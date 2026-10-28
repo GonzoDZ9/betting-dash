@@ -174,23 +174,25 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
     <div class="tiles" id="ov-tiles"></div>
 
+      <div class="card" id="today-card" style="margin-top: var(--cds-gap-md)">
+        <h3>Today's picks <small id="today-date"></small></h3>
+        <p class="note">Top picks and parlay pieces from every model whose game is played today.</p>
+        <div class="empty" id="today-empty" hidden>No top picks or parlay pieces on today's slate.</div>
+        <div class="scroll">
+          <table data-source="today_picks" data-row-key="key" id="today-table">
+            <thead><tr><th data-field="sport">Model</th><th data-field="type">Type</th><th data-field="game_time">Game time</th><th data-field="game">Game</th><th data-field="pick">Pick</th><th data-field="bet_type">Bet type</th><th data-field="line">Line / price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="note">Note</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+
+
     <div class="grid" style="margin-top: var(--cds-gap-md)">
       <div class="card" id="cum-card">
         <h3 id="cum-title">Cumulative units</h3>
         <p class="note" id="cum-note">Running profit in units by game date, each model and all three together.</p>
         <div class="legend" id="cum-legend"></div>
         <div class="chart" id="cum-chart" data-source="cum_by_date"><div class="tip"></div></div>
-      </div>
-      <div class="card" id="today-card">
-        <h3>Today's picks <small id="today-date"></small></h3>
-        <p class="note">Top picks and parlay pieces from every model whose game is played today.</p>
-        <div class="empty" id="today-empty" hidden>No top picks or parlay pieces on today's slate.</div>
-        <div class="scroll">
-          <table data-source="today_picks" data-row-key="key" id="today-table">
-            <thead><tr><th>Model</th><th>Type</th><th>Kickoff</th><th>Game</th><th>Pick</th><th>Line / price</th><th class="num">Units</th><th class="num">Model %</th><th class="num">Market %</th><th>Note</th></tr></thead>
-            <tbody></tbody>
-          </table>
-        </div>
       </div>
     </div>
 
@@ -228,7 +230,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       <div class="empty sp-empty" hidden></div>
       <div class="scroll">
         <table class="sp-card-table" data-source="cards" data-row-key="sport,n">
-          <thead><tr><th data-field="n">#</th><th data-field="kickoff">Kickoff</th><th data-field="game">Game</th><th data-field="market">Market</th><th data-field="pick">Pick</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead>
+          <thead><tr><th data-field="n">#</th><th data-field="kickoff">Game time</th><th data-field="game">Game</th><th data-field="pick">Pick</th><th data-field="market">Bet type</th><th data-field="tier">Tier</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -237,7 +239,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       <h3>Parlay pieces</h3>
       <p class="note">The model's likeliest legs on today's slate — for parlays, not straight bets. Market says what the leg is (shots, points, goals, moneyline…).</p>
       <table class="sp-parlay-table" data-source="parlays" data-row-key="sport,n">
-        <thead><tr><th data-field="n">#</th><th data-field="market">Market</th><th data-field="leg">Leg</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead>
+        <thead><tr><th data-field="n">#</th><th data-field="leg">Leg</th><th data-field="market">Bet type</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead>
         <tbody></tbody>
       </table>
     </div>
@@ -286,14 +288,14 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       <h4 class="sub sp-pending-title">Upcoming games</h4>
       <div class="scroll sp-pending-wrap">
         <table class="sp-picks-table" data-kind="pending" data-source="picks" data-row-key="id">
-          <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="market"><button>Market</button></th><th data-field="selection">Pick</th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
+          <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="selection">Pick</th><th data-field="market"><button>Bet type</button></th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
       <h4 class="sub sp-done-title">Completed games</h4>
       <div class="scroll">
         <table class="sp-picks-table" data-kind="done" data-source="picks" data-row-key="id">
-          <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="market"><button>Market</button></th><th data-field="selection">Pick</th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
+          <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="selection">Pick</th><th data-field="market"><button>Bet type</button></th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
           <tbody></tbody>
         </table>
       </div>
@@ -396,9 +398,35 @@ dash.calc('today_picks', {
     for (const r of picks) if (r.result === 'Pending' && r.bet !== '') { if (!cardDate[r.sport] || r.date > cardDate[r.sport]) cardDate[r.sport] = r.date; }
     const dateFor = (sport, game) => dateOf[sport + '|' + game] || (sport === 'NHL' ? cardDate.NHL : '') || '';
     const nhlGame = (leg) => { const t = String(leg || '').split(' ')[0]; return t.includes('@') ? t.replace('@', ' @ ') : ''; };
+    const betType = (sport, market, pick) => {
+    const code = { SOG: 'Shots on goal', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'Power-play points', SAVES: 'Saves', BLK: 'Blocked shots', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' };
+    const m = String(market || '').trim();
+    if (code[m]) return code[m];
+    if (m === 'Spread') return sport === 'NHL' ? 'Puck line' : 'ATS (spread)';
+    if (m === 'Moneyline' || m === 'Total' || m === 'Puck line') return m;
+    const prop = { 'reception yds': 'Receiving yards', 'rec yds': 'Receiving yards', receptions: 'Receptions', 'rush yds': 'Rushing yards', 'rush attempts': 'Rushes', 'rush att': 'Rushes', 'pass yds': 'Passing yards', 'pass attempts': 'Pass attempts', 'pass att': 'Pass attempts', 'pass completions': 'Completions', completions: 'Completions', 'pass interceptions': 'Interceptions', INTs: 'Interceptions', 'anytime TD': 'Anytime TD', 'pass TDs': 'Passing TDs', 'rush TDs': 'Rushing TDs', 'rec TDs': 'Receiving TDs', shots: 'Shots on goal', points: 'Points', 'PP points': 'Power-play points', goals: 'Goals', saves: 'Saves', blocks: 'Blocked shots', assists: 'Assists' };
+    const pm = m.replace(/^Prop\s*·\s*/, '');
+    if (prop[pm]) return prop[pm];
+    const t = String(pick || '').toLowerCase();
+    const tail = [['rec yds', 'Receiving yards'], ['receiving yards', 'Receiving yards'], ['receptions', 'Receptions'], ['rush yds', 'Rushing yards'], ['rush att', 'Rushes'], ['pass yds', 'Passing yards'], ['pass att', 'Pass attempts'], ['completions', 'Completions'], ['interceptions', 'Interceptions'], ['ints', 'Interceptions'], ['anytime td', 'Anytime TD'], ['pass tds', 'Passing TDs'], ['puck line', 'Puck line'], ['moneyline', 'Moneyline'], [' ml', 'Moneyline'], ['ats', 'ATS (spread)']];
+    for (const [k, v] of tail) if (t.includes(k)) return v;
+    if (/^(over|under) /.test(t)) return 'Total';
+    return m;
+  };
+    const times = ((picks) => {
+    const out = {};
+    for (const r of picks) {
+      if (!(r.result === 'Pending' || r.result === 'NP') || !r.kickoff || !r.date) continue;
+      const k = r.sport + '|' + r.game; if (out[k]) continue;
+      if (/^\d{1,2}:\d{2}$/.test(r.kickoff)) { const [h, mi] = r.kickoff.split(':').map(Number); const d = new Date(r.date + 'T12:00:00'); const wd = d.toLocaleDateString('en-US', { weekday: 'short' }); out[k] = `${wd} ${((h + 11) % 12) + 1}:${String(mi).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'} ET`; }
+      else out[k] = r.kickoff;
+    }
+    return out;
+  })(picks);
+    const timeOf = (c, g) => (c.kickoff && !/^\d{1,2}:\d{2}$/.test(c.kickoff)) ? c.kickoff : (times[c.sport + '|' + g] || c.kickoff || '');
     const out = [];
-    for (const c of cards) if (c.top === 'Y' && dateFor(c.sport, c.game) === today) out.push({ key: `${c.sport}-top-${c.n}`, sport: c.sport, type: 'Top pick', kickoff: c.kickoff, game: c.game, pick: c.pick, line: [c.line, c.price].filter((v) => v !== '' && v !== null && v !== undefined).join(' '), units: c.units, model_prob: c.model_prob, market_prob: c.market_prob, note: c.tag, top: 'Y', soft: c.soft, date: today });
-    for (const c of parlays) { const g = c.game || nhlGame(c.leg); if (dateFor(c.sport, g) === today) out.push({ key: `${c.sport}-parlay-${c.n}`, sport: c.sport, type: 'Parlay piece', kickoff: '', game: g, pick: c.leg, line: c.price, units: null, model_prob: c.model_prob, market_prob: null, note: c.hit_rate, top: '', soft: '', date: today }); }
+    for (const c of cards) if (c.top === 'Y' && dateFor(c.sport, c.game) === today) out.push({ key: `${c.sport}-top-${c.n}`, sport: c.sport, type: 'Top pick', game_time: timeOf(c, c.game), game: c.game, pick: c.pick, bet_type: betType(c.sport, c.market, c.pick), line: [c.line, c.price].filter((v) => v !== '' && v !== null && v !== undefined).join(' '), units: c.units, model_prob: c.model_prob, market_prob: c.market_prob, note: c.tag, top: 'Y', soft: c.soft, date: today });
+    for (const c of parlays) { const g = c.game || nhlGame(c.leg); if (dateFor(c.sport, g) === today) out.push({ key: `${c.sport}-parlay-${c.n}`, sport: c.sport, type: 'Parlay piece', game_time: timeOf(c, g), game: g, pick: c.leg, bet_type: betType(c.sport, c.market, c.leg), line: c.price, units: null, model_prob: c.model_prob, market_prob: null, note: c.hit_rate, top: '', soft: '', date: today }); }
     return out;
   },
 });
@@ -432,7 +460,32 @@ const fN = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—
 const fD = (s) => s ? d3.utcFormat('%b %-d')(new Date(s.slice(0, 10))) : '';
 const signCls = (v) => Number(v) > 0 ? 'pos' : Number(v) < 0 ? 'neg' : '';
 const esc = (s) => String(s ?? '');
-window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc };
+const betType = (sport, market, pick) => {
+    const code = { SOG: 'Shots on goal', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'Power-play points', SAVES: 'Saves', BLK: 'Blocked shots', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' };
+    const m = String(market || '').trim();
+    if (code[m]) return code[m];
+    if (m === 'Spread') return sport === 'NHL' ? 'Puck line' : 'ATS (spread)';
+    if (m === 'Moneyline' || m === 'Total' || m === 'Puck line') return m;
+    const prop = { 'reception yds': 'Receiving yards', 'rec yds': 'Receiving yards', receptions: 'Receptions', 'rush yds': 'Rushing yards', 'rush attempts': 'Rushes', 'rush att': 'Rushes', 'pass yds': 'Passing yards', 'pass attempts': 'Pass attempts', 'pass att': 'Pass attempts', 'pass completions': 'Completions', completions: 'Completions', 'pass interceptions': 'Interceptions', INTs: 'Interceptions', 'anytime TD': 'Anytime TD', 'pass TDs': 'Passing TDs', 'rush TDs': 'Rushing TDs', 'rec TDs': 'Receiving TDs', shots: 'Shots on goal', points: 'Points', 'PP points': 'Power-play points', goals: 'Goals', saves: 'Saves', blocks: 'Blocked shots', assists: 'Assists' };
+    const pm = m.replace(/^Prop\s*·\s*/, '');
+    if (prop[pm]) return prop[pm];
+    const t = String(pick || '').toLowerCase();
+    const tail = [['rec yds', 'Receiving yards'], ['receiving yards', 'Receiving yards'], ['receptions', 'Receptions'], ['rush yds', 'Rushing yards'], ['rush att', 'Rushes'], ['pass yds', 'Passing yards'], ['pass att', 'Pass attempts'], ['completions', 'Completions'], ['interceptions', 'Interceptions'], ['ints', 'Interceptions'], ['anytime td', 'Anytime TD'], ['pass tds', 'Passing TDs'], ['puck line', 'Puck line'], ['moneyline', 'Moneyline'], [' ml', 'Moneyline'], ['ats', 'ATS (spread)']];
+    for (const [k, v] of tail) if (t.includes(k)) return v;
+    if (/^(over|under) /.test(t)) return 'Total';
+    return m;
+  };
+const gameTimes = (picks) => {
+    const out = {};
+    for (const r of picks) {
+      if (!(r.result === 'Pending' || r.result === 'NP') || !r.kickoff || !r.date) continue;
+      const k = r.sport + '|' + r.game; if (out[k]) continue;
+      if (/^\d{1,2}:\d{2}$/.test(r.kickoff)) { const [h, mi] = r.kickoff.split(':').map(Number); const d = new Date(r.date + 'T12:00:00'); const wd = d.toLocaleDateString('en-US', { weekday: 'short' }); out[k] = `${wd} ${((h + 11) % 12) + 1}:${String(mi).padStart(2, '0')} ${h < 12 ? 'AM' : 'PM'} ET`; }
+      else out[k] = r.kickoff;
+    }
+    return out;
+  };
+window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes };
 
 // ---------- tabs ----------
 const pages = ['overview', 'cfb', 'nfl', 'nhl'];
@@ -457,7 +510,7 @@ window.bmShowTab = showTab;
 
 <script>(() => {
 // ---------- table helper ----------
-const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc } = window.bmF;
+const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes } = window.bmF;
 // cols: [{f, fmt, cls, html}] ; keyOf(row) -> data-key string
 const fillTable = (table, rows, cols, keyOf) => {
   const tb = table.querySelector('tbody');
@@ -475,14 +528,14 @@ const fillTable = (table, rows, cols, keyOf) => {
   }));
 };
 const badge = (res) => { const s = document.createElement('span'); s.className = 'badge ' + (res === 'W' || res === 'L' ? res : ''); s.textContent = res === 'W' ? 'Win' : res === 'L' ? 'Loss' : res === 'P' ? 'Push' : res === 'V' ? 'Void' : res === 'NP' ? 'No pick' : 'Pending'; return s; };
-const pickCell = (r) => { const sp = document.createElement('span'); if (r.top === 'Y') { const st = document.createElement('span'); st.className = 'star'; st.textContent = '★ '; sp.appendChild(st); } sp.appendChild(document.createTextNode(esc(r.pick ?? r.selection))); if (r.soft === 'Y') sp.appendChild(document.createTextNode(' · soft')); return sp; };
+const pickCell = (r) => { const sp = document.createElement('span'); if (r.top === 'Y') { const st = document.createElement('span'); st.className = 'star'; st.textContent = '★ '; sp.appendChild(st); } sp.appendChild(document.createTextNode(esc(r.pick ?? r.selection).replace(/\s+(MODEL|SOFT)\b/g, '').replace(/^[A-Z]{2,3}@[A-Z]{2,3}\s+/, '').trim())); if (r.soft === 'Y') sp.appendChild(document.createTextNode(' · soft')); return sp; };
 const tile = (k, v, s, cls) => { const d = document.createElement('div'); d.className = 'tile'; d.innerHTML = '<div class="k"></div><div class="v"></div><div class="s"></div>'; d.querySelector('.k').textContent = k; d.querySelector('.v').textContent = v; if (cls) d.querySelector('.v').classList.add(cls); d.querySelector('.s').textContent = s || ''; return d; };
 window.bmT = { fillTable, badge, pickCell, tile };
 })();</script>
 
 <script>(() => {
 // ---------- charts ----------
-const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc } = window.bmF;
+const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes } = window.bmF;
 const tipShow = (box, x, y, html) => { const t = box.querySelector('.tip'); t.replaceChildren(...html); t.style.display = 'block'; const bw = box.clientWidth, tw = t.offsetWidth; t.style.left = Math.min(Math.max(0, x + 12), bw - tw) + 'px'; t.style.top = Math.max(0, y - 10 - t.offsetHeight) + 'px'; };
 const tipHide = (box) => { box.querySelector('.tip').style.display = 'none'; };
 const tipLine = (sw, name, val, color) => { const d = document.createElement('div'); if (sw) { const s = document.createElement('span'); s.className = 'sw'; s.style.background = color; d.appendChild(s); } d.appendChild(document.createTextNode(name + (val !== undefined ? ': ' + val : ''))); return d; };
@@ -567,7 +620,7 @@ window.bmC = { drawCum, drawPeriod };
 
 <script>(() => {
 // ---------- draw ----------
-const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc } = window.bmF;
+const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes } = window.bmF;
 const { fillTable, badge, pickCell, tile } = window.bmT;
 const sortState = {};
 const skel = (el, on) => el.classList.toggle('dash-skeleton', !!on);
@@ -616,6 +669,7 @@ const drawOverview = () => {
   if (cards.status !== 'ok' || parl.status !== 'ok' || picks.status !== 'ok') return;
   document.getElementById('today-date').textContent = d3.timeFormat('%a %b %-d')(new Date());
   const todayCalc = dash.data('today_picks');
+  const times = gameTimes(picks.data);
   const host = document.getElementById('model-cards'); host.replaceChildren();
   for (const sport of ['CFB', 'NFL', 'NHL']) {
     const top = cards.data.filter((c) => c.sport === sport && c.top === 'Y');
@@ -629,9 +683,9 @@ const drawOverview = () => {
     else {
       const wrap = document.createElement('div'); wrap.className = 'scroll';
       const t = document.createElement('table'); t.setAttribute('data-source', 'cards'); t.setAttribute('data-row-key', 'sport,n');
-      t.innerHTML = '<thead><tr><th data-field="kickoff">Kickoff</th><th data-field="game">Game</th><th data-field="market">Market</th><th data-field="pick">Pick</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th class="num" data-field="edge">Edge</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead><tbody></tbody>';
-      fillTable(t, top, [{ f: 'kickoff' }, { f: 'game' }, { f: 'market', fmt: marketName }, { f: 'pick', html: pickCell }, { f: 'line' }, { f: 'price' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'edge', fmt: fPs, cls: 'num' }, { f: 'limit' }, { f: 'tag', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
-      const hide = { CFB: ['price', 'market_prob', 'edge'], NFL: ['kickoff', 'game', 'market_prob', 'limit'], NHL: ['kickoff', 'line', 'limit'] }[sport];
+      t.innerHTML = '<thead><tr><th data-field="kickoff">Game time</th><th data-field="game">Game</th><th data-field="pick">Pick</th><th data-field="market">Bet type</th><th data-field="tier">Tier</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th class="num" data-field="edge">Edge</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead><tbody></tbody>';
+      fillTable(t, top, [{ f: 'kickoff', fmt: (v, r) => (!v || /^\d{1,2}:\d{2}$/.test(v)) ? (times[r.sport + '|' + r.game] || v || '') : v }, { f: 'game' }, { f: 'pick', html: pickCell }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.pick) }, { f: 'market', fmt: (v) => /^T\d/.test(v) ? v : '' }, { f: 'line' }, { f: 'price' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'edge', fmt: fPs, cls: 'num' }, { f: 'limit' }, { f: 'tag', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+      const hide = { CFB: ['price', 'market_prob', 'edge', 'tier'], NFL: ['market_prob', 'limit'], NHL: ['line', 'limit', 'tier'] }[sport];
       t.querySelectorAll('thead th').forEach((th, i) => { const h = hide.includes(th.dataset.field); th.hidden = h; t.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = h; }); });
       wrap.appendChild(t); card.appendChild(wrap);
     }
@@ -640,8 +694,8 @@ const drawOverview = () => {
     else {
       const wrap = document.createElement('div'); wrap.className = 'scroll';
       const t = document.createElement('table'); t.setAttribute('data-source', 'parlays'); t.setAttribute('data-row-key', 'sport,n');
-      t.innerHTML = '<thead><tr><th data-field="n">#</th><th data-field="market">Market</th><th data-field="leg">Leg</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead><tbody></tbody>';
-      fillTable(t, legs, [{ f: 'n' }, { f: 'market', fmt: marketName }, { f: 'leg' }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+      t.innerHTML = '<thead><tr><th data-field="n">#</th><th data-field="leg">Leg</th><th data-field="market">Bet type</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead><tbody></tbody>';
+      fillTable(t, legs, [{ f: 'n' }, { f: 'leg' }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.leg) }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
       if (sport === 'NHL') t.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'game') { th.hidden = true; t.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = true; }); } });
       wrap.appendChild(t); card.appendChild(wrap);
     }
@@ -650,7 +704,7 @@ const drawOverview = () => {
   const todayRows = todayCalc.status === 'ok' ? todayCalc.data : [];
   const tt = document.getElementById('today-table');
   document.getElementById('today-empty').hidden = todayRows.length > 0; tt.closest('.scroll').hidden = todayRows.length === 0;
-  fillTable(tt, todayRows, [{ f: 'sport' }, { f: 'type', cls: 'type-tag' }, { f: 'kickoff' }, { f: 'game' }, { f: 'pick', html: pickCell, cls: 'wrap' }, { f: 'line' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'note', cls: 'wrap' }], (r) => r.key);
+  fillTable(tt, todayRows, [{ f: 'sport' }, { f: 'type', cls: 'type-tag' }, { f: 'game_time' }, { f: 'game' }, { f: 'pick', html: pickCell, cls: 'wrap' }, { f: 'bet_type' }, { f: 'line' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'note', cls: 'wrap' }], (r) => r.key);
 };
 document.querySelectorAll('.bm .seg button').forEach((b) => b.addEventListener('click', () => { window.bmWin = b.dataset.win; drawOverview(); }));
 
@@ -671,20 +725,21 @@ const drawSport = (sport) => {
   q('.sp-title').setAttribute('data-field', 'title'); q('.sp-generated').setAttribute('data-field', 'generated'); q('.sp-nbets').setAttribute('data-field', 'n_bets'); q('.sp-units').setAttribute('data-field', 'units'); q('.sp-ntop').setAttribute('data-field', 'n_top');
   const emp = q('.sp-empty'); emp.hidden = !(me && me.n_bets === 0); emp.textContent = me && me.n_bets === 0 ? (me.empty || 'No bets on this card.') : '';
   // card rows
+  const spTimes = picks.status === 'ok' ? gameTimes(picks.data) : {};
   const ct = q('.sp-card-table');
   const crows = cards.status === 'ok' ? cards.data.filter((r) => r.sport === sport) : [];
   ct.closest('.scroll').hidden = !crows.length;
   fillTable(ct, crows, [
-    { f: 'n' }, { f: 'kickoff' }, { f: 'game' }, { f: 'market', fmt: (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'PP points', SAVES: 'Saves', BLK: 'Blocks', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' })[v] || esc(v) }, { f: 'pick', html: pickCell }, { f: 'line' }, { f: 'price' },
+    { f: 'n' }, { f: 'kickoff', fmt: (v, r) => (!v || /^\d{1,2}:\d{2}$/.test(v)) ? (spTimes[r.sport + '|' + r.game] || v || '') : v }, { f: 'game' }, { f: 'pick', html: pickCell }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.pick) }, { f: 'market', fmt: (v) => /^T\d/.test(v) ? v : '' }, { f: 'line' }, { f: 'price' },
     { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'limit' }, { f: 'tag', cls: 'wrap' },
   ], (r) => `${r.sport},${r.n}`);
   // hide empty columns for this sport
-  const hideCols = { CFB: ['price', 'market_prob'], NFL: ['kickoff', 'game', 'market_prob', 'limit'], NHL: ['kickoff', 'line', 'limit'] }[sport] || [];
+  const hideCols = { CFB: ['price', 'market_prob', 'tier'], NFL: ['market_prob', 'limit'], NHL: ['line', 'limit', 'tier'] }[sport] || [];
   ct.querySelectorAll('thead th').forEach((th, i) => { const hide = hideCols.includes(th.dataset.field); th.hidden = hide; ct.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hide; }); });
   // parlays
   const prows = parl.status === 'ok' ? parl.data.filter((r) => r.sport === sport) : [];
   q('.sp-parlay-card').hidden = !prows.length;
-  fillTable(q('.sp-parlay-table'), prows, [{ f: 'n' }, { f: 'market', fmt: (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'PP points', SAVES: 'Saves', BLK: 'Blocks', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' })[v] || esc(v) }, { f: 'leg' }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+  fillTable(q('.sp-parlay-table'), prows, [{ f: 'n' }, { f: 'leg' }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.leg) }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
   // tiles
   const tiles = q('.sp-tiles');
   const s = sum.status === 'ok' ? sum.data.find((r) => r.sport === sport && r.window === 'season') : null;
@@ -723,7 +778,7 @@ const drawSport = (sport) => {
     const isPending = (r) => r.result === 'Pending' || (r.result === 'NP' && String(r.date) >= today);
     const sorter = (dir) => (a, b) => { const va = a[st2.f], vb = b[st2.f]; const na = Number(va), nb = Number(vb); const c = (!isNaN(na) && !isNaN(nb) && va !== '' && vb !== '') ? na - nb : String(va ?? '').localeCompare(String(vb ?? '')); return c * dir || (a.id < b.id ? -1 : 1); };
     const cols = [
-      { f: 'id', hidden: true }, { f: 'date', fmt: fD }, { f: 'game' }, { f: 'market' }, { f: 'selection', html: pickCell, cls: 'wrap' }, { f: 'odds', fmt: fOdds, cls: 'num' },
+      { f: 'id', hidden: true }, { f: 'date', fmt: fD }, { f: 'game' }, { f: 'selection', html: pickCell, cls: 'wrap' }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.selection) }, { f: 'odds', fmt: fOdds, cls: 'num' },
       { f: 'units', html: (r) => { const sp = document.createElement('span'); if (r.bet === '') { sp.className = 'nobet-tag'; sp.textContent = 'No bet'; } else sp.textContent = d3.format('.1f')(r.units) + 'u'; return sp; }, cls: 'num' },
       { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'result', html: (r) => badge(r.result) },
       { f: 'profit', fmt: (v, r) => (r.result === 'Pending' || r.bet === '') ? '—' : fU2(v), cls: (r) => 'num ' + signCls(r.bet === '' ? 0 : r.profit) },
