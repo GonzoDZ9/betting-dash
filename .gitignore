@@ -4,3 +4,5 @@ publish.log
 merge_dash.py
 SETUP.md
 com.gonzo.bettingdash.publish.plist
+publish.sh
+icon/
