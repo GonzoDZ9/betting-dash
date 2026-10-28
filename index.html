@@ -1,0 +1,642 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="color-scheme" content="light dark">
+<title>Betting Models</title>
+<script src="d3.min.js"></script>
+<style>
+:root {
+  --font-anthropic-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-anthropic-serif: "Iowan Old Style", "Palatino Linotype", Palatino, Georgia, serif;
+  --color-fg: #1d1d1b; --color-fg-muted: #6b6b66; --color-bg: #f7f6f2; --color-panel: #ffffff; --color-border-line: #e3e1da;
+  --color-ok: #15803d; --color-warn: #b45309; --color-bad: #b91c1c;
+  --cds-radius: 10px; --cds-pad-xs: 4px; --cds-pad-sm: 8px; --cds-pad-md: 12px; --cds-pad-lg: 16px; --cds-pad-xl: 24px;
+  --cds-gap-xs: 4px; --cds-gap-sm: 8px; --cds-gap-md: 12px; --cds-gap-lg: 20px; --cds-gap-xl: 32px;
+  --cds-font-size-caption: 12px; --cds-font-size-body: 14px; --cds-font-size-heading: 16px; --cds-font-size-title: 26px;
+  --cds-font-weight-medium: 600;
+  --cds-chart-grid: #ecebe5; --cds-chart-axis: #c9c7bf; --cds-chart-reference: #9a9890; --cds-chart-muted: #c9c7bf;
+  --cds-surface-popover: #ffffff; --cds-border: #d8d6cf; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.12); --cds-text-secondary: #6b6b66;
+  --cds-dur-slow: 300ms;
+}
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-fg: #ecebe6; --color-fg-muted: #a09e97; --color-bg: #151514; --color-panel: #1f1f1d; --color-border-line: #33332f;
+    --color-ok: #4ade80; --color-warn: #fbbf24; --color-bad: #f87171;
+    --cds-chart-grid: #2a2a27; --cds-chart-axis: #4a4944; --cds-chart-reference: #6f6e67; --cds-chart-muted: #4a4944;
+    --cds-surface-popover: #262624; --cds-border: #3c3b36; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.5); --cds-text-secondary: #a09e97;
+  }
+}
+:root[data-theme="dark"] {
+  --color-fg: #ecebe6; --color-fg-muted: #a09e97; --color-bg: #151514; --color-panel: #1f1f1d; --color-border-line: #33332f;
+  --color-ok: #4ade80; --color-warn: #fbbf24; --color-bad: #f87171;
+  --cds-chart-grid: #2a2a27; --cds-chart-axis: #4a4944; --cds-chart-reference: #6f6e67; --cds-chart-muted: #4a4944;
+  --cds-surface-popover: #262624; --cds-border: #3c3b36; --cds-shadow-popover: 0 4px 16px rgba(0,0,0,.5); --cds-text-secondary: #a09e97;
+}
+html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
+#dash-root { padding: 16px; }
+.dash-skeleton { opacity: .4; }
+.bm .updated { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: -8px 0 12px; }
+.bm .loadfail { color: var(--color-bad); padding: 12px 0; }
+</style>
+</head>
+<body>
+<div id="dash-root">
+<script>
+// ---------- standalone runtime: loads the three model feeds and merges them (same rules as merge_dash.py) ----------
+(() => {
+  const FEEDS = ['cfb_dash.json', 'nfl_dash.json', 'nhl_dash.json'];
+  const sets = {}, calcs = {}, listeners = [];
+  let status = 'loading', message = '', loaded = {};
+  const shortDay = (t) => { const p = String(t || '').replace(/,/g, '').trim().split(/\s+/); const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1, 3).toLowerCase(); return p.length >= 3 ? `${cap(p[0])} ${cap(p[1])} ${p[2]}` : t; };
+  const fmtGen = (g) => { const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(g || ''); if (!m) return g || ''; const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' }); };
+  const merge = (feeds) => {
+    const picks = [], cards = [], info = [], parlays = [];
+    for (const d of feeds) {
+      if (!d) continue;
+      picks.push(...d.picks); cards.push(...d.cards); parlays.push(...(d.parlays || []));
+      const ci = { ...d.card_info };
+      if (ci.sport === 'NHL') { if (!ci.generated) ci.generated = fmtGen(d.generated_at); if (/,/.test(ci.label)) ci.label = shortDay(ci.label); }
+      ci.feed_generated = d.generated_at; info.push(ci);
+    }
+    sets.picks = picks; sets.cards = cards; sets.card_info = info; sets.parlays = parlays;
+  };
+  const load = async () => {
+    const results = await Promise.all(FEEDS.map((f) => fetch(f + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)));
+    loaded = Object.fromEntries(FEEDS.map((f, i) => [f, !!results[i]]));
+    if (results.every((r) => !r)) { status = 'error'; message = 'None of the model feeds could be loaded.'; }
+    else { merge(results); status = 'ok'; Object.keys(calcs).forEach((k) => { calcs[k].value = undefined; }); }
+    fire();
+  };
+  const fire = () => listeners.forEach((fn) => { try { fn(); } catch (e) { console.error(e); } });
+  const dash = {
+    colors: ['#2563eb', '#d97706', '#16a34a', '#7c3aed', '#db2777', '#0891b2', '#65a30d', '#ea580c'],
+    data(id) {
+      if (calcs[id]) {
+        if (status !== 'ok') return { status, data: [], message };
+        if (calcs[id].value === undefined) calcs[id].value = calcs[id].fn(...calcs[id].inputs.map((i) => dash.data(i).data));
+        return { status: 'ok', data: calcs[id].value, columns: [] };
+      }
+      if (status !== 'ok') return { status, data: [], message };
+      return { status: 'ok', data: sets[id] || [], columns: sets[id] && sets[id][0] ? Object.keys(sets[id][0]) : [] };
+    },
+    calc(id, spec) { calcs[id] = { inputs: spec.inputs, fn: spec.fn, value: undefined }; },
+    loader() {},
+    onData(fn) { listeners.push(fn); try { fn(); } catch (e) { console.error(e); } },
+    params() { return {}; }, setParams() {}, resetParams() {},
+    setLink(name) { if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name); },
+    refresh() { load(); },
+    loaded() { return loaded; },
+  };
+  window.dash = dash;
+  let rw = window.innerWidth;
+  window.addEventListener('resize', () => { if (Math.abs(window.innerWidth - rw) > 40) { rw = window.innerWidth; fire(); } });
+  window.addEventListener('DOMContentLoaded', () => { load(); setInterval(load, 10 * 60 * 1000); });
+})();
+</script>
+<style>
+#dash-root { --dash-gutter: var(--cds-pad-lg); }
+.bm { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg); max-width: 72rem; margin-inline: auto; }
+.bm * { box-sizing: border-box; }
+.bm h1 { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); margin: 0 0 var(--cds-gap-xs); }
+.bm .lede { color: var(--color-fg-muted); margin: 0 0 var(--cds-gap-md); }
+.bm .tabs { display: flex; gap: var(--cds-gap-xs); flex-wrap: wrap; margin-bottom: var(--cds-gap-lg); border-bottom: 1px solid var(--color-border-line); }
+.bm .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); font: inherit; color: var(--color-fg-muted); cursor: pointer; }
+.bm .tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.bm section.page[hidden] { display: none; }
+.bm h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-lg) 0 var(--cds-gap-sm); }
+.bm h2 small { font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-left: var(--cds-gap-sm); }
+.bm .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 20rem), 1fr)); gap: var(--cds-gap-md); }
+.bm .tiles { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 9.5rem), 1fr)); gap: var(--cds-gap-sm); }
+.bm .card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-lg); min-width: 0; }
+.bm .card h3 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: 0 0 var(--cds-gap-xs); }
+.bm .card .note { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-sm); }
+.bm .tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); }
+.bm .tile .k { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bm .tile .v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.bm .tile .s { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.bm .pos { color: var(--color-ok); } .bm .neg { color: var(--color-bad); }
+.bm table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-caption); }
+.bm th, .bm td { text-align: left; padding: var(--cds-pad-xs) var(--cds-pad-sm); border-bottom: 1px solid var(--color-border-line); white-space: nowrap; vertical-align: top; }
+.bm th { color: var(--color-fg-muted); font-weight: var(--cds-font-weight-medium); position: sticky; top: 0; background: var(--color-panel); }
+.bm th button { all: unset; cursor: pointer; }
+.bm th[aria-sort="ascending"] button::after { content: " ▲"; } .bm th[aria-sort="descending"] button::after { content: " ▼"; }
+.bm td.num, .bm th.num { text-align: right; }
+.bm td.wrap { white-space: normal; min-width: 12rem; }
+.bm .scroll { max-height: 32rem; overflow: auto; }
+.bm .badge { display: inline-block; padding: 0 .4em; border-radius: var(--cds-radius); font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); }
+.bm .badge.W { color: var(--color-ok); border-color: currentColor; } .bm .badge.L { color: var(--color-bad); border-color: currentColor; }
+.bm .star { color: var(--color-warn); }
+.bm .chart { min-height: 220px; position: relative; }
+.bm .chart svg { display: block; }
+.bm .chart svg text { font-family: var(--font-anthropic-sans); }
+.bm .tip { position: absolute; background: var(--cds-surface-popover); border: 1px solid var(--cds-border); border-radius: var(--cds-radius); box-shadow: var(--cds-shadow-popover); padding: var(--cds-pad-xs) var(--cds-pad-sm); font-size: var(--cds-font-size-caption); pointer-events: none; display: none; }
+.bm .tip .d { color: var(--cds-text-secondary); }
+.bm .sw { display: inline-block; width: .6em; height: .6em; border-radius: 50%; margin-right: .35em; }
+.bm .legend { display: flex; gap: var(--cds-gap-md); flex-wrap: wrap; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-xs); }
+.bm .search { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); margin-bottom: var(--cds-gap-sm); width: min(100%, 20rem); }
+.bm .empty { color: var(--color-fg-muted); padding: var(--cds-pad-md) 0; }
+.bm .cardhead { display: flex; gap: var(--cds-gap-md); flex-wrap: wrap; align-items: baseline; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-bottom: var(--cds-gap-sm); }
+.bm .cardhead b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.bm .methods { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: var(--cds-gap-lg); }
+[data-dash-source-state=empty] { color: transparent; }
+[data-dash-source-state=refreshing] { opacity: .5; transition: opacity var(--cds-dur-slow); }
+</style>
+
+<div class="bm">
+  <h1>Betting Models</h1>
+  <p class="lede" id="lede"><span data-source="summary_by_sport" data-field="record" data-where="sport=ALL">—</span> across the three models, <span data-source="summary_by_sport" data-field="profit" data-where="sport=ALL">—</span> on <span data-source="summary_by_sport" data-field="risked" data-where="sport=ALL">—</span> risked (ROI <span data-source="summary_by_sport" data-field="roi" data-where="sport=ALL">—</span>); <span data-source="summary_by_sport" data-field="pending" data-where="sport=ALL">—</span> bets pending on the current cards.</p>
+
+  <div class="tabs" role="tablist">
+    <button role="tab" data-tab="overview" aria-selected="true">All models</button>
+    <button role="tab" data-tab="cfb">CFB</button>
+    <button role="tab" data-tab="nfl">NFL</button>
+    <button role="tab" data-tab="nhl">NHL</button>
+  </div>
+
+  <!-- ===================== OVERVIEW ===================== -->
+  <section class="page" id="overview">
+    <h2>Season to date <small>graded bets only · 1u = $10</small></h2>
+    <div class="tiles" id="ov-tiles"></div>
+
+    <div class="grid" style="margin-top: var(--cds-gap-md)">
+      <div class="card" id="cum-card">
+        <h3>Cumulative units</h3>
+        <p class="note">Running profit in units by game date, each model and all three together.</p>
+        <div class="legend" id="cum-legend"></div>
+        <div class="chart" id="cum-chart" data-source="cum_by_date"><div class="tip"></div></div>
+      </div>
+      <div class="card" id="today-card">
+        <h3>On the cards right now</h3>
+        <p class="note">What each model is currently putting out. Open a sport's tab for the full card.</p>
+        <table data-source="card_info" data-row-key="sport" id="today-table">
+          <thead><tr><th data-field="sport">Model</th><th data-field="label">Slate</th><th class="num" data-field="n_bets">Bets</th><th class="num" data-field="units">Units</th><th class="num" data-field="n_top">Top picks</th><th data-field="generated">Card built</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: var(--cds-gap-md)" id="ov-table-card">
+      <h3>Record by model</h3>
+      <p class="note">Win % = W ÷ (W + L). ROI = units won ÷ units risked on decided bets. CLV = average closing-line value where the model captured a close (CFB in points, NFL/NHL in probability).</p>
+      <table data-source="summary_by_sport" data-row-key="sport" id="ov-table">
+        <thead><tr><th data-field="sport">Model</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="risked">Risked</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th><th class="num" data-field="avg_clv">Avg CLV</th><th class="num" data-field="pending">Pending</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </section>
+
+  <!-- ===================== SPORT PAGES (cloned from template) ===================== -->
+  <section class="page" id="cfb" hidden></section>
+  <section class="page" id="nfl" hidden></section>
+  <section class="page" id="nhl" hidden></section>
+
+  <template id="sport-tpl">
+    <h2>Current card <small class="sp-label"></small></h2>
+    <div class="card">
+      <div class="cardhead"><span><b class="sp-title"></b></span><span>Built <b class="sp-generated"></b></span><span><b class="sp-nbets"></b> bets</span><span><b class="sp-units"></b> units</span><span><b class="sp-ntop"></b> top picks</span></div>
+      <div class="empty sp-empty" hidden></div>
+      <div class="scroll">
+        <table class="sp-card-table" data-source="cards" data-row-key="sport,n">
+          <thead><tr><th data-field="n">#</th><th data-field="kickoff">Kickoff</th><th data-field="game">Game</th><th data-field="market">Market</th><th data-field="pick">Pick</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card sp-parlay-card" style="margin-top: var(--cds-gap-md)" hidden>
+      <h3>Parlay pieces</h3>
+      <p class="note">The model's likeliest legs on today's slate — for parlays, not straight bets. Market says what the leg is (shots, points, goals, moneyline…).</p>
+      <table class="sp-parlay-table" data-source="parlays" data-row-key="sport,n">
+        <thead><tr><th data-field="n">#</th><th data-field="market">Market</th><th data-field="leg">Leg</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <h2>Track record <small>graded bets this season</small></h2>
+    <div class="tiles sp-tiles"></div>
+
+    <div class="grid" style="margin-top: var(--cds-gap-md)">
+      <div class="card">
+        <h3 class="sp-period-title">Units by period</h3>
+        <p class="note">Units won or lost on each slate; the line is the running total.</p>
+        <div class="chart sp-period-chart" data-source="by_period"><div class="tip"></div></div>
+      </div>
+      <div class="card">
+        <h3>By market</h3>
+        <p class="note">Same columns as the model table, split by bet type.</p>
+        <div class="scroll">
+          <table class="sp-market-table" data-source="by_market" data-row-key="sport,market">
+            <thead><tr><th data-field="market">Market</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="risked">Risked</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th></tr></thead>
+            <tbody></tbody>
+          </table>
+        </div>
+      </div>
+      <div class="card">
+        <h3>By stake size</h3>
+        <p class="note">Does sizing up pay? Record by units staked.</p>
+        <table class="sp-stake-table" data-source="by_stake" data-row-key="sport,units">
+          <thead><tr><th data-field="units">Stake</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <div class="card">
+        <h3>Top picks vs the rest</h3>
+        <p class="note">Top picks are the starred rows on the card; soft lines are where Hard Rock's number beat the other books.</p>
+        <table class="sp-tag-table" data-source="by_tag" data-row-key="sport,tag">
+          <thead><tr><th data-field="tag">Group</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+
+    <div class="card" style="margin-top: var(--cds-gap-md)">
+      <h3>Every pick</h3>
+      <p class="note">Most recent first. Click a column header to sort; type to filter. Bet limit is the worst line the model still backs; cushion is how far the line at recommendation sat inside it.</p>
+      <input class="search sp-search" type="search" placeholder="Filter picks (team, player, market, W/L)…" aria-label="Filter picks">
+      <div class="scroll">
+        <table class="sp-picks-table" data-source="picks" data-row-key="id">
+          <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="market"><button>Market</button></th><th data-field="selection">Pick</th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+  </template>
+
+  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. CFB rows marked "No Bet" in the model (shadow leans) are not counted as bets.</p>
+</div>
+
+<script>(() => {
+// ---------- calculations (readers can inspect these in Sources) ----------
+const SPORTS = ['CFB', 'NFL', 'NHL'];
+
+
+dash.calc('summary_by_sport', {
+  title: 'Record by model',
+  description: 'W-L-P, units risked, profit, ROI and average CLV per model and for all three together, graded bets only.',
+  inputs: ['picks'],
+  fn: (picks) => {
+    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    return ['CFB', 'NFL', 'NHL', 'ALL'].map((sport) => ({ sport, ...S(sport === 'ALL' ? picks : picks.filter((r) => r.sport === sport)) }));
+  },
+});
+
+dash.calc('cum_by_date', {
+  title: 'Cumulative units by date',
+  description: 'Running total of graded profit (units) by game date, per model and combined.',
+  inputs: ['picks'],
+  fn: (picks) => {
+    const dates = [...new Set(picks.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P').map((r) => r.date))].sort();
+    const run = { CFB: 0, NFL: 0, NHL: 0 };
+    return dates.map((date) => {
+      for (const r of picks) if (r.date === date && (r.result === 'W' || r.result === 'L' || r.result === 'P')) run[r.sport] += Number(r.profit || 0);
+      return { date, CFB: Math.round(run.CFB * 100) / 100, NFL: Math.round(run.NFL * 100) / 100, NHL: Math.round(run.NHL * 100) / 100, ALL: Math.round((run.CFB + run.NFL + run.NHL) * 100) / 100 };
+    });
+  },
+});
+
+dash.calc('by_period', {
+  title: 'Units by slate',
+  description: 'Per model, each week (CFB, NFL) or game day (NHL): bets, record, profit and running total.',
+  inputs: ['picks'],
+  fn: (picks) => {
+    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const out = [];
+    for (const sport of ['CFB', 'NFL', 'NHL']) {
+      const mine = picks.filter((r) => r.sport === sport);
+      const periods = [...new Set(mine.map((r) => r.period))].sort((a, b) => (isNaN(a) ? a.localeCompare(b) : Number(a) - Number(b)));
+      let cum = 0;
+      for (const period of periods) {
+        const s = S(mine.filter((r) => r.period === period));
+        cum += s.profit;
+        out.push({ sport, period, ...s, cum: Math.round(cum * 10) / 10 });
+      }
+    }
+    return out;
+  },
+});
+
+const groupCalc = (id, title, key, labelOf) => dash.calc(id, {
+  title, description: `Per model, graded record split by ${key}.`, inputs: ['picks'],
+  fn: (picks) => {
+    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const out = [];
+    for (const sport of ['CFB', 'NFL', 'NHL']) {
+      const mine = picks.filter((r) => r.sport === sport);
+      const keys = [...new Set(mine.map((r) => String(r[key])))].sort((a, b) => (isNaN(a) ? a.localeCompare(b) : Number(a) - Number(b)));
+      for (const k of keys) out.push({ sport, [key]: k, ...S(mine.filter((r) => String(r[key]) === k)) });
+    }
+    return out;
+  },
+});
+groupCalc('by_market', 'Record by market', 'market');
+groupCalc('by_stake', 'Record by stake size', 'units');
+
+dash.calc('by_tag', {
+  title: 'Top picks vs other bets',
+  description: 'Per model: starred top picks, the remaining bets, and Hard Rock soft-line bets.',
+  inputs: ['picks'],
+  fn: (picks) => {
+    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const out = [];
+    for (const sport of ['CFB', 'NFL', 'NHL']) {
+      const mine = picks.filter((r) => r.sport === sport);
+      out.push({ sport, tag: 'Top picks', ...S(mine.filter((r) => r.top === 'Y')) });
+      out.push({ sport, tag: 'Other bets', ...S(mine.filter((r) => r.top !== 'Y')) });
+      out.push({ sport, tag: 'Soft lines', ...S(mine.filter((r) => r.soft === 'Y')) });
+    }
+    return out;
+  },
+});
+})();</script>
+
+<script>(() => {
+// ---------- formatting helpers ----------
+const fU = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : (Number(v) > 0 ? '+' : '') + d3.format('.1f')(v) + 'u';
+const fU2 = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : (Number(v) > 0 ? '+' : '') + d3.format('.2f')(v);
+const fP = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : d3.format('.1%')(v);
+const fPs = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : (Number(v) > 0 ? '+' : '') + d3.format('.1%')(v);
+const fOdds = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : (Number(v) > 0 ? '+' : '') + d3.format('d')(v);
+const fN = (v) => (v === null || v === undefined || v === '' || isNaN(v)) ? '—' : d3.format(',')(v);
+const fD = (s) => s ? d3.utcFormat('%b %-d')(new Date(s.slice(0, 10))) : '';
+const signCls = (v) => Number(v) > 0 ? 'pos' : Number(v) < 0 ? 'neg' : '';
+const esc = (s) => String(s ?? '');
+window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc };
+
+// ---------- tabs ----------
+const pages = ['overview', 'cfb', 'nfl', 'nhl'];
+const tpl = document.getElementById('sport-tpl');
+let current = 'overview';
+const showTab = (name) => {
+  if (!pages.includes(name)) name = 'overview';
+  current = name;
+  for (const p of pages) {
+    const sec = document.getElementById(p);
+    if (p !== 'overview' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
+    sec.hidden = p !== name;
+  }
+  document.querySelectorAll('.bm .tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  dash.setLink(name);
+  window.bmDraw && window.bmDraw();
+};
+document.querySelectorAll('.bm .tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+window.bmCurrent = () => current;
+window.bmShowTab = showTab;
+})();</script>
+
+<script>(() => {
+// ---------- table helper ----------
+const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc } = window.bmF;
+// cols: [{f, fmt, cls, html}] ; keyOf(row) -> data-key string
+const fillTable = (table, rows, cols, keyOf) => {
+  const tb = table.querySelector('tbody');
+  tb.replaceChildren(...rows.map((r) => {
+    const tr = document.createElement('tr');
+    tr.dataset.key = keyOf(r);
+    for (const c of cols) {
+      const td = document.createElement('td');
+      if (c.cls) td.className = typeof c.cls === 'function' ? c.cls(r) : c.cls;
+      if (c.hidden) td.hidden = true;
+      if (c.html) td.replaceChildren(c.html(r)); else td.textContent = c.fmt ? c.fmt(r[c.f], r) : esc(r[c.f]);
+      tr.appendChild(td);
+    }
+    return tr;
+  }));
+};
+const badge = (res) => { const s = document.createElement('span'); s.className = 'badge ' + (res === 'W' || res === 'L' ? res : ''); s.textContent = res === 'W' ? 'Win' : res === 'L' ? 'Loss' : res === 'P' ? 'Push' : res === 'V' ? 'Void' : 'Pending'; return s; };
+const pickCell = (r) => { const sp = document.createElement('span'); if (r.top === 'Y') { const st = document.createElement('span'); st.className = 'star'; st.textContent = '★ '; sp.appendChild(st); } sp.appendChild(document.createTextNode(esc(r.pick ?? r.selection))); if (r.soft === 'Y') sp.appendChild(document.createTextNode(' · soft')); return sp; };
+const tile = (k, v, s, cls) => { const d = document.createElement('div'); d.className = 'tile'; d.innerHTML = '<div class="k"></div><div class="v"></div><div class="s"></div>'; d.querySelector('.k').textContent = k; d.querySelector('.v').textContent = v; if (cls) d.querySelector('.v').classList.add(cls); d.querySelector('.s').textContent = s || ''; return d; };
+window.bmT = { fillTable, badge, pickCell, tile };
+})();</script>
+
+<script>(() => {
+// ---------- charts ----------
+const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc } = window.bmF;
+const tipShow = (box, x, y, html) => { const t = box.querySelector('.tip'); t.replaceChildren(...html); t.style.display = 'block'; const bw = box.clientWidth, tw = t.offsetWidth; t.style.left = Math.min(Math.max(0, x + 12), bw - tw) + 'px'; t.style.top = Math.max(0, y - 10 - t.offsetHeight) + 'px'; };
+const tipHide = (box) => { box.querySelector('.tip').style.display = 'none'; };
+const tipLine = (sw, name, val, color) => { const d = document.createElement('div'); if (sw) { const s = document.createElement('span'); s.className = 'sw'; s.style.background = color; d.appendChild(s); } d.appendChild(document.createTextNode(name + (val !== undefined ? ': ' + val : ''))); return d; };
+const tipHead = (txt) => { const d = document.createElement('div'); d.className = 'd'; d.textContent = txt; return d; };
+
+const clearSvg = (box) => { box.querySelectorAll('svg').forEach((s) => s.remove()); };
+
+// multi-line cumulative chart
+const drawCum = (box, rows, series, colors) => {
+  clearSvg(box);
+  const W = box.clientWidth || 600, H = 240;
+  if (!rows.length || W < 50) return;
+  const data = rows.map((r) => ({ ...r, date: new Date(String(r.date).slice(0, 10)) }));
+  const svg = d3.select(box).insert('svg', '.tip').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+  const allV = data.flatMap((d) => series.map((s) => Number(d[s])));
+  const y = d3.scaleLinear([Math.min(0, d3.min(allV)), Math.max(0, d3.max(allV))], [H - 28, 12]).nice();
+  const ticks = y.ticks(5);
+  const tmp = svg.append('text').attr('font-size', 11);
+  let ml = 0; for (const t of ticks) { tmp.text(fU(t)); ml = Math.max(ml, tmp.node().getComputedTextLength()); } tmp.remove();
+  const mL = Math.ceil(ml) + 8, mR = 8;
+  const x = d3.scaleUtc(d3.extent(data, (d) => d.date), [mL, W - mR]);
+  svg.append('g').attr('class', 'grid').selectAll('line').data(ticks).join('line').attr('x1', mL).attr('x2', W - mR).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).attr('stroke', 'var(--cds-chart-grid)');
+  svg.append('line').attr('x1', mL).attr('x2', W - mR).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+  svg.append('g').selectAll('text').data(ticks).join('text').attr('x', mL - 6).attr('y', (t) => y(t) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((t) => fU(t));
+  const nx = Math.max(2, Math.floor((W - mL - mR) / 90));
+  svg.append('g').selectAll('text').data(x.ticks(nx)).join('text').attr('x', (d) => x(d)).attr('y', H - 8).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((d) => d3.utcFormat('%b %-d')(d));
+  series.forEach((s, i) => {
+    const line = d3.line().x((d) => x(d.date)).y((d) => y(Number(d[s])));
+    svg.append('path').datum(data).attr('d', line).attr('fill', 'none').attr('stroke', colors[i]).attr('stroke-width', s === 'ALL' ? 2.5 : 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round').attr('stroke-dasharray', s === 'ALL' ? '4 3' : null);
+  });
+  const rule = svg.append('line').attr('y1', 12).attr('y2', H - 28).attr('stroke', 'var(--cds-chart-reference)').style('display', 'none');
+  const dots = svg.append('g').style('display', 'none');
+  series.forEach((s, i) => dots.append('circle').attr('r', 4).attr('fill', colors[i]).attr('stroke', 'var(--color-panel)').attr('stroke-width', 2));
+  const bisect = d3.bisector((d) => d.date).center;
+  svg.on('mousemove', (ev) => {
+    const [mx, my] = d3.pointer(ev);
+    const i = bisect(data, x.invert(mx)); const d = data[i]; if (!d) return;
+    rule.style('display', null).attr('x1', x(d.date)).attr('x2', x(d.date));
+    dots.style('display', null).selectAll('circle').data(series).attr('cx', x(d.date)).attr('cy', (s) => y(Number(d[s])));
+    const sc = W / box.clientWidth;
+    tipShow(box, x(d.date) / sc, my / sc, [tipHead(d3.utcFormat('%a %b %-d')(d.date)), ...series.map((s, j) => tipLine(true, s === 'ALL' ? 'All models' : s, fU(d[s]), colors[j]))]);
+  }).on('mouseleave', () => { rule.style('display', 'none'); dots.style('display', 'none'); tipHide(box); });
+};
+
+// bars per period + running total line
+const drawPeriod = (box, rows, labelOf) => {
+  clearSvg(box);
+  const W = box.clientWidth || 600, H = 240;
+  if (!rows.length || W < 50) return;
+  const svg = d3.select(box).insert('svg', '.tip').attr('width', '100%').attr('viewBox', `0 0 ${W} ${H}`);
+  const vals = rows.flatMap((r) => [Number(r.profit), Number(r.cum)]);
+  const y = d3.scaleLinear([Math.min(0, d3.min(vals)), Math.max(0, d3.max(vals))], [H - 28, 12]).nice();
+  const ticks = y.ticks(5);
+  const tmp = svg.append('text').attr('font-size', 11);
+  let ml = 0; for (const t of ticks) { tmp.text(fU(t)); ml = Math.max(ml, tmp.node().getComputedTextLength()); } tmp.remove();
+  const mL = Math.ceil(ml) + 8, mR = 8;
+  const x = d3.scaleBand(rows.map((r) => r.period), [mL, W - mR]).padding(0.25);
+  svg.append('g').selectAll('line').data(ticks).join('line').attr('x1', mL).attr('x2', W - mR).attr('y1', (t) => y(t)).attr('y2', (t) => y(t)).attr('stroke', 'var(--cds-chart-grid)');
+  svg.append('g').selectAll('text').data(ticks).join('text').attr('x', mL - 6).attr('y', (t) => y(t) + 4).attr('text-anchor', 'end').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((t) => fU(t));
+  svg.append('line').attr('x1', mL).attr('x2', W - mR).attr('y1', y(0)).attr('y2', y(0)).attr('stroke', 'var(--cds-chart-axis)');
+  const bw = Math.min(32, x.bandwidth());
+  svg.append('g').selectAll('rect').data(rows).join('rect')
+    .attr('x', (r) => x(r.period) + (x.bandwidth() - bw) / 2).attr('width', bw)
+    .attr('y', (r) => Math.min(y(0), y(Number(r.profit)))).attr('height', (r) => Math.max(1, Math.abs(y(Number(r.profit)) - y(0))))
+    .attr('rx', 3).attr('fill', (r) => Number(r.profit) >= 0 ? dash.colors[0] : 'var(--cds-chart-muted)');
+  svg.append('path').datum(rows).attr('d', d3.line().x((r) => x(r.period) + x.bandwidth() / 2).y((r) => y(Number(r.cum)))).attr('fill', 'none').attr('stroke', dash.colors[1]).attr('stroke-width', 2).attr('stroke-linecap', 'round').attr('stroke-linejoin', 'round');
+  const every = Math.max(1, Math.ceil(rows.length / Math.floor((W - mL - mR) / 48)));
+  svg.append('g').selectAll('text').data(rows.filter((r, i) => i % every === 0)).join('text').attr('x', (r) => x(r.period) + x.bandwidth() / 2).attr('y', H - 8).attr('text-anchor', 'middle').attr('font-size', 11).attr('fill', 'var(--color-fg-muted)').text((r) => labelOf(r.period));
+  const hi = svg.append('rect').attr('y', 12).attr('height', H - 40).attr('fill', 'var(--color-fg)').attr('opacity', 0.06).style('display', 'none');
+  svg.on('mousemove', (ev) => {
+    const [mx, my] = d3.pointer(ev);
+    const i = Math.min(rows.length - 1, Math.max(0, Math.floor((mx - mL) / x.step()))); const r = rows[i]; if (!r) return;
+    hi.style('display', null).attr('x', x(r.period)).attr('width', x.bandwidth());
+    const sc = W / box.clientWidth;
+    tipShow(box, (x(r.period) + x.bandwidth() / 2) / sc, my / sc, [tipHead(labelOf(r.period)), tipLine(true, 'Slate', `${r.record}, ${fU(r.profit)}`, dash.colors[0]), tipLine(true, 'Running total', fU(r.cum), dash.colors[1])]);
+  }).on('mouseleave', () => { hi.style('display', 'none'); tipHide(box); });
+};
+window.bmC = { drawCum, drawPeriod };
+})();</script>
+
+<script>(() => {
+// ---------- draw ----------
+const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc } = window.bmF;
+const { fillTable, badge, pickCell, tile } = window.bmT;
+const sortState = {};
+const skel = (el, on) => el.classList.toggle('dash-skeleton', !!on);
+
+const drawOverview = () => {
+  const sum = dash.data('summary_by_sport'), cum = dash.data('cum_by_date'), info = dash.data('card_info');
+  const lede = document.getElementById('lede');
+  const tiles = document.getElementById('ov-tiles');
+  if (sum.status === 'ok') {
+    const rows = sum.data; const all = rows.find((r) => r.sport === 'ALL');
+    const sp = lede.querySelectorAll('span'); sp[0].textContent = all.record; sp[1].textContent = fU(all.profit); sp[2].textContent = fN(all.risked) + 'u'; sp[3].textContent = fPs(all.roi); sp[4].textContent = fN(all.pending);
+    tiles.replaceChildren(...rows.map((r) => {
+      const t = tile(r.sport === 'ALL' ? 'All models' : r.sport, fU(r.profit), `${r.record} · ROI ${fPs(r.roi)}`, signCls(r.profit));
+      t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', 'profit'); t.setAttribute('data-where', 'sport=' + r.sport);
+      return t;
+    }));
+    fillTable(document.getElementById('ov-table'), rows, [
+      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
+      { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) },
+      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => `${v} (${r.pending_units}u)`, cls: 'num' },
+    ], (r) => r.sport);
+  } else { lede.querySelectorAll('span').forEach((e) => { e.textContent = '—'; }); tiles.replaceChildren(); }
+  skel(lede, sum.status === 'loading');
+  const box = document.getElementById('cum-chart');
+  if (cum.status === 'ok' && !document.getElementById('overview').hidden) {
+    const series = ['CFB', 'NFL', 'NHL', 'ALL']; const colors = [dash.colors[0], dash.colors[1], dash.colors[2], 'var(--color-fg-muted)'];
+    document.getElementById('cum-legend').replaceChildren(...series.map((s, i) => { const d = document.createElement('span'); const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = colors[i]; d.append(sw, s === 'ALL' ? 'All models' : s); return d; }));
+    window.bmC.drawCum(box, cum.data, series, colors);
+  } else { box.querySelectorAll('svg').forEach((s) => s.remove()); }
+  skel(box, cum.status === 'loading');
+  if (info.status === 'ok') fillTable(document.getElementById('today-table'), info.data, [{ f: 'sport' }, { f: 'label' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated' }], (r) => r.sport);
+};
+
+const periodLabel = (sport) => (p) => sport === 'NHL' ? fD(p) : 'Wk ' + p;
+
+const drawSport = (sport) => {
+  const sec = document.getElementById(sport.toLowerCase());
+  if (sec.hidden || !sec.dataset.built) return;
+  const q = (s) => sec.querySelector(s);
+  const info = dash.data('card_info'), cards = dash.data('cards'), parl = dash.data('parlays'), sum = dash.data('summary_by_sport');
+  const per = dash.data('by_period'), mk = dash.data('by_market'), st = dash.data('by_stake'), tg = dash.data('by_tag'), picks = dash.data('picks');
+  // card header
+  const me = info.status === 'ok' ? info.data.find((r) => r.sport === sport) : null;
+  q('.sp-label').textContent = me ? me.label : '';
+  q('.sp-title').textContent = me ? me.title : '—'; q('.sp-generated').textContent = me ? me.generated : '—';
+  q('.sp-nbets').textContent = me ? fN(me.n_bets) : '—'; q('.sp-units').textContent = me ? fN(me.units) : '—'; q('.sp-ntop').textContent = me ? fN(me.n_top) : '—';
+  for (const c of ['.sp-title', '.sp-generated', '.sp-nbets', '.sp-units', '.sp-ntop']) { q(c).setAttribute('data-source', 'card_info'); q(c).setAttribute('data-where', 'sport=' + sport); }
+  q('.sp-title').setAttribute('data-field', 'title'); q('.sp-generated').setAttribute('data-field', 'generated'); q('.sp-nbets').setAttribute('data-field', 'n_bets'); q('.sp-units').setAttribute('data-field', 'units'); q('.sp-ntop').setAttribute('data-field', 'n_top');
+  const emp = q('.sp-empty'); emp.hidden = !(me && me.n_bets === 0); emp.textContent = me && me.n_bets === 0 ? (me.empty || 'No bets on this card.') : '';
+  // card rows
+  const ct = q('.sp-card-table');
+  const crows = cards.status === 'ok' ? cards.data.filter((r) => r.sport === sport) : [];
+  ct.closest('.scroll').hidden = !crows.length;
+  fillTable(ct, crows, [
+    { f: 'n' }, { f: 'kickoff' }, { f: 'game' }, { f: 'market', fmt: (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'PP points', SAVES: 'Saves', BLK: 'Blocks', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' })[v] || esc(v) }, { f: 'pick', html: pickCell }, { f: 'line' }, { f: 'price' },
+    { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'limit' }, { f: 'tag', cls: 'wrap' },
+  ], (r) => `${r.sport},${r.n}`);
+  // hide empty columns for this sport
+  const hideCols = { CFB: ['price', 'market_prob'], NFL: ['kickoff', 'game', 'market_prob', 'limit'], NHL: ['kickoff', 'line', 'limit'] }[sport] || [];
+  ct.querySelectorAll('thead th').forEach((th, i) => { const hide = hideCols.includes(th.dataset.field); th.hidden = hide; ct.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hide; }); });
+  // parlays
+  const prows = parl.status === 'ok' ? parl.data.filter((r) => r.sport === sport) : [];
+  q('.sp-parlay-card').hidden = !prows.length;
+  fillTable(q('.sp-parlay-table'), prows, [{ f: 'n' }, { f: 'market', fmt: (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'PP points', SAVES: 'Saves', BLK: 'Blocks', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' })[v] || esc(v) }, { f: 'leg' }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+  // tiles
+  const tiles = q('.sp-tiles');
+  const s = sum.status === 'ok' ? sum.data.find((r) => r.sport === sport) : null;
+  if (s) {
+    const mk1 = (k, f, v, sub, cls) => { const t = tile(k, v, sub, cls); t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', f); t.setAttribute('data-where', 'sport=' + sport); return t; };
+    tiles.replaceChildren(
+      mk1('Record', 'record', s.record, `${fN(s.graded)} graded`),
+      mk1('Units +/-', 'profit', fU(s.profit), `on ${fN(s.risked)}u risked`, signCls(s.profit)),
+      mk1('ROI', 'roi', fPs(s.roi), 'units won ÷ risked', signCls(s.roi)),
+      mk1('Win %', 'win_pct', fP(s.win_pct), 'W ÷ (W + L)'),
+      mk1('Avg CLV', 'avg_clv', sport === 'CFB' ? (s.avg_clv === null ? '—' : fU2(s.avg_clv) + ' pts') : fPs(s.avg_clv), `${fN(s.clv_n)} bets with a close`, signCls(s.avg_clv)),
+      mk1('Pending', 'pending', fN(s.pending), `${s.pending_units}u on the card`),
+    );
+  } else tiles.replaceChildren();
+  // period chart
+  const box = q('.sp-period-chart');
+  q('.sp-period-title').textContent = sport === 'NHL' ? 'Units by game day' : 'Units by week';
+  if (per.status === 'ok') window.bmC.drawPeriod(box, per.data.filter((r) => r.sport === sport && r.graded > 0), periodLabel(sport)); else box.querySelectorAll('svg').forEach((e) => e.remove());
+  skel(box, per.status === 'loading');
+  // breakdown tables
+  const recCols = (first) => [first, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) }];
+  if (mk.status === 'ok') fillTable(q('.sp-market-table'), mk.data.filter((r) => r.sport === sport), recCols({ f: 'market' }), (r) => `${r.sport},${r.market}`);
+  const noRisk = (cols) => cols.filter((c) => c.f !== 'risked');
+  if (st.status === 'ok') fillTable(q('.sp-stake-table'), st.data.filter((r) => r.sport === sport), noRisk(recCols({ f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u' })), (r) => `${r.sport},${r.units}`);
+  if (tg.status === 'ok') fillTable(q('.sp-tag-table'), tg.data.filter((r) => r.sport === sport && r.graded > 0), noRisk(recCols({ f: 'tag' })), (r) => `${r.sport},${r.tag}`);
+  // picks table
+  const pt = q('.sp-picks-table');
+  if (picks.status === 'ok') {
+    const st2 = sortState[sport] || (sortState[sport] = { f: 'date', dir: -1 });
+    const needle = (q('.sp-search').value || '').trim().toLowerCase();
+    const resWord = { W: 'win', L: 'loss', P: 'push', V: 'void', Pending: 'pending' };
+    let rows = picks.data.filter((r) => r.sport === sport);
+    if (needle) rows = rows.filter((r) => [r.game, r.selection, r.market, r.date, resWord[r.result], r.score].join(' ').toLowerCase().includes(needle));
+    rows = rows.slice().sort((a, b) => { const va = a[st2.f], vb = b[st2.f]; const na = Number(va), nb = Number(vb); const c = (!isNaN(na) && !isNaN(nb) && va !== '' && vb !== '') ? na - nb : String(va ?? '').localeCompare(String(vb ?? '')); return c * st2.dir || (a.id < b.id ? -1 : 1); });
+    pt.querySelectorAll('thead th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === st2.f ? (st2.dir > 0 ? 'ascending' : 'descending') : 'none'));
+    fillTable(pt, rows, [
+      { f: 'id', hidden: true }, { f: 'date', fmt: fD }, { f: 'game' }, { f: 'market' }, { f: 'selection', html: pickCell, cls: 'wrap' }, { f: 'odds', fmt: fOdds, cls: 'num' },
+      { f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'result', html: (r) => badge(r.result) },
+      { f: 'profit', fmt: (v, r) => r.result === 'Pending' ? '—' : fU2(v), cls: (r) => 'num ' + signCls(r.profit) }, { f: 'clv', fmt: (v) => sport === 'CFB' ? (v === null ? '—' : fU2(v)) : fPs(v), cls: 'num' }, { f: 'limit' }, { f: 'limit_status', cls: 'wrap' }, { f: 'score' },
+    ], (r) => r.id);
+    const hideP = sport !== 'CFB';
+    pt.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'limit' || th.dataset.field === 'limit_status') { th.hidden = hideP; pt.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hideP; }); } });
+  }
+};
+
+// sort + search wiring (delegated, once per section)
+for (const id of ['cfb', 'nfl', 'nhl']) {
+  const sec = document.getElementById(id);
+  sec.addEventListener('click', (ev) => {
+    const th = ev.target.closest('.sp-picks-table th'); if (!th || !ev.target.closest('button')) return;
+    const sport = id.toUpperCase(); const st2 = sortState[sport] || (sortState[sport] = { f: 'date', dir: -1 });
+    if (st2.f === th.dataset.field) st2.dir = -st2.dir; else { st2.f = th.dataset.field; st2.dir = th.classList.contains('num') || th.dataset.field === 'date' ? -1 : 1; }
+    drawSport(sport);
+  });
+  sec.addEventListener('input', (ev) => { if (ev.target.classList.contains('sp-search')) drawSport(id.toUpperCase()); });
+}
+
+window.bmDraw = () => { drawOverview(); for (const s of ['CFB', 'NFL', 'NHL']) drawSport(s); };
+dash.onData(window.bmDraw);
+const named = location.hash.slice(1);
+window.bmShowTab(['cfb', 'nfl', 'nhl'].includes(named) ? named : 'overview');
+})();</script>
+
+<script>
+(() => {
+  // "last updated" line under the title, from each feed's generated_at
+  const p = document.createElement('p'); p.className = 'updated';
+  const lede = document.getElementById('lede'); lede.insertAdjacentElement('afterend', p);
+  dash.onData(() => {
+    const ci = dash.data('card_info');
+    if (ci.status === 'error') { p.className = 'updated loadfail'; p.textContent = ci.message; return; }
+    if (ci.status !== 'ok') { p.textContent = ''; return; }
+    const miss = Object.entries(dash.loaded()).filter(([, ok]) => !ok).map(([f]) => f.replace('_dash.json', '').toUpperCase());
+    p.className = 'updated';
+    p.textContent = 'Feeds updated: ' + ci.data.map((r) => `${r.sport} ${r.feed_generated || '—'}`).join(' · ') + (miss.length ? ' · missing: ' + miss.join(', ') : '');
+  });
+})();
+</script>
+</div>
+</body>
+</html>

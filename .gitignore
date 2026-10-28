@@ -1,0 +1,6 @@
+publish.log
+*.tmp
+.DS_Store
+merge_dash.py
+SETUP.md
+com.gonzo.bettingdash.publish.plist
