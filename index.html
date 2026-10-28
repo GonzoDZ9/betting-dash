@@ -265,7 +265,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
       <h3>Every game the model ran</h3>
-      <p class="note">Upcoming games first, then completed ones. Rows marked "No bet" are games the model priced but did not back; they are shown for reference and never count toward the record. Click a column header to sort; type to filter. Bet limit is the worst line the model still backs; cushion is how far the line at recommendation sat inside it.</p>
+      <p class="note">Upcoming games first, then completed ones. Rows marked "No bet" are markets the model priced but did not back (CFB shadow leans; NFL projections with the model's reason for passing, and past game projections graded against the final score); they are shown for reference and never count toward the record. Click a column header to sort; type to filter. Bet limit is the worst line the model still backs; cushion is how far the line at recommendation sat inside it.</p>
       <div class="controls"><input class="search sp-search" type="search" placeholder="Filter (team, player, market, win/loss, no bet)…" aria-label="Filter games"><label class="chk"><input type="checkbox" class="sp-betsonly"> Bets only</label></div>
       <h4 class="sub sp-pending-title">Upcoming games</h4>
       <div class="scroll sp-pending-wrap">
@@ -624,7 +624,8 @@ const drawSport = (sport) => {
       { f: 'profit', fmt: (v, r) => (r.result === 'Pending' || r.bet === '') ? '—' : fU2(v), cls: (r) => 'num ' + signCls(r.bet === '' ? 0 : r.profit) },
       { f: 'clv', fmt: (v) => sport === 'CFB' ? (v === null || v === undefined || v === '' ? '—' : fU2(v)) : fPs(v), cls: 'num' }, { f: 'limit' }, { f: 'limit_status', cls: 'wrap' }, { f: 'score' },
     ];
-    const hideP = sport !== 'CFB';
+    const hideP = sport === 'NHL';
+    const colLabel = sport === 'CFB' ? ['Bet limit', 'Cushion'] : ['Model', 'Reason'];
     const groups = [['pending', rows.filter(isPending), st2.f === 'date' ? -st2.dir : st2.dir], ['done', rows.filter((r) => !isPending(r)), st2.dir]];
     for (const [kind, grp, dir] of groups) {
       const pt = q(`.sp-picks-table[data-kind="${kind}"]`);
@@ -632,7 +633,7 @@ const drawSport = (sport) => {
       pt.querySelectorAll('thead th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === st2.f ? (dir > 0 ? 'ascending' : 'descending') : 'none'));
       fillTable(pt, sorted, cols, (r) => r.id);
       pt.querySelectorAll('tbody tr').forEach((tr, i) => { if (sorted[i].bet === '') tr.classList.add('nobet'); });
-      pt.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'limit' || th.dataset.field === 'limit_status') { th.hidden = hideP; pt.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hideP; }); } });
+      pt.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'limit' || th.dataset.field === 'limit_status') { th.hidden = hideP; (th.querySelector('button') || th).textContent = th.dataset.field === 'limit' ? colLabel[0] : colLabel[1]; pt.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hideP; }); } });
       const nb = grp.filter((r) => r.bet !== '').length;
       const title = q(kind === 'pending' ? '.sp-pending-title' : '.sp-done-title');
       title.replaceChildren(kind === 'pending' ? 'Upcoming games' : 'Completed games', Object.assign(document.createElement('small'), { textContent: `${fN(grp.length)} games · ${fN(nb)} bets` }));
