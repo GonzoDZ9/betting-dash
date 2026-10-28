@@ -143,6 +143,13 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .legend { display: flex; gap: var(--cds-gap-md); flex-wrap: wrap; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-xs); }
 .bm .search { font: inherit; font-size: var(--cds-font-size-caption); padding: var(--cds-pad-xs) var(--cds-pad-sm); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); color: var(--color-fg); margin-bottom: var(--cds-gap-sm); width: min(100%, 20rem); }
 .bm .empty { color: var(--color-fg-muted); padding: var(--cds-pad-md) 0; }
+.bm .controls { display: flex; gap: var(--cds-gap-md); align-items: center; flex-wrap: wrap; margin-bottom: var(--cds-gap-sm); }
+.bm .controls .search { margin-bottom: 0; }
+.bm .chk { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: inline-flex; gap: .4em; align-items: center; }
+.bm h4.sub { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-md) 0 var(--cds-gap-xs); }
+.bm h4.sub small { font-weight: 400; color: var(--color-fg-muted); margin-left: var(--cds-gap-sm); }
+.bm tr.nobet td { color: var(--color-fg-muted); }
+.bm .nobet-tag { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-style: italic; }
 .bm .cardhead { display: flex; gap: var(--cds-gap-md); flex-wrap: wrap; align-items: baseline; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-bottom: var(--cds-gap-sm); }
 .bm .cardhead b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
 .bm .methods { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: var(--cds-gap-lg); }
@@ -257,11 +264,19 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
-      <h3>Every pick</h3>
-      <p class="note">Most recent first. Click a column header to sort; type to filter. Bet limit is the worst line the model still backs; cushion is how far the line at recommendation sat inside it.</p>
-      <input class="search sp-search" type="search" placeholder="Filter picks (team, player, market, W/L)…" aria-label="Filter picks">
+      <h3>Every game the model ran</h3>
+      <p class="note">Upcoming games first, then completed ones. Rows marked "No bet" are games the model priced but did not back; they are shown for reference and never count toward the record. Click a column header to sort; type to filter. Bet limit is the worst line the model still backs; cushion is how far the line at recommendation sat inside it.</p>
+      <div class="controls"><input class="search sp-search" type="search" placeholder="Filter (team, player, market, win/loss, no bet)…" aria-label="Filter games"><label class="chk"><input type="checkbox" class="sp-betsonly"> Bets only</label></div>
+      <h4 class="sub sp-pending-title">Upcoming games</h4>
+      <div class="scroll sp-pending-wrap">
+        <table class="sp-picks-table" data-kind="pending" data-source="picks" data-row-key="id">
+          <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="market"><button>Market</button></th><th data-field="selection">Pick</th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+      <h4 class="sub sp-done-title">Completed games</h4>
       <div class="scroll">
-        <table class="sp-picks-table" data-source="picks" data-row-key="id">
+        <table class="sp-picks-table" data-kind="done" data-source="picks" data-row-key="id">
           <thead><tr><th data-field="id" hidden>id</th><th data-field="date"><button>Date</button></th><th data-field="game"><button>Game</button></th><th data-field="market"><button>Market</button></th><th data-field="selection">Pick</th><th class="num" data-field="odds"><button>Odds</button></th><th class="num" data-field="units"><button>Units</button></th><th class="num" data-field="model_prob"><button>Model %</button></th><th data-field="result"><button>Result</button></th><th class="num" data-field="profit"><button>+/-</button></th><th class="num" data-field="clv"><button>CLV</button></th><th data-field="limit"><button>Bet limit</button></th><th data-field="limit_status">Cushion</th><th data-field="score">Final</th></tr></thead>
           <tbody></tbody>
         </table>
@@ -269,7 +284,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
   </template>
 
-  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. CFB rows marked "No Bet" in the model (shadow leans) are not counted as bets.</p>
+  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. CFB games the model priced but marked "No Bet" are listed for reference and are not counted as bets.</p>
 </div>
 
 <script>(() => {
@@ -282,7 +297,7 @@ dash.calc('summary_by_sport', {
   description: 'W-L-P, units risked, profit, ROI and average CLV per model and for all three together, graded bets only.',
   inputs: ['picks'],
   fn: (picks) => {
-    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const S = (rows) => { rows = rows.filter((r) => r.bet !== ''); const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
     return ['CFB', 'NFL', 'NHL', 'ALL'].map((sport) => ({ sport, ...S(sport === 'ALL' ? picks : picks.filter((r) => r.sport === sport)) }));
   },
 });
@@ -306,7 +321,7 @@ dash.calc('by_period', {
   description: 'Per model, each week (CFB, NFL) or game day (NHL): bets, record, profit and running total.',
   inputs: ['picks'],
   fn: (picks) => {
-    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const S = (rows) => { rows = rows.filter((r) => r.bet !== ''); const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
     const out = [];
     for (const sport of ['CFB', 'NFL', 'NHL']) {
       const mine = picks.filter((r) => r.sport === sport);
@@ -325,7 +340,7 @@ dash.calc('by_period', {
 const groupCalc = (id, title, key, labelOf) => dash.calc(id, {
   title, description: `Per model, graded record split by ${key}.`, inputs: ['picks'],
   fn: (picks) => {
-    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const S = (rows) => { rows = rows.filter((r) => r.bet !== ''); const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
     const out = [];
     for (const sport of ['CFB', 'NFL', 'NHL']) {
       const mine = picks.filter((r) => r.sport === sport);
@@ -343,7 +358,7 @@ dash.calc('by_tag', {
   description: 'Per model: starred top picks, the remaining bets, and Hard Rock soft-line bets.',
   inputs: ['picks'],
   fn: (picks) => {
-    const S = (rows) => { const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+    const S = (rows) => { rows = rows.filter((r) => r.bet !== ''); const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
     const out = [];
     for (const sport of ['CFB', 'NFL', 'NHL']) {
       const mine = picks.filter((r) => r.sport === sport);
@@ -409,7 +424,7 @@ const fillTable = (table, rows, cols, keyOf) => {
     return tr;
   }));
 };
-const badge = (res) => { const s = document.createElement('span'); s.className = 'badge ' + (res === 'W' || res === 'L' ? res : ''); s.textContent = res === 'W' ? 'Win' : res === 'L' ? 'Loss' : res === 'P' ? 'Push' : res === 'V' ? 'Void' : 'Pending'; return s; };
+const badge = (res) => { const s = document.createElement('span'); s.className = 'badge ' + (res === 'W' || res === 'L' ? res : ''); s.textContent = res === 'W' ? 'Win' : res === 'L' ? 'Loss' : res === 'P' ? 'Push' : res === 'V' ? 'Void' : res === 'NP' ? 'No pick' : 'Pending'; return s; };
 const pickCell = (r) => { const sp = document.createElement('span'); if (r.top === 'Y') { const st = document.createElement('span'); st.className = 'star'; st.textContent = '★ '; sp.appendChild(st); } sp.appendChild(document.createTextNode(esc(r.pick ?? r.selection))); if (r.soft === 'Y') sp.appendChild(document.createTextNode(' · soft')); return sp; };
 const tile = (k, v, s, cls) => { const d = document.createElement('div'); d.className = 'tile'; d.innerHTML = '<div class="k"></div><div class="v"></div><div class="s"></div>'; d.querySelector('.k').textContent = k; d.querySelector('.v').textContent = v; if (cls) d.querySelector('.v').classList.add(cls); d.querySelector('.s').textContent = s || ''; return d; };
 window.bmT = { fillTable, badge, pickCell, tile };
@@ -590,23 +605,40 @@ const drawSport = (sport) => {
   const noRisk = (cols) => cols.filter((c) => c.f !== 'risked');
   if (st.status === 'ok') fillTable(q('.sp-stake-table'), st.data.filter((r) => r.sport === sport), noRisk(recCols({ f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u' })), (r) => `${r.sport},${r.units}`);
   if (tg.status === 'ok') fillTable(q('.sp-tag-table'), tg.data.filter((r) => r.sport === sport && r.graded > 0), noRisk(recCols({ f: 'tag' })), (r) => `${r.sport},${r.tag}`);
-  // picks table
-  const pt = q('.sp-picks-table');
+  // picks tables: upcoming vs completed
   if (picks.status === 'ok') {
     const st2 = sortState[sport] || (sortState[sport] = { f: 'date', dir: -1 });
     const needle = (q('.sp-search').value || '').trim().toLowerCase();
-    const resWord = { W: 'win', L: 'loss', P: 'push', V: 'void', Pending: 'pending' };
+    const betsOnly = q('.sp-betsonly').checked;
+    const resWord = { W: 'win', L: 'loss', P: 'push', V: 'void', Pending: 'pending', NP: 'no pick' };
+    const today = d3.utcFormat('%Y-%m-%d')(new Date());
     let rows = picks.data.filter((r) => r.sport === sport);
-    if (needle) rows = rows.filter((r) => [r.game, r.selection, r.market, r.date, resWord[r.result], r.score].join(' ').toLowerCase().includes(needle));
-    rows = rows.slice().sort((a, b) => { const va = a[st2.f], vb = b[st2.f]; const na = Number(va), nb = Number(vb); const c = (!isNaN(na) && !isNaN(nb) && va !== '' && vb !== '') ? na - nb : String(va ?? '').localeCompare(String(vb ?? '')); return c * st2.dir || (a.id < b.id ? -1 : 1); });
-    pt.querySelectorAll('thead th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === st2.f ? (st2.dir > 0 ? 'ascending' : 'descending') : 'none'));
-    fillTable(pt, rows, [
+    if (betsOnly) rows = rows.filter((r) => r.bet !== '');
+    if (needle) rows = rows.filter((r) => [r.game, r.selection, r.market, r.date, resWord[r.result], r.score, r.bet === '' ? 'no bet' : 'bet'].join(' ').toLowerCase().includes(needle));
+    const isPending = (r) => r.result === 'Pending' || (r.result === 'NP' && String(r.date) >= today);
+    const sorter = (dir) => (a, b) => { const va = a[st2.f], vb = b[st2.f]; const na = Number(va), nb = Number(vb); const c = (!isNaN(na) && !isNaN(nb) && va !== '' && vb !== '') ? na - nb : String(va ?? '').localeCompare(String(vb ?? '')); return c * dir || (a.id < b.id ? -1 : 1); };
+    const cols = [
       { f: 'id', hidden: true }, { f: 'date', fmt: fD }, { f: 'game' }, { f: 'market' }, { f: 'selection', html: pickCell, cls: 'wrap' }, { f: 'odds', fmt: fOdds, cls: 'num' },
-      { f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'result', html: (r) => badge(r.result) },
-      { f: 'profit', fmt: (v, r) => r.result === 'Pending' ? '—' : fU2(v), cls: (r) => 'num ' + signCls(r.profit) }, { f: 'clv', fmt: (v) => sport === 'CFB' ? (v === null ? '—' : fU2(v)) : fPs(v), cls: 'num' }, { f: 'limit' }, { f: 'limit_status', cls: 'wrap' }, { f: 'score' },
-    ], (r) => r.id);
+      { f: 'units', html: (r) => { const sp = document.createElement('span'); if (r.bet === '') { sp.className = 'nobet-tag'; sp.textContent = 'No bet'; } else sp.textContent = d3.format('.1f')(r.units) + 'u'; return sp; }, cls: 'num' },
+      { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'result', html: (r) => badge(r.result) },
+      { f: 'profit', fmt: (v, r) => (r.result === 'Pending' || r.bet === '') ? '—' : fU2(v), cls: (r) => 'num ' + signCls(r.bet === '' ? 0 : r.profit) },
+      { f: 'clv', fmt: (v) => sport === 'CFB' ? (v === null || v === undefined || v === '' ? '—' : fU2(v)) : fPs(v), cls: 'num' }, { f: 'limit' }, { f: 'limit_status', cls: 'wrap' }, { f: 'score' },
+    ];
     const hideP = sport !== 'CFB';
-    pt.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'limit' || th.dataset.field === 'limit_status') { th.hidden = hideP; pt.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hideP; }); } });
+    const groups = [['pending', rows.filter(isPending), st2.f === 'date' ? -st2.dir : st2.dir], ['done', rows.filter((r) => !isPending(r)), st2.dir]];
+    for (const [kind, grp, dir] of groups) {
+      const pt = q(`.sp-picks-table[data-kind="${kind}"]`);
+      const sorted = grp.slice().sort(sorter(dir));
+      pt.querySelectorAll('thead th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === st2.f ? (dir > 0 ? 'ascending' : 'descending') : 'none'));
+      fillTable(pt, sorted, cols, (r) => r.id);
+      pt.querySelectorAll('tbody tr').forEach((tr, i) => { if (sorted[i].bet === '') tr.classList.add('nobet'); });
+      pt.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'limit' || th.dataset.field === 'limit_status') { th.hidden = hideP; pt.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hideP; }); } });
+      const nb = grp.filter((r) => r.bet !== '').length;
+      const title = q(kind === 'pending' ? '.sp-pending-title' : '.sp-done-title');
+      title.replaceChildren(kind === 'pending' ? 'Upcoming games' : 'Completed games', Object.assign(document.createElement('small'), { textContent: `${fN(grp.length)} games · ${fN(nb)} bets` }));
+      if (kind === 'pending') q('.sp-pending-wrap').style.maxHeight = '22rem';
+    }
+    q('.sp-pending-title').hidden = q('.sp-pending-wrap').hidden = groups[0][1].length === 0 && !needle;
   }
 };
 
@@ -620,6 +652,7 @@ for (const id of ['cfb', 'nfl', 'nhl']) {
     drawSport(sport);
   });
   sec.addEventListener('input', (ev) => { if (ev.target.classList.contains('sp-search')) drawSport(id.toUpperCase()); });
+  sec.addEventListener('change', (ev) => { if (ev.target.classList.contains('sp-betsonly')) drawSport(id.toUpperCase()); });
 }
 
 window.bmDraw = () => { drawOverview(); for (const s of ['CFB', 'NFL', 'NHL']) drawSport(s); };
