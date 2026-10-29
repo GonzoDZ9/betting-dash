@@ -119,6 +119,10 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-unmatched { margin-top: var(--cds-gap-lg); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 .bm .sb-dates { display: flex; gap: var(--cds-gap-sm); align-items: center; flex-wrap: wrap; margin-bottom: var(--cds-gap-sm); }
 .bm .sb-dates select { font: inherit; font-size: var(--cds-font-size-body); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 15rem; max-width: 100%; }
+.bm .sb-sports { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; margin-left: auto; }
+.bm .sb-sports button { background: var(--color-panel); border: 0; border-left: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); cursor: pointer; }
+.bm .sb-sports button:first-child { border-left: 0; }
+.bm .sb-sports button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
 .bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 </style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
@@ -261,9 +265,9 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <button class="sb-refresh" id="sb-refresh">Refresh now</button>
   </div>
   <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
-  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button></div>
+  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button></span></div>
   <div class="sb-status" id="sb-status">Loading live data…</div>
-  <div class="empty" id="sb-empty" hidden>No games with a pick on this date.</div>
+  <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports.</div>
   <div class="sb-grid" id="sb-grid"></div>
   <div class="sb-unmatched" id="sb-unmatched" hidden></div>
 </section>
@@ -873,7 +877,9 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const LEAGUE = { CFB: 'football/college-football', NFL: 'football/nfl', NHL: 'hockey/nhl' };
   const NHL_API = 'https://nhl-relay.bryangonzalez1868.workers.dev/v1/';   // Cloudflare relay in front of api-web.nhle.com (adds the browser permission header)
   const REFRESH_MS = 30000;
-  const st = { feeds: {}, gamesBy: {}, box: {}, last: {}, busy: false, sel: null };
+  const st = { feeds: {}, gamesBy: {}, box: {}, last: {}, busy: false, sel: null, sports: new Set(['CFB', 'NFL', 'NHL']) };
+  try { const saved = JSON.parse(localStorage.getItem('bm.sbSports') || 'null'); if (Array.isArray(saved) && saved.length) st.sports = new Set(saved); } catch (e) { /* storage unavailable: default to all */ }
+  const shown = (list) => list && list.filter((p) => st.sports.has(p.sport));
 
   // ---------- helpers ----------
   const ymd = (d, sep) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join(sep);
@@ -990,12 +996,13 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const dateOptions = () => {
     if (!dataReady()) return [];
     const dateFor = dateIndex(); const n = {};
-    const add = (d) => { if (d) n[d] = (n[d] || 0) + 1; };
+    const add = (d, sp) => { if (d && st.sports.has(sp)) n[d] = (n[d] || 0) + 1; };
     const cardSportDates = new Set();
-    for (const c of dash.data('cards').data) { const d = dateFor(c.sport, c.game); if (d) { add(d); cardSportDates.add(c.sport + d); } }
-    for (const c of dash.data('parlays').data) { const g = c.game || (String(c.leg).split(' ')[0].includes('@') ? String(c.leg).split(' ')[0].replace('@', ' @ ') : ''); add(dateFor(c.sport, g)); }
-    for (const r of dash.data('picks').data) if (r.bet !== '' && r.date && !cardSportDates.has(r.sport + r.date)) add(r.date);
+    for (const c of dash.data('cards').data) { const d = dateFor(c.sport, c.game); if (d) { add(d, c.sport); cardSportDates.add(c.sport + d); } }
+    for (const c of dash.data('parlays').data) { const g = c.game || (String(c.leg).split(' ')[0].includes('@') ? String(c.leg).split(' ')[0].replace('@', ' @ ') : ''); add(dateFor(c.sport, g), c.sport); }
+    for (const r of dash.data('picks').data) if (r.bet !== '' && r.date && !cardSportDates.has(r.sport + r.date)) add(r.date, r.sport);
     const today = todayIso(); if (!n[today]) n[today] = 0;
+    if (st.sel && !n[st.sel]) n[st.sel] = 0;   // keep the chosen date in the list even when the sport filter leaves it empty
     return Object.keys(n).sort().map((d) => ({ d, n: n[d] }));
   };
 
@@ -1085,7 +1092,8 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     const iso = st.sel || todayIso();
     drawDateSelect();
     document.getElementById('sb-date').textContent = dayLabel(iso) + (iso === todayIso() ? ' · today' : '');
-    const picks = picksFor(iso); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
+    document.querySelectorAll('.bm .sb-sports button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sport === 'ALL' ? st.sports.size === 3 : st.sports.has(b.dataset.sport))));
+    const picks = shown(picksFor(iso)); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
     if (!picks) { grid.replaceChildren(); return; }
     document.getElementById('sb-empty').hidden = picks.length > 0;
     const groups = new Map(), unmatched = [];
@@ -1133,7 +1141,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const refresh = async () => {
     if (st.busy) return; st.busy = true;
     try {
-      const iso = st.sel || todayIso(); const picks = picksFor(iso); if (!picks) return;
+      const iso = st.sel || todayIso(); const picks = shown(picksFor(iso)); if (!picks) return;
       const sports = [...new Set(picks.map((p) => p.sport))];
       await loadScoreboards(sports, iso);
       const needBox = new Map();
@@ -1149,6 +1157,15 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   document.addEventListener('visibilitychange', tick);
   document.getElementById('sb-refresh').addEventListener('click', refresh);
   const pick = (iso) => { st.sel = iso; render(); refresh(); };
+  document.querySelector('.bm .sb-sports').addEventListener('click', (e) => {
+    const b = e.target.closest('button[data-sport]'); if (!b) return; const sp = b.dataset.sport;
+    if (sp === 'ALL') st.sports = new Set(['CFB', 'NFL', 'NHL']);
+    else if (st.sports.size === 3) st.sports = new Set([sp]);            // from All, a click shows just that sport
+    else if (st.sports.has(sp)) { st.sports.delete(sp); if (!st.sports.size) st.sports = new Set(['CFB', 'NFL', 'NHL']); }
+    else st.sports.add(sp);
+    try { localStorage.setItem('bm.sbSports', JSON.stringify([...st.sports])); } catch (err) { /* storage unavailable */ }
+    render(); refresh();
+  });
   document.getElementById('sb-datesel').addEventListener('change', (e) => pick(e.target.value));
   document.getElementById('sb-prev').addEventListener('click', () => { const o = dateOptions(); const i = o.findIndex((x) => x.d === (st.sel || todayIso())); if (i > 0) pick(o[i - 1].d); });
   document.getElementById('sb-next').addEventListener('click', () => { const o = dateOptions(); const i = o.findIndex((x) => x.d === (st.sel || todayIso())); if (i >= 0 && i < o.length - 1) pick(o[i + 1].d); });
