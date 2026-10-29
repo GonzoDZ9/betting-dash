@@ -1339,7 +1339,10 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     if (!pass || busy) return; busy = true;
     try {
       const remote = await call('GET'); const local = T.state();
-      if ((+remote.updated || 0) > (+local.updated || 0)) T.load(remote);
+      const remoteEmpty = !Array.isArray(remote.tracked) || !remote.updated;
+      // picks tracked before sync existed carry no timestamp: if the saved copy is empty, upload this device's list
+      if (remoteEmpty && local.tracked.length) await call('PUT', JSON.stringify({ tracked: local.tracked, updated: local.updated || Date.now() }));
+      else if ((+remote.updated || 0) > (+local.updated || 0)) T.load(remote);
       else if ((+local.updated || 0) > (+remote.updated || 0)) await call('PUT', JSON.stringify(local));
       state = 'ok'; last = new Date();
     } catch (e) { fail(e); } finally { busy = false; draw(); }
