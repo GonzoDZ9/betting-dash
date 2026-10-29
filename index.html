@@ -107,6 +107,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-picks { border-top: 1px solid var(--color-border-line); margin-top: var(--cds-gap-sm); padding-top: var(--cds-gap-sm); display: grid; gap: var(--cds-gap-sm); }
 .bm .sb-pick { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--cds-gap-sm); align-items: start; }
 .bm .sb-pick .txt { font-size: var(--cds-font-size-body); }
+.bm .sb-pick.tracked { background: color-mix(in srgb, var(--color-ok) 9%, transparent); border-radius: 6px; margin: 0 -6px; padding: 2px 6px; }
+.bm .sb-pick .trk-btn { width: 1.35rem; height: 1.35rem; font-size: 11px; vertical-align: 1px; }
 .bm .sb-pick .meta { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
 .bm .chip { font-size: var(--cds-font-size-caption); padding: 1px .5em; border-radius: 999px; border: 1px solid var(--color-border-line); white-space: nowrap; color: var(--color-fg-muted); }
 .bm .chip.good { color: var(--color-ok); border-color: currentColor; }
@@ -133,6 +135,15 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .tabs { display: flex; gap: var(--cds-gap-xs); flex-wrap: wrap; margin-bottom: var(--cds-gap-lg); border-bottom: 1px solid var(--color-border-line); }
 .bm .tabs button { background: none; border: 0; border-bottom: 2px solid transparent; padding: var(--cds-pad-sm) var(--cds-pad-md); font: inherit; color: var(--color-fg-muted); cursor: pointer; }
 .bm .tabs button[aria-selected="true"] { color: var(--color-fg); border-bottom-color: var(--color-fg); }
+.bm .tabs { align-items: center; }
+.bm .trk-view { margin-left: auto; display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; margin-bottom: var(--cds-gap-xs); }
+.bm .tabs .trk-view button { border: 0; border-left: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-md); font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg-muted); }
+.bm .tabs .trk-view button:first-child { border-left: 0; }
+.bm .tabs .trk-view button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); border-bottom-color: transparent; }
+.bm .trk-h, .bm td.trk-c { width: 2.2rem; text-align: center; }
+.bm .trk-btn { width: 1.6rem; height: 1.6rem; border-radius: 50%; border: 1px solid var(--color-border-line); background: transparent; color: var(--color-fg-muted); font: inherit; font-size: 13px; line-height: 1; cursor: pointer; padding: 0; }
+.bm .trk-btn[aria-pressed="true"] { background: var(--color-ok); border-color: var(--color-ok); color: var(--color-bg); font-weight: 700; }
+.bm tr.tracked td { background: color-mix(in srgb, var(--color-ok) 9%, transparent); }
 .bm section.page[hidden] { display: none; }
 .bm h2 { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-lg) 0 var(--cds-gap-sm); }
 .bm h2 small { font-weight: 400; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-left: var(--cds-gap-sm); }
@@ -199,6 +210,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <button role="tab" data-tab="cfb">CFB</button>
     <button role="tab" data-tab="nfl">NFL</button>
     <button role="tab" data-tab="nhl">NHL</button>
+    <span class="trk-view" role="group" aria-label="Which picks to show"><button data-view="all" aria-pressed="true">All picks</button><button data-view="mine" aria-pressed="false">My picks <span class="trk-n"></span></button></span>
   </div>
 
   <!-- ===================== OVERVIEW ===================== -->
@@ -267,7 +279,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
   <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button></span></div>
   <div class="sb-status" id="sb-status">Loading live data…</div>
-  <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports.</div>
+  <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports (or none tracked, if My picks is on).</div>
   <div class="sb-grid" id="sb-grid"></div>
   <div class="sb-unmatched" id="sb-unmatched" hidden></div>
 </section>
@@ -351,7 +363,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
   </template>
 
-  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. CFB games the model priced but marked "No Bet" are listed for reference and are not counted as bets.</p>
+  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. CFB games the model priced but marked "No Bet" are listed for reference and are not counted as bets. Tracked picks (the + / ✓ column) are saved in this browser only; the records and charts always count every bet the models made.</p>
 </div>
 
 <script>(() => {
@@ -474,8 +486,8 @@ dash.calc('today_picks', {
   })(picks);
     const timeOf = (c, g) => (c.kickoff && !/^\d{1,2}:\d{2}$/.test(c.kickoff)) ? c.kickoff : (times[c.sport + '|' + g] || c.kickoff || '');
     const out = [];
-    for (const c of cards) if (c.top === 'Y' && dateFor(c.sport, c.game) === today) out.push({ key: `${c.sport}-top-${c.n}`, sport: c.sport, type: 'Top pick', game_time: timeOf(c, c.game), game: c.game, pick: c.pick, bet_type: betType(c.sport, c.market, c.pick), line: [c.line, c.price].filter((v) => v !== '' && v !== null && v !== undefined).join(' '), units: c.units, model_prob: c.model_prob, market_prob: c.market_prob, note: c.tag, top: 'Y', soft: c.soft, date: today });
-    for (const c of parlays) { const g = c.game || nhlGame(c.leg); if (dateFor(c.sport, g) === today) out.push({ key: `${c.sport}-parlay-${c.n}`, sport: c.sport, type: 'Parlay piece', game_time: timeOf(c, g), game: g, pick: c.leg, bet_type: betType(c.sport, c.market, c.leg), line: c.price, units: null, model_prob: c.model_prob, market_prob: null, note: c.hit_rate, top: '', soft: '', date: today }); }
+    for (const c of cards) if (c.top === 'Y' && dateFor(c.sport, c.game) === today) out.push({ key: `${c.sport}-top-${c.n}`, sport: c.sport, market: c.market, type: 'Top pick', game_time: timeOf(c, c.game), game: c.game, pick: c.pick, bet_type: betType(c.sport, c.market, c.pick), line: [c.line, c.price].filter((v) => v !== '' && v !== null && v !== undefined).join(' '), units: c.units, model_prob: c.model_prob, market_prob: c.market_prob, note: c.tag, top: 'Y', soft: c.soft, date: today });
+    for (const c of parlays) { const g = c.game || nhlGame(c.leg); if (dateFor(c.sport, g) === today) out.push({ key: `${c.sport}-parlay-${c.n}`, sport: c.sport, market: c.market, type: 'Parlay piece', game_time: timeOf(c, g), game: g, pick: c.leg, bet_type: betType(c.sport, c.market, c.leg), line: c.price, units: null, model_prob: c.model_prob, market_prob: null, note: c.hit_rate, top: '', soft: '', date: today }); }
     return out;
   },
 });
@@ -534,7 +546,63 @@ const gameTimes = (picks) => {
     }
     return out;
   };
-window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes };
+
+// ---- pick parsing shared by the tracker and the scoreboard ----
+const pkNorm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/['’.]/g, '').replace(/[^a-z0-9]+/g, ' ').replace(/\b(jr|sr|ii|iii|iv)\b/g, '').replace(/\bstate\b/g, 'st').replace(/\s+/g, ' ').trim();
+const cleanPick = (t) => String(t || '').replace(/\s*·?\s*proj\s+[\d.]+/i, '').replace(/\s+(MODEL|SOFT)\b/g, '').replace(/\s*·\s*soft$/i, '').replace(/^[A-Z]{2,3}@[A-Z]{2,3}\s+/, '').trim();
+const parsePick = (sport, text, market) => {
+  const t = cleanPick(text); const bt = betType(sport, market, t); let m;
+  if ((m = /^(.+?)\s+(ML|moneyline)$/i.exec(t))) return { kind: 'ml', team: m[1], bt: 'Moneyline' };
+  if ((m = /^(.+?)\s+ATS\s*\(?([+-]?\d+(?:\.\d+)?)?\)?$/i.exec(t))) return { kind: 'spread', team: m[1], line: m[2] != null ? +m[2] : null, bt };
+  if ((m = /^(Over|Under)\s+(\d+(?:\.\d+)?)$/i.exec(t))) return { kind: 'total', side: m[1].toLowerCase(), line: +m[2], bt: 'Total' };
+  if ((m = /^(.+?)\s+([+-]\d+(?:\.\d+)?)(\s+puck line)?$/i.exec(t))) return { kind: 'spread', team: m[1], line: +m[2], bt };
+  if ((m = /^(.+?)\s*(?:\(([A-Z]{2,4})\))?\s+(?:[a-z][a-z ]*?\s+)?(Over|Under|Yes|over|under|yes)\s*(\d+(?:\.\d+)?)?/.exec(t))) return { kind: 'prop', player: m[1].trim(), team: m[2] || '', side: m[3].toLowerCase(), line: m[4] != null ? +m[4] : 0.5, bt };
+  return { kind: 'unknown', bt, raw: t };
+};
+// CFB bets in the feed store the line from the home side ("Baylor ATS", line -1.5 = UCF -1.5): turn them into "Baylor +1.5"
+const feedText = (r) => {
+  const sel = String(r.selection || '');
+  if (r.sport === 'CFB' && /\sATS$/.test(sel) && r.line != null && r.line !== '') {
+    const team = sel.replace(/\s+ATS$/, ''); const [a] = String(r.game).split(' @ ');
+    const ln = pkNorm(team) === pkNorm(a) ? -Number(r.line) : Number(r.line);
+    return `${team} ${ln > 0 ? '+' : ''}${ln}`;
+  }
+  return sel.replace(/\s+ATS\s*\(([+-]?[\d.]+)\)$/, ' $1').replace(/ ([\d.]+)$/, (m0, n) => (/\sATS/.test(sel) ? ' +' + n : m0));
+};
+// ---- tracked picks: one key per pick, the same whichever table shows it; kept in this browser ----
+const pickKey = (sport, date, game, text, market) => {
+  const q = parsePick(sport, text, market);
+  const subj = q.kind === 'prop' ? pkNorm(q.player) : q.kind === 'total' ? '' : pkNorm(q.team || q.raw);
+  return [sport, date || '', pkNorm(game), q.kind, subj, q.side || '', q.line == null ? '' : Math.abs(q.line) * (q.kind === 'spread' && q.line < 0 ? -1 : 1), q.bt].join('|');
+};
+const bmTrack = (() => {
+  const KEY = 'bm.tracked.v1', VIEW = 'bm.trackView.v1';
+  let set = new Set(); let view = 'all'; const subs = [];
+  try { set = new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); view = localStorage.getItem(VIEW) === 'mine' ? 'mine' : 'all'; } catch (e) { /* storage unavailable: nothing saved */ }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...set])); localStorage.setItem(VIEW, view); } catch (e) { /* storage unavailable */ } };
+  const fire = () => { for (const f of subs) { try { f(); } catch (e) { console.error(e); } } };
+  let idxSrc = null, idx = {};
+  const dateOf = (sport, game) => {
+    const pk = window.dash && dash.data('picks'); const rows = pk && pk.status === 'ok' ? pk.data : [];
+    if (rows !== idxSrc) { idxSrc = rows; idx = {}; const last = {}; for (const r of rows) if (r.result === 'Pending' || r.result === 'NP') { const k = r.sport + '|' + r.game; if (!idx[k] || r.date < idx[k]) idx[k] = r.date; if (r.bet !== '' && (!last[r.sport] || r.date > last[r.sport])) last[r.sport] = r.date; } idx.__last = last; }
+    return idx[sport + '|' + game] || (sport === 'NHL' ? (idx.__last || {}).NHL : '') || '';
+  };
+  const legGame = (leg) => { const t = String(leg || '').split(' ')[0]; return t.includes('@') ? t.replace('@', ' @ ') : ''; };
+  return {
+    has: (k) => set.has(k), count: () => set.size,
+    toggle: (k) => { if (set.has(k)) set.delete(k); else set.add(k); save(); fire(); },
+    view: () => view, setView: (v) => { view = v === 'mine' ? 'mine' : 'all'; save(); fire(); },
+    onChange: (f) => subs.push(f),
+    // keys for each kind of row the dashboard shows
+    cardKey: (c) => pickKey(c.sport, dateOf(c.sport, c.game), c.game, c.pick, c.market),
+    legKey: (c) => { const g = c.game || legGame(c.leg); return pickKey(c.sport, dateOf(c.sport, g), g, c.leg, c.market); },
+    rowKey: (r) => pickKey(r.sport, r.date, r.game, r.sport === 'CFB' ? feedText(r) : r.selection, r.market),
+    keyOf: pickKey, dateOf,
+    filter: (rows, keyFn) => (view === 'mine' ? rows.filter((r) => set.has(keyFn(r))) : rows),
+  };
+})();
+window.bmTrack = bmTrack;
+window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes, parsePick, cleanPick, feedText, pkNorm };
 
 // ---------- tabs ----------
 const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores'];
@@ -548,11 +616,11 @@ const showTab = (name) => {
     if (p !== 'overview' && p !== 'scores' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
     sec.hidden = p !== name;
   }
-  document.querySelectorAll('.bm .tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
+  document.querySelectorAll('.bm .tabs button[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
   dash.setLink(name);
   window.bmDraw && window.bmDraw();
 };
-document.querySelectorAll('.bm .tabs button').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
+document.querySelectorAll('.bm .tabs button[data-tab]').forEach((b) => b.addEventListener('click', () => showTab(b.dataset.tab)));
 window.bmCurrent = () => current;
 window.bmShowTab = showTab;
 })();</script>
@@ -576,10 +644,21 @@ const fillTable = (table, rows, cols, keyOf) => {
     return tr;
   }));
 };
+const trackCol = (table, rows, keyFn) => {
+  const hr = table.querySelector('thead tr');
+  if (hr && !hr.querySelector('th.trk-h')) { const th = document.createElement('th'); th.className = 'trk-h'; th.title = 'Track picks you agree with'; th.textContent = 'Track'; hr.insertBefore(th, hr.firstChild); }
+  table.querySelectorAll('tbody tr').forEach((tr, i) => {
+    const k = keyFn(rows[i]); const td = document.createElement('td'); td.className = 'trk-c';
+    const b = document.createElement('button'); b.className = 'trk-btn'; b.dataset.key = k; const on = window.bmTrack.has(k);
+    b.setAttribute('aria-pressed', String(on)); b.setAttribute('aria-label', on ? 'Stop tracking this pick' : 'Track this pick'); b.textContent = on ? '✓' : '+';
+    td.appendChild(b); tr.insertBefore(td, tr.firstChild); if (on) tr.classList.add('tracked');
+  });
+};
+window.bmTrackCol = trackCol;
 const badge = (res) => { const s = document.createElement('span'); s.className = 'badge ' + (res === 'W' || res === 'L' ? res : ''); s.textContent = res === 'W' ? 'Win' : res === 'L' ? 'Loss' : res === 'P' ? 'Push' : res === 'V' ? 'Void' : res === 'NP' ? 'No pick' : 'Pending'; return s; };
 const pickCell = (r) => { const sp = document.createElement('span'); if (r.top === 'Y') { const st = document.createElement('span'); st.className = 'star'; st.textContent = '★ '; sp.appendChild(st); } sp.appendChild(document.createTextNode(esc(r.pick ?? r.selection).replace(/\s+(MODEL|SOFT)\b/g, '').replace(/^[A-Z]{2,3}@[A-Z]{2,3}\s+/, '').trim())); if (r.soft === 'Y') sp.appendChild(document.createTextNode(' · soft')); return sp; };
 const tile = (k, v, s, cls) => { const d = document.createElement('div'); d.className = 'tile'; d.innerHTML = '<div class="k"></div><div class="v"></div><div class="s"></div>'; d.querySelector('.k').textContent = k; d.querySelector('.v').textContent = v; if (cls) d.querySelector('.v').classList.add(cls); d.querySelector('.s').textContent = s || ''; return d; };
-window.bmT = { fillTable, badge, pickCell, tile };
+window.bmT = { fillTable, badge, pickCell, tile, trackCol };
 })();</script>
 
 <script>(() => {
@@ -670,7 +749,8 @@ window.bmC = { drawCum, drawPeriod };
 <script>(() => {
 // ---------- draw ----------
 const { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes } = window.bmF;
-const { fillTable, badge, pickCell, tile } = window.bmT;
+const { fillTable, badge, pickCell, tile, trackCol } = window.bmT;
+const T = window.bmTrack;
 const sortState = {};
 const skel = (el, on) => el.classList.toggle('dash-skeleton', !!on);
 
@@ -721,39 +801,44 @@ const drawOverview = () => {
   const times = gameTimes(picks.data);
   const host = document.getElementById('model-cards'); host.replaceChildren();
   for (const sport of ['CFB', 'NFL', 'NHL']) {
-    const top = cards.data.filter((c) => c.sport === sport && c.top === 'Y');
-    const legs = parl.data.filter((c) => c.sport === sport);
+    const top = window.bmTrack.filter(cards.data.filter((c) => c.sport === sport && c.top === 'Y'), window.bmTrack.cardKey);
+    const legs = window.bmTrack.filter(parl.data.filter((c) => c.sport === sport), window.bmTrack.legKey);
     const card = document.createElement('div'); card.className = 'card';
     const h3 = document.createElement('h3'); h3.textContent = sport === 'CFB' ? 'College Football' : sport; card.appendChild(h3);
     const ci = info.status === 'ok' ? info.data.find((r) => r.sport === sport) : null;
     const note = document.createElement('p'); note.className = 'note'; note.textContent = ci ? `${ci.label} card · built ${ci.generated} · ${fN(ci.n_bets)} bets, ${fN(ci.units)}u` : ''; card.appendChild(note);
     const h4a = document.createElement('h4'); h4a.replaceChildren('Top picks', Object.assign(document.createElement('small'), { textContent: `${top.length}` })); card.appendChild(h4a);
-    if (!top.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = 'No top picks on this card.'; card.appendChild(e); }
+    if (!top.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = window.bmTrack.view() === 'mine' ? 'No tracked top picks on this card.' : 'No top picks on this card.'; card.appendChild(e); }
     else {
       const wrap = document.createElement('div'); wrap.className = 'scroll';
       const t = document.createElement('table'); t.setAttribute('data-source', 'cards'); t.setAttribute('data-row-key', 'sport,n');
       t.innerHTML = '<thead><tr><th data-field="kickoff">Game time</th><th data-field="game">Game</th><th data-field="pick">Pick</th><th data-field="market">Bet type</th><th data-field="tier">Tier</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th class="num" data-field="edge">Edge</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead><tbody></tbody>';
       fillTable(t, top, [{ f: 'kickoff', fmt: (v, r) => (!v || /^\d{1,2}:\d{2}$/.test(v)) ? (times[r.sport + '|' + r.game] || v || '') : v }, { f: 'game' }, { f: 'pick', html: pickCell }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.pick) }, { f: 'market', fmt: (v) => /^T\d/.test(v) ? v : '' }, { f: 'line' }, { f: 'price' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'edge', fmt: fPs, cls: 'num' }, { f: 'limit' }, { f: 'tag', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+      window.bmTrackCol(t, top, window.bmTrack.cardKey);
       const hide = { CFB: ['price', 'market_prob', 'edge', 'tier'], NFL: ['market_prob', 'limit'], NHL: ['line', 'limit', 'tier'] }[sport];
       t.querySelectorAll('thead th').forEach((th, i) => { const h = hide.includes(th.dataset.field); th.hidden = h; t.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = h; }); });
       wrap.appendChild(t); card.appendChild(wrap);
     }
     const h4b = document.createElement('h4'); h4b.replaceChildren('Parlay pieces', Object.assign(document.createElement('small'), { textContent: `${legs.length}` })); card.appendChild(h4b);
-    if (!legs.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = sport === 'NFL' ? 'The NFL model does not print parlay pieces.' : 'No parlay pieces on this card.'; card.appendChild(e); }
+    if (!legs.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = sport === 'NFL' ? 'The NFL model does not print parlay pieces.' : window.bmTrack.view() === 'mine' ? 'No tracked parlay pieces.' : 'No parlay pieces on this card.'; card.appendChild(e); }
     else {
       const wrap = document.createElement('div'); wrap.className = 'scroll';
       const t = document.createElement('table'); t.setAttribute('data-source', 'parlays'); t.setAttribute('data-row-key', 'sport,n');
       t.innerHTML = '<thead><tr><th data-field="n">#</th><th data-field="leg">Leg</th><th data-field="market">Bet type</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead><tbody></tbody>';
       fillTable(t, legs, [{ f: 'n' }, { f: 'leg' }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.leg) }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+      window.bmTrackCol(t, legs, window.bmTrack.legKey);
       if (sport === 'NHL') t.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'game') { th.hidden = true; t.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = true; }); } });
       wrap.appendChild(t); card.appendChild(wrap);
     }
     host.appendChild(card);
   }
-  const todayRows = todayCalc.status === 'ok' ? todayCalc.data : [];
+  const todayKey = (r) => window.bmTrack.keyOf(r.sport, r.date, r.game, r.pick, r.market);
+  const todayRows = window.bmTrack.filter(todayCalc.status === 'ok' ? todayCalc.data : [], todayKey);
   const tt = document.getElementById('today-table');
   document.getElementById('today-empty').hidden = todayRows.length > 0; tt.closest('.scroll').hidden = todayRows.length === 0;
+  document.getElementById('today-empty').textContent = window.bmTrack.view() === 'mine' ? 'None of today\'s top picks or parlay pieces are tracked. Switch to All picks and tap + on the ones you agree with.' : 'No top picks or parlay pieces on today\'s slate.';
   fillTable(tt, todayRows, [{ f: 'sport' }, { f: 'type', cls: 'type-tag' }, { f: 'game_time' }, { f: 'game' }, { f: 'pick', html: pickCell, cls: 'wrap' }, { f: 'bet_type' }, { f: 'line' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'note', cls: 'wrap' }], (r) => r.key);
+  window.bmTrackCol(tt, todayRows, todayKey);
 };
 document.querySelectorAll('.bm .seg button').forEach((b) => b.addEventListener('click', () => { window.bmWin = b.dataset.win; drawOverview(); }));
 
@@ -776,19 +861,21 @@ const drawSport = (sport) => {
   // card rows
   const spTimes = picks.status === 'ok' ? gameTimes(picks.data) : {};
   const ct = q('.sp-card-table');
-  const crows = cards.status === 'ok' ? cards.data.filter((r) => r.sport === sport) : [];
+  const crows = T.filter(cards.status === 'ok' ? cards.data.filter((r) => r.sport === sport) : [], T.cardKey);
   ct.closest('.scroll').hidden = !crows.length;
   fillTable(ct, crows, [
     { f: 'n' }, { f: 'kickoff', fmt: (v, r) => (!v || /^\d{1,2}:\d{2}$/.test(v)) ? (spTimes[r.sport + '|' + r.game] || v || '') : v }, { f: 'game' }, { f: 'pick', html: pickCell }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.pick) }, { f: 'market', fmt: (v) => /^T\d/.test(v) ? v : '' }, { f: 'line' }, { f: 'price' },
     { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'limit' }, { f: 'tag', cls: 'wrap' },
   ], (r) => `${r.sport},${r.n}`);
+  trackCol(ct, crows, T.cardKey);
   // hide empty columns for this sport
   const hideCols = { CFB: ['price', 'market_prob', 'tier'], NFL: ['market_prob', 'limit'], NHL: ['line', 'limit', 'tier'] }[sport] || [];
   ct.querySelectorAll('thead th').forEach((th, i) => { const hide = hideCols.includes(th.dataset.field); th.hidden = hide; ct.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hide; }); });
   // parlays
-  const prows = parl.status === 'ok' ? parl.data.filter((r) => r.sport === sport) : [];
-  q('.sp-parlay-card').hidden = !prows.length;
+  const prows = T.filter(parl.status === 'ok' ? parl.data.filter((r) => r.sport === sport) : [], T.legKey);
+  q('.sp-parlay-card').hidden = !prows.length && T.view() !== 'mine';
   fillTable(q('.sp-parlay-table'), prows, [{ f: 'n' }, { f: 'leg' }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.leg) }, { f: 'game' }, { f: 'price' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'hit_rate', cls: 'wrap' }], (r) => `${r.sport},${r.n}`);
+  trackCol(q('.sp-parlay-table'), prows, T.legKey);
   // tiles
   const tiles = q('.sp-tiles');
   const s = sum.status === 'ok' ? sum.data.find((r) => r.sport === sport && r.window === 'season') : null;
@@ -823,6 +910,7 @@ const drawSport = (sport) => {
     const today = d3.utcFormat('%Y-%m-%d')(new Date());
     let rows = picks.data.filter((r) => r.sport === sport);
     if (betsOnly) rows = rows.filter((r) => r.bet !== '');
+    rows = T.filter(rows, T.rowKey);
     if (needle) rows = rows.filter((r) => [r.game, r.selection, r.market, r.date, resWord[r.result], r.score, r.bet === '' ? 'no bet' : 'bet'].join(' ').toLowerCase().includes(needle));
     const isPending = (r) => r.result === 'Pending' || (r.result === 'NP' && String(r.date) >= today);
     const sorter = (dir) => (a, b) => { const va = a[st2.f], vb = b[st2.f]; const na = Number(va), nb = Number(vb); const c = (!isNaN(na) && !isNaN(nb) && va !== '' && vb !== '') ? na - nb : String(va ?? '').localeCompare(String(vb ?? '')); return c * dir || (a.id < b.id ? -1 : 1); };
@@ -841,6 +929,7 @@ const drawSport = (sport) => {
       const sorted = grp.slice().sort(sorter(dir));
       pt.querySelectorAll('thead th').forEach((th) => th.setAttribute('aria-sort', th.dataset.field === st2.f ? (dir > 0 ? 'ascending' : 'descending') : 'none'));
       fillTable(pt, sorted, cols, (r) => r.id);
+      trackCol(pt, sorted, T.rowKey);
       pt.querySelectorAll('tbody tr').forEach((tr, i) => { if (sorted[i].bet === '') tr.classList.add('nobet'); });
       pt.querySelectorAll('thead th').forEach((th, i) => { if (th.dataset.field === 'limit' || th.dataset.field === 'limit_status') { th.hidden = hideP; (th.querySelector('button') || th).textContent = th.dataset.field === 'limit' ? colLabel[0] : colLabel[1]; pt.querySelectorAll('tbody tr').forEach((tr) => { tr.children[i].hidden = hideP; }); } });
       const nb = grp.filter((r) => r.bet !== '').length;
@@ -866,6 +955,16 @@ for (const id of ['cfb', 'nfl', 'nhl']) {
 }
 
 window.bmDraw = () => { drawOverview(); for (const s of ['CFB', 'NFL', 'NHL']) drawSport(s); };
+const syncTrackView = () => {
+  document.querySelectorAll('.bm .trk-view button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.view === T.view())));
+  document.querySelectorAll('.bm .trk-n').forEach((n) => { n.textContent = T.count() ? '(' + T.count() + ')' : ''; });
+};
+document.addEventListener('click', (ev) => {
+  const b = ev.target.closest('.bm .trk-btn'); if (b) { ev.preventDefault(); T.toggle(b.dataset.key); return; }
+  const v = ev.target.closest('.bm .trk-view button'); if (v) { ev.preventDefault(); T.setView(v.dataset.view); }
+});
+T.onChange(() => { syncTrackView(); window.bmDraw(); if (window.bmScoreboard) window.bmScoreboard.render(); });
+syncTrackView();
 dash.onData(window.bmDraw);
 const named = location.hash.slice(1);
 window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'overview');
@@ -879,7 +978,8 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const REFRESH_MS = 30000;
   const st = { feeds: {}, gamesBy: {}, box: {}, last: {}, busy: false, sel: null, sports: new Set(['CFB', 'NFL', 'NHL']) };
   try { const saved = JSON.parse(localStorage.getItem('bm.sbSports') || 'null'); if (Array.isArray(saved) && saved.length) st.sports = new Set(saved); } catch (e) { /* storage unavailable: default to all */ }
-  const shown = (list) => list && list.filter((p) => st.sports.has(p.sport));
+  const T = window.bmTrack; const pkKey = (p, iso) => T.keyOf(p.sport, iso, p.game, p.text, p.market);
+  const shown = (list, iso) => list && T.filter(list.filter((p) => st.sports.has(p.sport)), (p) => pkKey(p, iso));
 
   // ---------- helpers ----------
   const ymd = (d, sep) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join(sep);
@@ -973,15 +1073,6 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     for (const r of picks) if (r.result === 'Pending' && r.bet !== '') { if (!cardDate[r.sport] || r.date > cardDate[r.sport]) cardDate[r.sport] = r.date; }
     return (sp, g) => dateOf[sp + '|' + g] || (sp === 'NHL' ? cardDate.NHL : '') || '';
   };
-  const feedText = (r) => {
-    const sel = String(r.selection || '');
-    if (r.sport === 'CFB' && /\sATS$/.test(sel) && r.line != null) {   // CFB lines are stored from the home side
-      const team = sel.replace(/\s+ATS$/, ''); const [a] = String(r.game).split(' @ ');
-      const ln = norm(team) === norm(a) ? -Number(r.line) : Number(r.line);
-      return `${team} ${ln > 0 ? '+' : ''}${ln}`;
-    }
-    return sel.replace(/\s+ATS\s*\(([+-]?[\d.]+)\)$/, ' $1').replace(/ ([\d.]+)$/, (m0, n) => (/\sATS/.test(sel) ? ' +' + n : m0));
-  };
   const picksFor = (iso) => {
     if (!dataReady()) return null;
     const cards = dash.data('cards').data, parl = dash.data('parlays').data, picks = dash.data('picks').data;
@@ -996,27 +1087,20 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const dateOptions = () => {
     if (!dataReady()) return [];
     const dateFor = dateIndex(); const n = {};
-    const add = (d, sp) => { if (d && st.sports.has(sp)) n[d] = (n[d] || 0) + 1; };
+    const add = (d, sp, key) => { if (d && st.sports.has(sp) && (T.view() !== 'mine' || T.has(key))) n[d] = (n[d] || 0) + 1; };
     const cardSportDates = new Set();
-    for (const c of dash.data('cards').data) { const d = dateFor(c.sport, c.game); if (d) { add(d, c.sport); cardSportDates.add(c.sport + d); } }
-    for (const c of dash.data('parlays').data) { const g = c.game || (String(c.leg).split(' ')[0].includes('@') ? String(c.leg).split(' ')[0].replace('@', ' @ ') : ''); add(dateFor(c.sport, g), c.sport); }
-    for (const r of dash.data('picks').data) if (r.bet !== '' && r.date && !cardSportDates.has(r.sport + r.date)) add(r.date, r.sport);
+    for (const c of dash.data('cards').data) { const d = dateFor(c.sport, c.game); if (d) { add(d, c.sport, T.cardKey(c)); cardSportDates.add(c.sport + d); } }
+    for (const c of dash.data('parlays').data) { const g = c.game || (String(c.leg).split(' ')[0].includes('@') ? String(c.leg).split(' ')[0].replace('@', ' @ ') : ''); add(dateFor(c.sport, g), c.sport, T.legKey(c)); }
+    for (const r of dash.data('picks').data) if (r.bet !== '' && r.date && !cardSportDates.has(r.sport + r.date)) add(r.date, r.sport, T.rowKey(r));
     const today = todayIso(); if (!n[today]) n[today] = 0;
     if (st.sel && !n[st.sel]) n[st.sel] = 0;   // keep the chosen date in the list even when the sport filter leaves it empty
     return Object.keys(n).sort().map((d) => ({ d, n: n[d] }));
   };
 
   // ---------- pick parsing + live evaluation ----------
-  const clean = (t) => String(t || '').replace(/\s*·?\s*proj\s+[\d.]+/i, '').replace(/\s+(MODEL|SOFT)\b/g, '').replace(/^[A-Z]{2,3}@[A-Z]{2,3}\s+/, '').trim();
-  const parse = (p) => {
-    const t = clean(p.text); const bt = betType(p.sport, p.market, t); let m;
-    if ((m = /^(.+?)\s+(ML|moneyline)$/i.exec(t))) return { kind: 'ml', team: m[1], bt: 'Moneyline' };
-    if ((m = /^(.+?)\s+ATS\s*\(?([+-]?\d+(?:\.\d+)?)?\)?$/i.exec(t))) return { kind: 'spread', team: m[1], line: m[2] != null ? +m[2] : null, bt };
-    if ((m = /^(Over|Under)\s+(\d+(?:\.\d+)?)$/i.exec(t))) return { kind: 'total', side: m[1].toLowerCase(), line: +m[2], bt: 'Total' };
-    if ((m = /^(.+?)\s+([+-]\d+(?:\.\d+)?)(\s+puck line)?$/i.exec(t))) return { kind: 'spread', team: m[1], line: +m[2], bt };
-    if ((m = /^(.+?)\s*(?:\(([A-Z]{2,4})\))?\s+(?:[a-z][a-z ]*?\s+)?(Over|Under|Yes)\s*(\d+(?:\.\d+)?)?/i.exec(t))) return { kind: 'prop', player: m[1].trim(), team: m[2] || '', side: m[3].toLowerCase(), line: m[4] != null ? +m[4] : 0.5, bt };
-    return { kind: 'unknown', bt };
-  };
+  const clean = window.bmF.cleanPick;
+  const parse = (p) => window.bmF.parsePick(p.sport, p.text, p.market);
+  const feedText = window.bmF.feedText;
   const elapsed = (g) => {
     if (g.state === 'post') return 1; if (g.state !== 'in' || !g.period) return 0;
     const per = g.sport === 'NHL' ? 1200 : 900, n = g.sport === 'NHL' ? 3 : 4;
@@ -1093,7 +1177,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     drawDateSelect();
     document.getElementById('sb-date').textContent = dayLabel(iso) + (iso === todayIso() ? ' · today' : '');
     document.querySelectorAll('.bm .sb-sports button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sport === 'ALL' ? st.sports.size === 3 : st.sports.has(b.dataset.sport))));
-    const picks = shown(picksFor(iso)); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
+    const picks = shown(picksFor(iso), iso); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
     if (!picks) { grid.replaceChildren(); return; }
     document.getElementById('sb-empty').hidden = picks.length > 0;
     const groups = new Map(), unmatched = [];
@@ -1114,7 +1198,9 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
       const box = el('div', 'sb-picks');
       for (const p of ps) {
         const r = evaluate(p, g); const row = el('div', 'sb-pick');
-        const txt = el('span', 'txt'); if (p.kind === 'Top pick') txt.appendChild(el('span', 'star', '★ ')); txt.appendChild(document.createTextNode(clean(p.text)));
+        const k = pkKey(p, iso); const on = T.has(k); const tb = el('button', 'trk-btn', on ? '\u2713' : '+'); tb.dataset.key = k; tb.setAttribute('aria-pressed', String(on)); tb.setAttribute('aria-label', on ? 'Stop tracking this pick' : 'Track this pick');
+        if (on) row.classList.add('tracked');
+        const txt = el('span', 'txt'); txt.appendChild(tb); txt.appendChild(document.createTextNode(' ')); if (p.kind === 'Top pick') txt.appendChild(el('span', 'star', '★ ')); txt.appendChild(document.createTextNode(clean(p.text)));
         row.append(txt, el('span', 'chip ' + r.cls, r.chip));
         if (r.bar) { const b = el('div', 'sb-bar ' + (r.bar.good ? 'good' : 'bad')); const s = el('span'); s.style.width = Math.round(r.bar.frac * 100) + '%'; b.appendChild(s); row.appendChild(b); }
         row.appendChild(el('span', 'meta', [p.kind, r.bt, p.price, p.units ? p.units + 'u' : '', p.graded && p.profit != null && p.graded !== 'Void' ? (p.profit > 0 ? '+' : '') + (Math.round(p.profit * 100) / 100) + 'u' : '', r.now].filter(Boolean).join(' · ')));
@@ -1141,7 +1227,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const refresh = async () => {
     if (st.busy) return; st.busy = true;
     try {
-      const iso = st.sel || todayIso(); const picks = shown(picksFor(iso)); if (!picks) return;
+      const iso = st.sel || todayIso(); const picks = shown(picksFor(iso), iso); if (!picks) return;
       const sports = [...new Set(picks.map((p) => p.sport))];
       await loadScoreboards(sports, iso);
       const needBox = new Map();
