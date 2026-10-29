@@ -127,6 +127,17 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-sports button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
 .bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 </style><style>
+.bm .sync-btn { margin-left: var(--cds-gap-xs); margin-bottom: var(--cds-gap-xs); border: 1px solid var(--color-border-line) !important; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm) !important; font-size: var(--cds-font-size-caption) !important; background: var(--color-panel) !important; color: var(--color-fg-muted) !important; }
+.bm .sync-btn .dot { display: inline-block; width: .45rem; height: .45rem; border-radius: 50%; background: var(--color-border-line); margin-right: .35rem; vertical-align: 1px; }
+.bm .sync-btn.on .dot { background: var(--color-ok); } .bm .sync-btn.err .dot { background: var(--color-bad); }
+.bm .sync-panel { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); margin: calc(-1 * var(--cds-gap-sm)) 0 var(--cds-gap-lg); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.bm .sync-panel[hidden] { display: none; }
+.bm .sync-panel .row { display: flex; gap: var(--cds-gap-sm); flex-wrap: wrap; align-items: center; margin-top: var(--cds-gap-sm); }
+.bm .sync-panel input { font: inherit; font-size: var(--cds-font-size-body); background: var(--color-bg); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 14rem; flex: 1 1 14rem; }
+.bm .sync-panel button { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-fg); color: var(--color-bg); border: 0; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
+.bm .sync-panel button.secondary { background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); }
+.bm .sync-panel .st { color: var(--color-fg); }
+</style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
 .bm { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg); max-width: 72rem; margin-inline: auto; }
 .bm * { box-sizing: border-box; }
@@ -155,6 +166,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .tile { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); }
 .bm .tile .k { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 .bm .tile .v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.2; }
+.bm .tile.tile-mine { border-color: var(--color-ok); }
 .bm .tile .s { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
 .bm .pos { color: var(--color-ok); } .bm .neg { color: var(--color-bad); }
 .bm table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-caption); }
@@ -576,10 +588,10 @@ const pickKey = (sport, date, game, text, market) => {
   return [sport, date || '', pkNorm(game), q.kind, subj, q.side || '', q.line == null ? '' : Math.abs(q.line) * (q.kind === 'spread' && q.line < 0 ? -1 : 1), q.bt].join('|');
 };
 const bmTrack = (() => {
-  const KEY = 'bm.tracked.v1', VIEW = 'bm.trackView.v1';
-  let set = new Set(); let view = 'all'; const subs = [];
-  try { set = new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); view = localStorage.getItem(VIEW) === 'mine' ? 'mine' : 'all'; } catch (e) { /* storage unavailable: nothing saved */ }
-  const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...set])); localStorage.setItem(VIEW, view); } catch (e) { /* storage unavailable */ } };
+  const KEY = 'bm.tracked.v1', VIEW = 'bm.trackView.v1', UPD = 'bm.tracked.updated.v1';
+  let set = new Set(); let view = 'all'; let updated = 0; const subs = [], changeSubs = [];
+  try { set = new Set(JSON.parse(localStorage.getItem(KEY) || '[]')); view = localStorage.getItem(VIEW) === 'mine' ? 'mine' : 'all'; updated = +localStorage.getItem(UPD) || 0; } catch (e) { /* storage unavailable: nothing saved */ }
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify([...set])); localStorage.setItem(VIEW, view); localStorage.setItem(UPD, String(updated)); } catch (e) { /* storage unavailable */ } };
   const fire = () => { for (const f of subs) { try { f(); } catch (e) { console.error(e); } } };
   let idxSrc = null, idx = {};
   const dateOf = (sport, game) => {
@@ -590,7 +602,11 @@ const bmTrack = (() => {
   const legGame = (leg) => { const t = String(leg || '').split(' ')[0]; return t.includes('@') ? t.replace('@', ' @ ') : ''; };
   return {
     has: (k) => set.has(k), count: () => set.size,
-    toggle: (k) => { if (set.has(k)) set.delete(k); else set.add(k); save(); fire(); },
+    toggle: (k) => { if (set.has(k)) set.delete(k); else set.add(k); updated = Date.now(); save(); fire(); for (const f of changeSubs) f(); },
+    // for syncing between devices: the list and when it last changed; load() replaces it with a newer copy
+    state: () => ({ tracked: [...set], updated }),
+    load: (st) => { if (!st || !Array.isArray(st.tracked)) return; set = new Set(st.tracked); updated = +st.updated || Date.now(); save(); fire(); },
+    onListChange: (f) => changeSubs.push(f),
     view: () => view, setView: (v) => { view = v === 'mine' ? 'mine' : 'all'; save(); fire(); },
     onChange: (f) => subs.push(f),
     // keys for each kind of row the dashboard shows
@@ -758,6 +774,24 @@ const WIN_LABEL = { season: 'Season to date', d30: 'Last 30 days', d7: 'Last 7 d
 window.bmWin = window.bmWin || 'season';
 const marketName = (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'PP points', SAVES: 'Saves', BLK: 'Blocks', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' })[v] || esc(v);
 
+// "My picks" tile: the record of the bets you tracked (same window as the other tiles). Parlay pieces and
+// no-bet projections you track have no stake in the models' records, so only tracked bets are counted.
+const myPicksTile = (win) => {
+  const T = window.bmTrack; const pk = dash.data('picks');
+  const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
+  const keep = { season: () => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1) }[win] || (() => true);
+  const mine = pk.status === 'ok' ? pk.data.filter((r) => r.bet !== '' && T.has(T.rowKey(r))) : [];
+  const g = mine.filter((r) => (r.result === 'W' || r.result === 'L' || r.result === 'P') && keep(r));
+  const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length;
+  const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0);
+  const profit = Math.round(10 * g.reduce((a, r) => a + Number(r.profit || 0), 0)) / 10;
+  const pend = mine.filter((r) => r.result === 'Pending').length;
+  const t = T.count()
+    ? tile('My picks', fU(profit), `${w}-${l}-${p} · ROI ${risked ? fPs(Math.round(1000 * profit / risked) / 1000) : '—'} · ${pend} pending`, signCls(profit))
+    : tile('My picks', '—', 'Tap + on a pick to track it');
+  t.classList.add('tile-mine'); t.title = 'Bets you tracked with the + button. Tracked parlay pieces and no-bet projections are not counted, since the models put no stake on them.';
+  return t;
+};
 const drawOverview = () => {
   const win = window.bmWin;
   const sum = dash.data('summary_by_sport'), cum = dash.data('cum_by_date'), info = dash.data('card_info'), cards = dash.data('cards'), parl = dash.data('parlays'), picks = dash.data('picks');
@@ -775,7 +809,7 @@ const drawOverview = () => {
       const t = tile(r.sport === 'ALL' ? 'All models' : r.sport, fU(r.profit), `${r.record} · ROI ${fPs(r.roi)}`, signCls(r.profit));
       t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', 'profit'); t.setAttribute('data-where', 'window=' + win + '&sport=' + r.sport);
       return t;
-    }));
+    }), myPicksTile(win));
     fillTable(document.getElementById('ov-table'), rows, [
       { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
       { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) },
@@ -1261,6 +1295,63 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   dash.onData(() => { if (!dataReady()) return; if (visible()) { if (!st.last[st.sel || todayIso()] && !st.busy) refresh(); else render(); } else if (firstCheck) { firstCheck = false; checkLive(); } });
   if (!document.getElementById('scores').hidden) refresh();
   window.bmScoreboard = { st, refresh, render, parse, evaluate };
+})();
+</script>
+<script>
+(() => {
+  // Keeps tracked picks the same on all of your devices, through your own Cloudflare worker.
+  // Every read and write needs the passphrase you stored in the worker; without it nothing is returned.
+  const SYNC_URL = 'https://nhl-relay.bryangonzalez1868.workers.dev/sync';
+  const PASS = 'bm.syncPass.v1';
+  const T = window.bmTrack;
+  let pass = ''; try { pass = localStorage.getItem(PASS) || ''; } catch (e) { /* storage unavailable */ }
+  let pushTimer = null, last = null, state = pass ? 'connecting' : 'off', busy = false;
+
+  // ---- UI: a Sync button beside the My picks switch, and a small panel under the tab bar ----
+  const view = document.querySelector('.bm .trk-view');
+  const btn = document.createElement('button'); btn.className = 'sync-btn'; btn.type = 'button';
+  view.insertAdjacentElement('afterend', btn);
+  const panel = document.createElement('div'); panel.className = 'sync-panel'; panel.hidden = true;
+  panel.innerHTML = '<div>Keep your tracked picks the same on your phone, iPad and Mac. Enter the sync passphrase you saved in Cloudflare — the same one on every device. Without it nobody can see or change your picks; friends using the site keep their own picks on their own device.</div>'
+    + '<div class="row"><input type="password" autocomplete="off" placeholder="Sync passphrase" aria-label="Sync passphrase"><button class="go">Connect</button><button class="secondary off">Turn off on this device</button></div>'
+    + '<div class="row"><span class="st"></span></div>';
+  document.querySelector('.bm .tabs').insertAdjacentElement('afterend', panel);
+  const inp = panel.querySelector('input'), stEl = panel.querySelector('.st');
+  const draw = () => {
+    btn.classList.toggle('on', state === 'ok'); btn.classList.toggle('err', state === 'bad' || state === 'fail');
+    btn.innerHTML = '<span class="dot"></span>' + (state === 'off' ? 'Sync off' : state === 'ok' ? 'Synced' : state === 'bad' ? 'Sync: wrong passphrase' : state === 'fail' ? 'Sync: offline' : 'Syncing…');
+    stEl.textContent = state === 'off' ? 'Sync is off on this device — picks are saved here only.' : state === 'ok' ? `Synced${last ? ' at ' + last.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''} · ${T.count()} tracked picks` : state === 'bad' ? 'The passphrase doesn’t match the one saved in Cloudflare.' : state === 'fail' ? 'Couldn’t reach the sync service; your picks are still saved on this device and will sync when it’s back.' : 'Syncing…';
+    panel.querySelector('.off').hidden = !pass;
+  };
+  btn.addEventListener('click', () => { panel.hidden = !panel.hidden; if (!panel.hidden) inp.focus(); });
+
+  // ---- talking to the worker ----
+  const call = async (method, body) => {
+    const r = await fetch(SYNC_URL, { method, cache: 'no-store', headers: { 'X-Sync-Key': pass, 'Content-Type': 'application/json' }, body });
+    if (r.status === 403) { const e = new Error('forbidden'); e.code = 403; throw e; }
+    if (!r.ok) throw new Error('HTTP ' + r.status);
+    return r.json();
+  };
+  const fail = (e) => { state = e && e.code === 403 ? 'bad' : 'fail'; draw(); };
+  const push = async () => { if (!pass) return; try { await call('PUT', JSON.stringify(T.state())); state = 'ok'; last = new Date(); } catch (e) { fail(e); } draw(); };
+  // newest list wins: a device that changed its picks more recently than the saved copy uploads, otherwise it takes the saved copy
+  const pull = async () => {
+    if (!pass || busy) return; busy = true;
+    try {
+      const remote = await call('GET'); const local = T.state();
+      if ((+remote.updated || 0) > (+local.updated || 0)) T.load(remote);
+      else if ((+local.updated || 0) > (+remote.updated || 0)) await call('PUT', JSON.stringify(local));
+      state = 'ok'; last = new Date();
+    } catch (e) { fail(e); } finally { busy = false; draw(); }
+  };
+  T.onListChange(() => { if (!pass) return; clearTimeout(pushTimer); state = 'connecting'; draw(); pushTimer = setTimeout(push, 800); });
+
+  panel.querySelector('.go').addEventListener('click', () => { pass = inp.value.trim(); if (!pass) return; try { localStorage.setItem(PASS, pass); } catch (e) { /* storage unavailable */ } inp.value = ''; state = 'connecting'; draw(); pull().then(() => { if (state === 'ok') setTimeout(() => { panel.hidden = true; }, 1500); }); });
+  inp.addEventListener('keydown', (e) => { if (e.key === 'Enter') panel.querySelector('.go').click(); });
+  panel.querySelector('.off').addEventListener('click', () => { pass = ''; try { localStorage.removeItem(PASS); } catch (e) { /* storage unavailable */ } state = 'off'; draw(); });
+  document.addEventListener('visibilitychange', () => { if (document.visibilityState === 'visible') pull(); });
+  setInterval(() => { if (document.visibilityState === 'visible') pull(); }, 60000);
+  draw(); if (pass) pull();
 })();
 </script>
 
