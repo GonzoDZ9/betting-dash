@@ -866,7 +866,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const { betType, gameTimes, esc } = window.bmF;
   const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/';
   const LEAGUE = { CFB: 'football/college-football', NFL: 'football/nfl', NHL: 'hockey/nhl' };
-  const NHL_API = 'https://api-web.nhle.com/v1/';
+  const NHL_API = 'https://nhl-relay.bryangonzalez1868.workers.dev/v1/';   // Cloudflare relay in front of api-web.nhle.com (adds the browser permission header)
   const REFRESH_MS = 30000;
   const st = { feeds: {}, games: {}, box: {}, last: null, busy: false };
 
