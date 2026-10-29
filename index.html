@@ -1320,7 +1320,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const draw = () => {
     btn.classList.toggle('on', state === 'ok'); btn.classList.toggle('err', state === 'bad' || state === 'fail');
     btn.innerHTML = '<span class="dot"></span>' + (state === 'off' ? 'Sync off' : state === 'ok' ? 'Synced' : state === 'bad' ? 'Sync: wrong passphrase' : state === 'fail' ? 'Sync: offline' : 'Syncing…');
-    stEl.textContent = state === 'off' ? 'Sync is off on this device — picks are saved here only.' : state === 'ok' ? `Synced${last ? ' at ' + last.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''} · ${T.count()} tracked picks` : state === 'bad' ? 'The passphrase doesn’t match the one saved in Cloudflare.' : state === 'fail' ? 'Couldn’t reach the sync service; your picks are still saved on this device and will sync when it’s back.' : 'Syncing…';
+    stEl.textContent = state === 'off' ? 'Sync is off on this device — picks are saved here only.' : state === 'ok' ? `Synced${last ? ' at ' + last.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' }) : ''} · ${T.count()} tracked picks` : state === 'bad' ? 'The passphrase doesn’t match the one saved in Cloudflare.' : state === 'fail' ? 'Couldn’t reach the sync service' + (why ? ': ' + why : '') + '. Your picks are still saved on this device and will sync once it works.' : 'Syncing…';
     panel.querySelector('.off').hidden = !pass;
   };
   btn.addEventListener('click', () => { panel.hidden = !panel.hidden; if (!panel.hidden) inp.focus(); });
@@ -1329,10 +1329,11 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const call = async (method, body) => {
     const r = await fetch(SYNC_URL, { method, cache: 'no-store', headers: { 'X-Sync-Key': pass, 'Content-Type': 'application/json' }, body });
     if (r.status === 403) { const e = new Error('forbidden'); e.code = 403; throw e; }
-    if (!r.ok) throw new Error('HTTP ' + r.status);
+    if (!r.ok) { let msg = ''; try { msg = (await r.json()).error || ''; } catch (e) { /* not JSON */ } throw new Error(msg === 'sync not set up' ? 'the worker is missing its PICKS storage or SYNC_SECRET' : 'the worker answered ' + r.status + (msg ? ' (' + msg + ')' : '')); }
     return r.json();
   };
-  const fail = (e) => { state = e && e.code === 403 ? 'bad' : 'fail'; draw(); };
+  let why = '';
+  const fail = (e) => { state = e && e.code === 403 ? 'bad' : 'fail'; why = (e && e.name === 'TypeError') ? 'no answer the browser could read, usually because the worker is still running the old code' : (e && e.message) || ''; draw(); };
   const push = async () => { if (!pass) return; try { await call('PUT', JSON.stringify(T.state())); state = 'ok'; last = new Date(); } catch (e) { fail(e); } draw(); };
   // newest list wins: a device that changed its picks more recently than the saved copy uploads, otherwise it takes the saved copy
   const pull = async () => {
