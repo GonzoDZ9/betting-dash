@@ -98,6 +98,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-top { display: flex; justify-content: space-between; align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-xs); }
 .bm .sb-top .live-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-bad); margin-right: .35rem; animation: sbpulse 1.6s infinite; }
 @keyframes sbpulse { 50% { opacity: .25; } }
+.bm .tabs .tab-live { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-bad); margin-right: .4rem; vertical-align: middle; animation: sbpulse 1.2s infinite; }
+.bm .tabs .tab-live[hidden] { display: none; }
 .bm .sb-team { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
 .bm .sb-team .nm { font-size: var(--cds-font-size-body); }
 .bm .sb-team .sc { font-family: var(--font-anthropic-serif); font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
@@ -115,6 +117,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-bar > span { display: block; height: 100%; background: var(--color-fg-muted); }
 .bm .sb-bar.good > span { background: var(--color-ok); } .bm .sb-bar.bad > span { background: var(--color-bad); }
 .bm .sb-unmatched { margin-top: var(--cds-gap-lg); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bm .sb-dates { display: flex; gap: var(--cds-gap-sm); align-items: center; flex-wrap: wrap; margin-bottom: var(--cds-gap-sm); }
+.bm .sb-dates select { font: inherit; font-size: var(--cds-font-size-body); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 15rem; max-width: 100%; }
 .bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 </style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
@@ -187,10 +191,10 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
   <div class="tabs" role="tablist">
     <button role="tab" data-tab="overview" aria-selected="true">All models</button>
+    <button role="tab" data-tab="scores"><span class="tab-live" hidden></span>Scores</button>
     <button role="tab" data-tab="cfb">CFB</button>
     <button role="tab" data-tab="nfl">NFL</button>
     <button role="tab" data-tab="nhl">NHL</button>
-    <button role="tab" data-tab="scores">Scores</button>
   </div>
 
   <!-- ===================== OVERVIEW ===================== -->
@@ -253,12 +257,13 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   <section class="page" id="nhl" hidden></section>
 <section class="page" id="scores" hidden>
   <div class="sb-head">
-    <h2>Live scoreboard <small id="sb-date"></small></h2>
+    <h2>Scoreboard <small id="sb-date"></small></h2>
     <button class="sb-refresh" id="sb-refresh">Refresh now</button>
   </div>
-  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Today's games that have a bet or parlay piece on a card, with each pick's live status. Refreshes every 30 seconds while this tab is open. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
+  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
+  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button></div>
   <div class="sb-status" id="sb-status">Loading live data…</div>
-  <div class="empty" id="sb-empty" hidden>No games with a pick today.</div>
+  <div class="empty" id="sb-empty" hidden>No games with a pick on this date.</div>
   <div class="sb-grid" id="sb-grid"></div>
   <div class="sb-unmatched" id="sb-unmatched" hidden></div>
 </section>
@@ -868,11 +873,13 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   const LEAGUE = { CFB: 'football/college-football', NFL: 'football/nfl', NHL: 'hockey/nhl' };
   const NHL_API = 'https://nhl-relay.bryangonzalez1868.workers.dev/v1/';   // Cloudflare relay in front of api-web.nhle.com (adds the browser permission header)
   const REFRESH_MS = 30000;
-  const st = { feeds: {}, games: {}, box: {}, last: null, busy: false };
+  const st = { feeds: {}, gamesBy: {}, box: {}, last: {}, busy: false, sel: null };
 
   // ---------- helpers ----------
   const ymd = (d, sep) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join(sep);
   const todayIso = () => ymd(new Date(), '-');
+  const isoDate = (iso) => new Date(iso + 'T12:00:00');
+  const dayLabel = (iso) => isoDate(iso).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
   const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/['’.]/g, '').replace(/[^a-z0-9]+/g, ' ').replace(/\b(jr|sr|ii|iii|iv)\b/g, '').replace(/\bstate\b/g, 'st').replace(/\s+/g, ' ').trim();
   const getJSON = async (url) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 12000); try { const r = await fetch(url, { cache: 'no-store', signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); } finally { clearTimeout(t); } };
   const clockSec = (c) => { const m = /^(\d+):(\d{2})/.exec(String(c || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
@@ -907,16 +914,16 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     const t = (x) => ({ abbr: x.abbrev, name: (x.name && x.name.default) || x.abbrev, short: x.abbrev, location: '', score: x.score == null ? null : +x.score });
     return { sport: 'NHL', src: 'nhl', id: g.id, start: g.startTimeUTC, away: t(g.awayTeam), home: t(g.homeTeam), state, detail, period: per, clock: clockSec(clk) };
   };
-  const loadScoreboards = async (sports) => {
-    const d = new Date(); const jobs = [];
+  const loadScoreboards = async (sports, iso) => {
+    const d = isoDate(iso); const jobs = []; const G = st.gamesBy[iso] || (st.gamesBy[iso] = {});
     for (const sp of sports) {
       if (sp === 'NHL') {
-        jobs.push(getJSON(NHL_API + 'score/' + ymd(d, '-')).then((j) => { st.feeds['NHL scores'] = 'ok'; st.games.NHL = (j.games || []).map(nhlGame); st.nhlApi = true; })
-          .catch(() => getJSON(ESPN + LEAGUE.NHL + '/scoreboard?dates=' + ymd(d, '')).then((j) => { st.feeds['NHL scores'] = 'ok (ESPN)'; st.games.NHL = (j.events || []).map((e) => espnGame('NHL', e)); st.nhlApi = false; }))
+        jobs.push(getJSON(NHL_API + 'score/' + ymd(d, '-')).then((j) => { st.feeds['NHL scores'] = 'ok'; G.NHL = (j.games || []).map(nhlGame); st.nhlApi = true; })
+          .catch(() => getJSON(ESPN + LEAGUE.NHL + '/scoreboard?dates=' + ymd(d, '')).then((j) => { st.feeds['NHL scores'] = 'ok (ESPN)'; G.NHL = (j.events || []).map((e) => espnGame('NHL', e)); st.nhlApi = false; }))
           .catch(() => { st.feeds['NHL scores'] = 'fail'; }));
       } else {
         const url = ESPN + LEAGUE[sp] + '/scoreboard?dates=' + ymd(d, '') + (sp === 'CFB' ? '&groups=80&limit=400' : '&limit=100');
-        jobs.push(getJSON(url).then((j) => { st.feeds[sp + ' scores'] = 'ok'; st.games[sp] = (j.events || []).map((e) => espnGame(sp, e)); }).catch(() => { st.feeds[sp + ' scores'] = 'fail'; }));
+        jobs.push(getJSON(url).then((j) => { st.feeds[sp + ' scores'] = 'ok'; G[sp] = (j.events || []).map((e) => espnGame(sp, e)); }).catch(() => { st.feeds[sp + ' scores'] = 'fail'; }));
       }
     }
     await Promise.allSettled(jobs);
@@ -951,20 +958,45 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     } catch (e) { st.feeds[game.sport + ' player stats'] = game.sport === 'NHL' ? 'blocked' : 'fail'; }
   };
 
-  // ---------- today's picks (card bets + parlay pieces) ----------
-  const todaysPicks = () => {
-    const cards = dash.data('cards'), parl = dash.data('parlays'), picks = dash.data('picks');
-    if (cards.status !== 'ok' || parl.status !== 'ok' || picks.status !== 'ok') return null;
-    const today = todayIso(); const dateOf = {}, cardDate = {};
-    for (const r of picks.data) if (r.result === 'Pending' || r.result === 'NP') { const k = r.sport + '|' + r.game; if (!dateOf[k] || r.date < dateOf[k]) dateOf[k] = r.date; }
-    for (const r of picks.data) if (r.result === 'Pending' && r.bet !== '') { if (!cardDate[r.sport] || r.date > cardDate[r.sport]) cardDate[r.sport] = r.date; }
-    const dateFor = (sp, g) => dateOf[sp + '|' + g] || (sp === 'NHL' ? cardDate.NHL : '') || '';
+  // ---------- picks for a date: current cards (bets + parlay pieces) where they cover the date, else the graded/pending bets in the feed ----------
+  const RES_WORD = { W: 'Won', L: 'Lost', P: 'Push', V: 'Void' };
+  const dataReady = () => ['cards', 'parlays', 'picks'].every((k) => dash.data(k).status === 'ok');
+  const dateIndex = () => {
+    const picks = dash.data('picks').data; const dateOf = {}, cardDate = {};
+    for (const r of picks) if (r.result === 'Pending' || r.result === 'NP') { const k = r.sport + '|' + r.game; if (!dateOf[k] || r.date < dateOf[k]) dateOf[k] = r.date; }
+    for (const r of picks) if (r.result === 'Pending' && r.bet !== '') { if (!cardDate[r.sport] || r.date > cardDate[r.sport]) cardDate[r.sport] = r.date; }
+    return (sp, g) => dateOf[sp + '|' + g] || (sp === 'NHL' ? cardDate.NHL : '') || '';
+  };
+  const feedText = (r) => {
+    const sel = String(r.selection || '');
+    if (r.sport === 'CFB' && /\sATS$/.test(sel) && r.line != null) {   // CFB lines are stored from the home side
+      const team = sel.replace(/\s+ATS$/, ''); const [a] = String(r.game).split(' @ ');
+      const ln = norm(team) === norm(a) ? -Number(r.line) : Number(r.line);
+      return `${team} ${ln > 0 ? '+' : ''}${ln}`;
+    }
+    return sel.replace(/\s+ATS\s*\(([+-]?[\d.]+)\)$/, ' $1').replace(/ ([\d.]+)$/, (m0, n) => (/\sATS/.test(sel) ? ' +' + n : m0));
+  };
+  const picksFor = (iso) => {
+    if (!dataReady()) return null;
+    const cards = dash.data('cards').data, parl = dash.data('parlays').data, picks = dash.data('picks').data;
+    const dateFor = dateIndex(); const times = gameTimes(picks);
     const gameOfLeg = (leg) => { const t = String(leg || '').split(' ')[0]; return t.includes('@') ? t.replace('@', ' @ ') : ''; };
-    const times = gameTimes(picks.data);
-    const out = [];
-    for (const c of cards.data) if (c.game && dateFor(c.sport, c.game) === today) out.push({ sport: c.sport, game: c.game, kind: c.top === 'Y' ? 'Top pick' : 'Bet', text: c.pick, market: c.market, units: c.units, price: [c.line, c.price].filter((v) => v !== '' && v != null).join(' '), time: times[c.sport + '|' + c.game] || c.kickoff, soft: c.soft });
-    for (const c of parl.data) { const g = c.game || gameOfLeg(c.leg); if (g && dateFor(c.sport, g) === today) out.push({ sport: c.sport, game: g, kind: 'Parlay piece', text: c.leg, market: c.market, units: null, price: c.price, time: times[c.sport + '|' + g] || '' }); }
+    const out = []; const fromCards = new Set();
+    for (const c of cards) if (c.game && dateFor(c.sport, c.game) === iso) { fromCards.add(c.sport); out.push({ sport: c.sport, game: c.game, kind: c.top === 'Y' ? 'Top pick' : 'Bet', text: c.pick, market: c.market, units: c.units, price: [c.line, c.price].filter((v) => v !== '' && v != null).join(' '), time: times[c.sport + '|' + c.game] || c.kickoff, soft: c.soft }); }
+    for (const c of parl) { const g = c.game || gameOfLeg(c.leg); if (g && dateFor(c.sport, g) === iso) out.push({ sport: c.sport, game: g, kind: 'Parlay piece', text: c.leg, market: c.market, units: null, price: c.price, time: times[c.sport + '|' + g] || '' }); }
+    for (const r of picks) if (r.bet !== '' && r.date === iso && !fromCards.has(r.sport)) out.push({ sport: r.sport, game: r.game, kind: r.top === 'Y' ? 'Top pick' : 'Bet', text: feedText(r), market: r.market, units: r.units, price: r.odds != null && r.odds !== '' ? (r.odds > 0 ? '+' : '') + r.odds : '', time: times[r.sport + '|' + r.game] || '', graded: RES_WORD[r.result] || '', profit: r.profit });
     return out;
+  };
+  const dateOptions = () => {
+    if (!dataReady()) return [];
+    const dateFor = dateIndex(); const n = {};
+    const add = (d) => { if (d) n[d] = (n[d] || 0) + 1; };
+    const cardSportDates = new Set();
+    for (const c of dash.data('cards').data) { const d = dateFor(c.sport, c.game); if (d) { add(d); cardSportDates.add(c.sport + d); } }
+    for (const c of dash.data('parlays').data) { const g = c.game || (String(c.leg).split(' ')[0].includes('@') ? String(c.leg).split(' ')[0].replace('@', ' @ ') : ''); add(dateFor(c.sport, g)); }
+    for (const r of dash.data('picks').data) if (r.bet !== '' && r.date && !cardSportDates.has(r.sport + r.date)) add(r.date);
+    const today = todayIso(); if (!n[today]) n[today] = 0;
+    return Object.keys(n).sort().map((d) => ({ d, n: n[d] }));
   };
 
   // ---------- pick parsing + live evaluation ----------
@@ -1002,7 +1034,8 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
     const ca = String(s['passing.completions/passingAttempts'] || '').split('/');
     return ({ 'Receiving yards': f('receiving.receivingYards'), Receptions: f('receiving.receptions'), 'Rushing yards': f('rushing.rushingYards'), Rushes: f('rushing.rushingAttempts'), 'Passing yards': f('passing.passingYards'), 'Pass attempts': num(ca[1]), Completions: num(ca[0]), Interceptions: f('passing.interceptions'), 'Passing TDs': f('passing.passingTouchdowns'), 'Anytime TD': (f('rushing.rushingTouchdowns') || 0) + (f('receiving.receivingTouchdowns') || 0) })[bt];
   };
-  const evaluate = (p, g) => {
+  const evaluate = (p, g) => { const r0 = evaluateLive(p, g); if (p.graded && g.state === 'post') { r0.chip = p.graded; r0.cls = p.graded === 'Won' ? 'win' : p.graded === 'Lost' ? 'loss' : ''; } else if (p.graded && g.state !== 'in') { r0.chip = p.graded; r0.cls = p.graded === 'Won' ? 'win' : p.graded === 'Lost' ? 'loss' : ''; } return r0; };
+  const evaluateLive = (p, g) => {
     const q = parse(p); const fin = g.state === 'post'; const live = g.state === 'in';
     const res = { bt: q.bt, now: '', chip: 'Not started', cls: '', bar: null };
     if (g.state === 'pre') { res.now = q.kind === 'prop' ? `Line ${q.line}` : ''; return res; }
@@ -1042,19 +1075,21 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
   };
 
   // ---------- matching + render ----------
-  const matchGame = (p) => {
-    const [a, h] = String(p.game).split(' @ ');
-    return (st.games[p.sport] || []).find((g) => sameTeam(p.sport, a, g.away) && sameTeam(p.sport, h, g.home)) || (st.games[p.sport] || []).find((g) => sameTeam(p.sport, h, g.home) || sameTeam(p.sport, a, g.away)) || null;
+  const matchGame = (p, iso) => {
+    const [a, h] = String(p.game).split(' @ '); const list = ((st.gamesBy[iso] || {})[p.sport]) || [];
+    return list.find((g) => sameTeam(p.sport, a, g.away) && sameTeam(p.sport, h, g.home)) || list.find((g) => sameTeam(p.sport, h, g.home) || sameTeam(p.sport, a, g.away)) || null;
   };
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   const render = () => {
     const sec = document.getElementById('scores'); if (!sec) return;
-    document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
-    const picks = todaysPicks(); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
+    const iso = st.sel || todayIso();
+    drawDateSelect();
+    document.getElementById('sb-date').textContent = dayLabel(iso) + (iso === todayIso() ? ' · today' : '');
+    const picks = picksFor(iso); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
     if (!picks) { grid.replaceChildren(); return; }
     document.getElementById('sb-empty').hidden = picks.length > 0;
     const groups = new Map(), unmatched = [];
-    for (const p of picks) { const g = matchGame(p); if (!g) { unmatched.push(p); continue; } const k = g.sport + g.id; if (!groups.has(k)) groups.set(k, { g, picks: [] }); groups.get(k).picks.push(p); }
+    for (const p of picks) { const g = matchGame(p, iso); if (!g) { unmatched.push(p); continue; } const k = g.sport + g.id; if (!groups.has(k)) groups.set(k, { g, picks: [] }); groups.get(k).picks.push(p); }
     const order = { in: 0, pre: 1, post: 2 };
     const list = [...groups.values()].sort((x, y) => (order[x.g.state] - order[y.g.state]) || String(x.g.start).localeCompare(String(y.g.start)));
     grid.replaceChildren(...list.map(({ g, picks: ps }) => {
@@ -1074,34 +1109,53 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'over
         const txt = el('span', 'txt'); if (p.kind === 'Top pick') txt.appendChild(el('span', 'star', '★ ')); txt.appendChild(document.createTextNode(clean(p.text)));
         row.append(txt, el('span', 'chip ' + r.cls, r.chip));
         if (r.bar) { const b = el('div', 'sb-bar ' + (r.bar.good ? 'good' : 'bad')); const s = el('span'); s.style.width = Math.round(r.bar.frac * 100) + '%'; b.appendChild(s); row.appendChild(b); }
-        row.appendChild(el('span', 'meta', [p.kind, r.bt, p.price, p.units ? p.units + 'u' : '', r.now].filter(Boolean).join(' · ')));
+        row.appendChild(el('span', 'meta', [p.kind, r.bt, p.price, p.units ? p.units + 'u' : '', p.graded && p.profit != null && p.graded !== 'Void' ? (p.profit > 0 ? '+' : '') + (Math.round(p.profit * 100) / 100) + 'u' : '', r.now].filter(Boolean).join(' · ')));
         box.appendChild(row);
       }
       card.appendChild(box); return card;
     }));
     un.hidden = !unmatched.length;
-    un.textContent = unmatched.length ? 'Not found in today’s live feed (game time not set yet, or a team name that needs matching): ' + unmatched.map((p) => `${p.sport} ${p.game} — ${clean(p.text)}`).join(' · ') : '';
+    un.textContent = unmatched.length ? 'Not found in the live feed for this date (game time not set yet, or a team name that needs matching): ' + unmatched.map((p) => `${p.sport} ${p.game} — ${clean(p.text)}${p.graded ? ' (' + p.graded + ')' : ''}`).join(' · ') : '';
     const fs = Object.entries(st.feeds).map(([k, v]) => `<span class="${v.startsWith('ok') ? 'ok' : 'bad'}">${esc(k)}: ${esc(v)}</span>`).join(' · ');
-    document.getElementById('sb-status').innerHTML = (st.last ? 'Updated ' + st.last.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + ' · ' : 'Loading… · ') + (fs || '');
+    const last = st.last[iso]; document.getElementById('sb-status').innerHTML = (last ? 'Updated ' + last.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + ' · ' : 'Loading… · ') + (fs || '');
   };
+  const drawDateSelect = () => {
+    const sel = document.getElementById('sb-datesel'); const opts = dateOptions(); const today = todayIso(); const cur = st.sel || today;
+    const sig = opts.map((o) => o.d + ':' + o.n).join(',') + '|' + today;
+    if (sel.dataset.sig !== sig) { sel.replaceChildren(...opts.map((o) => { const op = new Option(`${dayLabel(o.d)}${o.d === today ? ' (today)' : ''} — ${o.n} pick${o.n === 1 ? '' : 's'}`, o.d); return op; })); sel.dataset.sig = sig; }
+    sel.value = cur;
+    const i = opts.findIndex((o) => o.d === cur);
+    document.getElementById('sb-prev').disabled = i <= 0; document.getElementById('sb-next').disabled = i < 0 || i >= opts.length - 1;
+  };
+  const markLive = () => { const iso = todayIso(); const picks = picksFor(iso); const live = !!picks && picks.some((p) => { const g = matchGame(p, iso); return g && g.state === 'in'; }); const dot = document.querySelector('.bm .tabs .tab-live'); if (dot) dot.hidden = !live; };
+  // scores-only check, used while another tab is open (keeps the live dot on the Scores tab current)
+  const checkLive = async () => { if (st.busy) return; const iso = todayIso(); const picks = picksFor(iso); if (!picks || !picks.length) { markLive(); return; } st.busy = true; try { await loadScoreboards([...new Set(picks.map((p) => p.sport))], iso); } finally { st.busy = false; markLive(); } };
   const refresh = async () => {
     if (st.busy) return; st.busy = true;
     try {
-      const picks = todaysPicks(); if (!picks) return;
+      const iso = st.sel || todayIso(); const picks = picksFor(iso); if (!picks) return;
       const sports = [...new Set(picks.map((p) => p.sport))];
-      await loadScoreboards(sports);
+      await loadScoreboards(sports, iso);
       const needBox = new Map();
-      for (const p of picks) { if (parse(p).kind !== 'prop') continue; const g = matchGame(p); if (g && g.state !== 'pre') needBox.set(g.sport + g.id, g); }
+      for (const p of picks) { if (parse(p).kind !== 'prop') continue; const g = matchGame(p, iso); if (g && g.state !== 'pre') needBox.set(g.sport + g.id, g); }
       await Promise.allSettled([...needBox.values()].map((g) => (g.state === 'post' && st.box[g.sport + g.id] && st.box[g.sport + g.id].final) ? null : loadBox(g).then(() => { if (g.state === 'post' && st.box[g.sport + g.id]) st.box[g.sport + g.id].final = true; })));
-      st.last = new Date();
-    } finally { st.busy = false; render(); }
+      st.last[iso] = new Date();
+    } finally { st.busy = false; render(); markLive(); }
   };
   const visible = () => { const s = document.getElementById('scores'); return s && !s.hidden && document.visibilityState === 'visible'; };
-  setInterval(() => { if (visible()) refresh(); }, REFRESH_MS);
-  document.addEventListener('visibilitychange', () => { if (visible()) refresh(); });
+  const selIsLive = () => { const iso = st.sel || todayIso(); if (iso === todayIso()) return true; const G = st.gamesBy[iso] || {}; return Object.values(G).some((l) => l.some((g) => g.state === 'in')); };
+  const tick = () => { if (visible() && selIsLive()) refresh(); else if (document.visibilityState === 'visible') checkLive(); };
+  setInterval(tick, REFRESH_MS);
+  document.addEventListener('visibilitychange', tick);
   document.getElementById('sb-refresh').addEventListener('click', refresh);
+  const pick = (iso) => { st.sel = iso; render(); refresh(); };
+  document.getElementById('sb-datesel').addEventListener('change', (e) => pick(e.target.value));
+  document.getElementById('sb-prev').addEventListener('click', () => { const o = dateOptions(); const i = o.findIndex((x) => x.d === (st.sel || todayIso())); if (i > 0) pick(o[i - 1].d); });
+  document.getElementById('sb-next').addEventListener('click', () => { const o = dateOptions(); const i = o.findIndex((x) => x.d === (st.sel || todayIso())); if (i >= 0 && i < o.length - 1) pick(o[i + 1].d); });
+  document.getElementById('sb-today').addEventListener('click', () => pick(todayIso()));
   document.querySelector('.bm .tabs button[data-tab="scores"]').addEventListener('click', () => { render(); refresh(); });
-  dash.onData(() => { if (!visible()) return; if (!st.last && !st.busy) refresh(); else render(); });
+  let firstCheck = true;
+  dash.onData(() => { if (!dataReady()) return; if (visible()) { if (!st.last[st.sel || todayIso()] && !st.busy) refresh(); else render(); } else if (firstCheck) { firstCheck = false; checkLive(); } });
   if (!document.getElementById('scores').hidden) refresh();
   window.bmScoreboard = { st, refresh, render, parse, evaluate };
 })();
