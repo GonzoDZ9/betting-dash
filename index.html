@@ -89,6 +89,34 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 })();
 </script>
 <style>
+.bm .sb-head { display: flex; justify-content: space-between; align-items: baseline; flex-wrap: wrap; gap: var(--cds-gap-sm); }
+.bm .sb-status { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-md); }
+.bm .sb-status .ok { color: var(--color-ok); } .bm .sb-status .bad { color: var(--color-bad); }
+.bm .sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
+.bm .sb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); min-width: 0; }
+.bm .sb-card.live { border-color: var(--color-ok); }
+.bm .sb-top { display: flex; justify-content: space-between; align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-xs); }
+.bm .sb-top .live-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-bad); margin-right: .35rem; animation: sbpulse 1.6s infinite; }
+@keyframes sbpulse { 50% { opacity: .25; } }
+.bm .sb-team { display: flex; justify-content: space-between; align-items: baseline; padding: 2px 0; }
+.bm .sb-team .nm { font-size: var(--cds-font-size-body); }
+.bm .sb-team .sc { font-family: var(--font-anthropic-serif); font-size: 1.6rem; font-variant-numeric: tabular-nums; line-height: 1.1; }
+.bm .sb-team.lead .nm { font-weight: var(--cds-font-weight-medium); }
+.bm .sb-picks { border-top: 1px solid var(--color-border-line); margin-top: var(--cds-gap-sm); padding-top: var(--cds-gap-sm); display: grid; gap: var(--cds-gap-sm); }
+.bm .sb-pick { display: grid; grid-template-columns: 1fr auto; gap: 2px var(--cds-gap-sm); align-items: start; }
+.bm .sb-pick .txt { font-size: var(--cds-font-size-body); }
+.bm .sb-pick .meta { grid-column: 1 / -1; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.bm .chip { font-size: var(--cds-font-size-caption); padding: 1px .5em; border-radius: 999px; border: 1px solid var(--color-border-line); white-space: nowrap; color: var(--color-fg-muted); }
+.bm .chip.good { color: var(--color-ok); border-color: currentColor; }
+.bm .chip.bad { color: var(--color-bad); border-color: currentColor; }
+.bm .chip.win { background: var(--color-ok); color: var(--color-bg); border-color: var(--color-ok); }
+.bm .chip.loss { background: var(--color-bad); color: var(--color-bg); border-color: var(--color-bad); }
+.bm .sb-bar { height: 4px; border-radius: 2px; background: var(--color-border-line); grid-column: 1 / -1; overflow: hidden; }
+.bm .sb-bar > span { display: block; height: 100%; background: var(--color-fg-muted); }
+.bm .sb-bar.good > span { background: var(--color-ok); } .bm .sb-bar.bad > span { background: var(--color-bad); }
+.bm .sb-unmatched { margin-top: var(--cds-gap-lg); color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
+</style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
 .bm { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg); max-width: 72rem; margin-inline: auto; }
 .bm * { box-sizing: border-box; }
@@ -162,6 +190,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <button role="tab" data-tab="cfb">CFB</button>
     <button role="tab" data-tab="nfl">NFL</button>
     <button role="tab" data-tab="nhl">NHL</button>
+    <button role="tab" data-tab="scores">Scores</button>
   </div>
 
   <!-- ===================== OVERVIEW ===================== -->
@@ -222,6 +251,17 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   <section class="page" id="cfb" hidden></section>
   <section class="page" id="nfl" hidden></section>
   <section class="page" id="nhl" hidden></section>
+<section class="page" id="scores" hidden>
+  <div class="sb-head">
+    <h2>Live scoreboard <small id="sb-date"></small></h2>
+    <button class="sb-refresh" id="sb-refresh">Refresh now</button>
+  </div>
+  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Today's games that have a bet or parlay piece on a card, with each pick's live status. Refreshes every 30 seconds while this tab is open. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
+  <div class="sb-status" id="sb-status">Loading live data…</div>
+  <div class="empty" id="sb-empty" hidden>No games with a pick today.</div>
+  <div class="sb-grid" id="sb-grid"></div>
+  <div class="sb-unmatched" id="sb-unmatched" hidden></div>
+</section>
 
   <template id="sport-tpl">
     <h2>Current card <small class="sp-label"></small></h2>
@@ -488,7 +528,7 @@ const gameTimes = (picks) => {
 window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes };
 
 // ---------- tabs ----------
-const pages = ['overview', 'cfb', 'nfl', 'nhl'];
+const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores'];
 const tpl = document.getElementById('sport-tpl');
 let current = 'overview';
 const showTab = (name) => {
@@ -496,7 +536,7 @@ const showTab = (name) => {
   current = name;
   for (const p of pages) {
     const sec = document.getElementById(p);
-    if (p !== 'overview' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
+    if (p !== 'overview' && p !== 'scores' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
     sec.hidden = p !== name;
   }
   document.querySelectorAll('.bm .tabs button').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
@@ -819,8 +859,253 @@ for (const id of ['cfb', 'nfl', 'nhl']) {
 window.bmDraw = () => { drawOverview(); for (const s of ['CFB', 'NFL', 'NHL']) drawSport(s); };
 dash.onData(window.bmDraw);
 const named = location.hash.slice(1);
-window.bmShowTab(['cfb', 'nfl', 'nhl'].includes(named) ? named : 'overview');
+window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores'].includes(named) ? named : 'overview');
 })();</script>
+<script>
+(() => {
+  const { betType, gameTimes, esc } = window.bmF;
+  const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/';
+  const LEAGUE = { CFB: 'football/college-football', NFL: 'football/nfl', NHL: 'hockey/nhl' };
+  const NHL_API = 'https://api-web.nhle.com/v1/';
+  const REFRESH_MS = 30000;
+  const st = { feeds: {}, games: {}, box: {}, last: null, busy: false };
+
+  // ---------- helpers ----------
+  const ymd = (d, sep) => [d.getFullYear(), String(d.getMonth() + 1).padStart(2, '0'), String(d.getDate()).padStart(2, '0')].join(sep);
+  const todayIso = () => ymd(new Date(), '-');
+  const norm = (s) => String(s || '').normalize('NFD').replace(/[̀-ͯ]/g, '').toLowerCase().replace(/&/g, ' and ').replace(/['’.]/g, '').replace(/[^a-z0-9]+/g, ' ').replace(/\b(jr|sr|ii|iii|iv)\b/g, '').replace(/\bstate\b/g, 'st').replace(/\s+/g, ' ').trim();
+  const getJSON = async (url) => { const c = new AbortController(); const t = setTimeout(() => c.abort(), 12000); try { const r = await fetch(url, { cache: 'no-store', signal: c.signal }); if (!r.ok) throw new Error('HTTP ' + r.status); return await r.json(); } finally { clearTimeout(t); } };
+  const clockSec = (c) => { const m = /^(\d+):(\d{2})/.exec(String(c || '')); return m ? (+m[1]) * 60 + (+m[2]) : null; };
+  const num = (v) => { const n = parseFloat(String(v).replace(/[^0-9.\-]/g, '')); return isNaN(n) ? null : n; };
+  const fmt1 = (v) => (Math.round(v * 10) / 10).toString();
+
+  // team aliases (model -> other spellings)
+  const CFB_ALIAS = { 'ul monroe': ['louisiana monroe'], louisiana: ['louisiana lafayette', 'ul lafayette'], 'miami oh': ['miami ohio'], uconn: ['connecticut'], hawaii: ['hawai i'], 'florida international': ['fiu'], fiu: ['florida international'], utsa: ['ut san antonio'], utep: ['texas el paso'], ucf: ['central florida'], smu: ['southern methodist'], byu: ['brigham young'], tcu: ['texas christian'], usc: ['southern california'], unlv: ['nevada las vegas'], 'app st': ['appalachian st'], 'sam houston': ['sam houston st'], 'southern miss': ['southern mississippi'], massachusetts: ['umass'], 'nc st': ['north carolina st'], 'san jose st': ['san jose st'] };
+  const NHL_ESPN = { LAK: 'LA', NJD: 'NJ', SJS: 'SJ', TBL: 'TB', UTA: 'UTAH' };
+  const NFL_ESPN = { LA: 'LAR', WAS: 'WSH' };
+  const teamKeys = (t) => new Set([t.abbr, t.name, t.short, t.location].filter(Boolean).map(norm));
+  const modelKeys = (sport, name) => {
+    const n = String(name || '').trim();
+    if (sport === 'NHL') return new Set([norm(n), norm(NHL_ESPN[n] || n)]);
+    if (sport === 'NFL') return new Set([norm(n), norm(NFL_ESPN[n] || n)]);
+    const k = norm(n); return new Set([k, ...(CFB_ALIAS[k] || [])]);
+  };
+  const sameTeam = (sport, modelName, t) => { const a = modelKeys(sport, modelName), b = teamKeys(t); for (const x of a) if (b.has(x)) return true; return false; };
+
+  // ---------- feeds ----------
+  const espnGame = (sport, ev) => {
+    const c = ev.competitions[0]; const side = (h) => c.competitors.find((x) => x.homeAway === h);
+    const t = (x) => ({ abbr: x.team.abbreviation, name: x.team.displayName, short: x.team.shortDisplayName, location: x.team.location, score: num(x.score) });
+    const s = ev.status || c.status;
+    return { sport, src: 'espn', id: ev.id, start: ev.date, away: t(side('away')), home: t(side('home')), state: s.type.state, detail: s.type.shortDetail, period: s.period, clock: clockSec(s.displayClock) };
+  };
+  const nhlGame = (g) => {
+    const state = ({ FUT: 'pre', PRE: 'pre', LIVE: 'in', CRIT: 'in', FINAL: 'post', OFF: 'post' })[g.gameState] || 'pre';
+    const per = g.periodDescriptor ? g.periodDescriptor.number : null; const ptype = g.periodDescriptor ? g.periodDescriptor.periodType : '';
+    const clk = g.clock ? g.clock.timeRemaining : '';
+    const detail = state === 'post' ? (ptype && ptype !== 'REG' ? 'Final/' + ptype : 'Final') : state === 'in' ? ((g.clock && g.clock.inIntermission) ? `End ${per}` : `${ptype === 'OT' ? 'OT' : ptype === 'SO' ? 'SO' : ['1st', '2nd', '3rd'][per - 1] || per} ${clk}`) : new Date(g.startTimeUTC).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
+    const t = (x) => ({ abbr: x.abbrev, name: (x.name && x.name.default) || x.abbrev, short: x.abbrev, location: '', score: x.score == null ? null : +x.score });
+    return { sport: 'NHL', src: 'nhl', id: g.id, start: g.startTimeUTC, away: t(g.awayTeam), home: t(g.homeTeam), state, detail, period: per, clock: clockSec(clk) };
+  };
+  const loadScoreboards = async (sports) => {
+    const d = new Date(); const jobs = [];
+    for (const sp of sports) {
+      if (sp === 'NHL') {
+        jobs.push(getJSON(NHL_API + 'score/' + ymd(d, '-')).then((j) => { st.feeds['NHL scores'] = 'ok'; st.games.NHL = (j.games || []).map(nhlGame); st.nhlApi = true; })
+          .catch(() => getJSON(ESPN + LEAGUE.NHL + '/scoreboard?dates=' + ymd(d, '')).then((j) => { st.feeds['NHL scores'] = 'ok (ESPN)'; st.games.NHL = (j.events || []).map((e) => espnGame('NHL', e)); st.nhlApi = false; }))
+          .catch(() => { st.feeds['NHL scores'] = 'fail'; }));
+      } else {
+        const url = ESPN + LEAGUE[sp] + '/scoreboard?dates=' + ymd(d, '') + (sp === 'CFB' ? '&groups=80&limit=400' : '&limit=100');
+        jobs.push(getJSON(url).then((j) => { st.feeds[sp + ' scores'] = 'ok'; st.games[sp] = (j.events || []).map((e) => espnGame(sp, e)); }).catch(() => { st.feeds[sp + ' scores'] = 'fail'; }));
+      }
+    }
+    await Promise.allSettled(jobs);
+  };
+  // player box scores: football from ESPN summary, hockey from the NHL API
+  const loadBox = async (game) => {
+    try {
+      if (game.sport === 'NHL') {
+        if (game.src !== 'nhl') { st.feeds['NHL player stats'] = 'unavailable'; return; }
+        const j = await getJSON(NHL_API + 'gamecenter/' + game.id + '/boxscore');
+        const players = [];
+        for (const side of ['awayTeam', 'homeTeam']) {
+          const team = j[side] ? j[side].abbrev : ''; const g = (j.playerByGameStats || {})[side] || {};
+          for (const grp of ['forwards', 'defense', 'goalies']) for (const p of g[grp] || []) players.push({ team, name: (p.name && p.name.default) || '', stats: { goals: p.goals, assists: p.assists, points: p.points, sog: p.sog, blockedShots: p.blockedShots, saves: p.saves, ppg: p.powerPlayGoals } });
+        }
+        st.box[game.sport + game.id] = players; st.feeds['NHL player stats'] = 'ok';
+      } else {
+        const j = await getJSON(ESPN + LEAGUE[game.sport] + '/summary?event=' + game.id);
+        const players = [];
+        for (const tm of ((j.boxscore || {}).players || [])) {
+          const team = tm.team ? tm.team.abbreviation : '';
+          const byName = {};
+          for (const grp of tm.statistics || []) for (const a of grp.athletes || []) {
+            const nm = a.athlete ? a.athlete.displayName : ''; if (!nm) continue;
+            const o = byName[nm] || (byName[nm] = { team, name: nm, stats: {} });
+            (grp.keys || []).forEach((k, i) => { o.stats[grp.name + '.' + k] = a.stats ? a.stats[i] : null; });
+          }
+          players.push(...Object.values(byName));
+        }
+        st.box[game.sport + game.id] = players; st.feeds[game.sport + ' player stats'] = 'ok';
+      }
+    } catch (e) { st.feeds[game.sport + ' player stats'] = game.sport === 'NHL' ? 'blocked' : 'fail'; }
+  };
+
+  // ---------- today's picks (card bets + parlay pieces) ----------
+  const todaysPicks = () => {
+    const cards = dash.data('cards'), parl = dash.data('parlays'), picks = dash.data('picks');
+    if (cards.status !== 'ok' || parl.status !== 'ok' || picks.status !== 'ok') return null;
+    const today = todayIso(); const dateOf = {}, cardDate = {};
+    for (const r of picks.data) if (r.result === 'Pending' || r.result === 'NP') { const k = r.sport + '|' + r.game; if (!dateOf[k] || r.date < dateOf[k]) dateOf[k] = r.date; }
+    for (const r of picks.data) if (r.result === 'Pending' && r.bet !== '') { if (!cardDate[r.sport] || r.date > cardDate[r.sport]) cardDate[r.sport] = r.date; }
+    const dateFor = (sp, g) => dateOf[sp + '|' + g] || (sp === 'NHL' ? cardDate.NHL : '') || '';
+    const gameOfLeg = (leg) => { const t = String(leg || '').split(' ')[0]; return t.includes('@') ? t.replace('@', ' @ ') : ''; };
+    const times = gameTimes(picks.data);
+    const out = [];
+    for (const c of cards.data) if (c.game && dateFor(c.sport, c.game) === today) out.push({ sport: c.sport, game: c.game, kind: c.top === 'Y' ? 'Top pick' : 'Bet', text: c.pick, market: c.market, units: c.units, price: [c.line, c.price].filter((v) => v !== '' && v != null).join(' '), time: times[c.sport + '|' + c.game] || c.kickoff, soft: c.soft });
+    for (const c of parl.data) { const g = c.game || gameOfLeg(c.leg); if (g && dateFor(c.sport, g) === today) out.push({ sport: c.sport, game: g, kind: 'Parlay piece', text: c.leg, market: c.market, units: null, price: c.price, time: times[c.sport + '|' + g] || '' }); }
+    return out;
+  };
+
+  // ---------- pick parsing + live evaluation ----------
+  const clean = (t) => String(t || '').replace(/\s*·?\s*proj\s+[\d.]+/i, '').replace(/\s+(MODEL|SOFT)\b/g, '').replace(/^[A-Z]{2,3}@[A-Z]{2,3}\s+/, '').trim();
+  const parse = (p) => {
+    const t = clean(p.text); const bt = betType(p.sport, p.market, t); let m;
+    if ((m = /^(.+?)\s+(ML|moneyline)$/i.exec(t))) return { kind: 'ml', team: m[1], bt: 'Moneyline' };
+    if ((m = /^(.+?)\s+ATS\s*\(?([+-]?\d+(?:\.\d+)?)?\)?$/i.exec(t))) return { kind: 'spread', team: m[1], line: m[2] != null ? +m[2] : null, bt };
+    if ((m = /^(Over|Under)\s+(\d+(?:\.\d+)?)$/i.exec(t))) return { kind: 'total', side: m[1].toLowerCase(), line: +m[2], bt: 'Total' };
+    if ((m = /^(.+?)\s+([+-]\d+(?:\.\d+)?)(\s+puck line)?$/i.exec(t))) return { kind: 'spread', team: m[1], line: +m[2], bt };
+    if ((m = /^(.+?)\s*(?:\(([A-Z]{2,4})\))?\s+(?:[a-z][a-z ]*?\s+)?(Over|Under|Yes)\s*(\d+(?:\.\d+)?)?/i.exec(t))) return { kind: 'prop', player: m[1].trim(), team: m[2] || '', side: m[3].toLowerCase(), line: m[4] != null ? +m[4] : 0.5, bt };
+    return { kind: 'unknown', bt };
+  };
+  const elapsed = (g) => {
+    if (g.state === 'post') return 1; if (g.state !== 'in' || !g.period) return 0;
+    const per = g.sport === 'NHL' ? 1200 : 900, n = g.sport === 'NHL' ? 3 : 4;
+    if (g.period > n) return 1;
+    const left = g.clock == null ? per / 2 : g.clock;
+    return Math.min(1, Math.max(0.02, ((g.period - 1) * per + (per - left)) / (n * per)));
+  };
+  const sideOf = (g, team) => sameTeam(g.sport, team, g.away) ? 'away' : sameTeam(g.sport, team, g.home) ? 'home' : null;
+  const findPlayer = (g, player, team) => {
+    const list = st.box[g.sport + g.id]; if (!list) return undefined;
+    const full = norm(player), parts = full.split(' '), first = parts[0] || '', last = parts.slice(1).join(' ');
+    const teamOk = (p) => !team || norm(p.team) === norm(team) || norm(p.team) === norm((g.sport === 'NHL' ? NHL_ESPN : NFL_ESPN)[team] || team);
+    let hit = list.find((p) => norm(p.name) === full && teamOk(p));
+    if (!hit && g.sport === 'NHL') hit = list.find((p) => { const n = norm(p.name).split(' '); return n[0] === first[0] && n.slice(1).join(' ') === last && teamOk(p); });
+    if (!hit) hit = list.find((p) => { const n = norm(p.name).split(' '); return n.slice(1).join(' ') === last && (n[0] || '')[0] === first[0] && teamOk(p); });
+    return hit || null;
+  };
+  const statOf = (g, p, bt) => {
+    const s = p.stats;
+    if (g.sport === 'NHL') return ({ 'Shots on goal': s.sog, Points: s.points, Goals: s.goals, Assists: s.assists, 'Blocked shots': s.blockedShots, Saves: s.saves })[bt];
+    const f = (k) => num(s[k]);
+    const ca = String(s['passing.completions/passingAttempts'] || '').split('/');
+    return ({ 'Receiving yards': f('receiving.receivingYards'), Receptions: f('receiving.receptions'), 'Rushing yards': f('rushing.rushingYards'), Rushes: f('rushing.rushingAttempts'), 'Passing yards': f('passing.passingYards'), 'Pass attempts': num(ca[1]), Completions: num(ca[0]), Interceptions: f('passing.interceptions'), 'Passing TDs': f('passing.passingTouchdowns'), 'Anytime TD': (f('rushing.rushingTouchdowns') || 0) + (f('receiving.receivingTouchdowns') || 0) })[bt];
+  };
+  const evaluate = (p, g) => {
+    const q = parse(p); const fin = g.state === 'post'; const live = g.state === 'in';
+    const res = { bt: q.bt, now: '', chip: 'Not started', cls: '', bar: null };
+    if (g.state === 'pre') { res.now = q.kind === 'prop' ? `Line ${q.line}` : ''; return res; }
+    const score = (side) => g[side].score || 0;
+    if (q.kind === 'ml' || q.kind === 'spread') {
+      const side = sideOf(g, q.team); if (!side) { res.chip = 'Team not matched'; return res; }
+      const other = side === 'away' ? 'home' : 'away'; const diff = score(side) - score(other);
+      if (q.kind === 'ml') { res.now = diff > 0 ? `Leading by ${diff}` : diff < 0 ? `Trailing by ${-diff}` : 'Tied'; }
+      else { const m = diff + (q.line || 0); res.now = `${diff >= 0 ? '+' : ''}${diff} with ${q.line > 0 ? '+' : ''}${q.line} → ${m > 0 ? 'covering by ' + fmt1(m) : m < 0 ? 'short by ' + fmt1(-m) : 'push'}`; }
+      const val = q.kind === 'ml' ? diff : diff + (q.line || 0);
+      if (fin) { res.chip = val > 0 ? 'Won' : val < 0 ? 'Lost' : 'Push'; res.cls = val > 0 ? 'win' : val < 0 ? 'loss' : ''; }
+      else { res.chip = val > 0 ? (q.kind === 'ml' ? 'Winning' : 'Covering') : val < 0 ? (q.kind === 'ml' ? 'Losing' : 'Not covering') : 'Even'; res.cls = val > 0 ? 'good' : val < 0 ? 'bad' : ''; }
+      return res;
+    }
+    if (q.kind === 'total') {
+      const tot = score('away') + score('home'); const e = elapsed(g); const pace = e > 0 ? tot / e : tot;
+      res.now = `Total ${tot} of ${q.line}` + (live && e >= 0.25 ? ` · pace ${fmt1(pace)}` : '');
+      res.bar = { frac: Math.min(1, tot / q.line), good: q.side === 'over' ? pace > q.line : pace < q.line };
+      const over = tot > q.line, under = tot < q.line;
+      if (q.side === 'over') { if (over) { res.chip = fin ? 'Won' : 'Hit'; res.cls = 'win'; } else if (fin) { res.chip = under ? 'Lost' : 'Push'; res.cls = under ? 'loss' : ''; } else { res.chip = pace > q.line ? 'On pace' : 'Behind pace'; res.cls = pace > q.line ? 'good' : 'bad'; } }
+      else { if (over) { res.chip = 'Lost'; res.cls = 'loss'; } else if (fin) { res.chip = under ? 'Won' : 'Push'; res.cls = under ? 'win' : ''; } else { res.chip = pace < q.line ? 'On pace' : 'Ahead of pace'; res.cls = pace < q.line ? 'good' : 'bad'; } }
+      return res;
+    }
+    if (q.kind === 'prop') {
+      const pl = findPlayer(g, q.player, q.team);
+      if (pl === undefined) { res.chip = g.sport === 'NHL' && st.feeds['NHL player stats'] && st.feeds['NHL player stats'] !== 'ok' ? 'Stats unavailable' : 'Loading stats'; return res; }
+      let v = pl ? statOf(g, pl, q.bt) : 0; if (v == null) { res.chip = q.bt === 'Power-play points' ? 'Not in live feed' : 'Stat n/a'; return res; }
+      v = +v; const e = elapsed(g); const pace = e > 0 ? v / e : v;
+      res.now = `${pl ? '' : 'No stats yet · '}${fmt1(v)} of ${q.line} ${q.bt.toLowerCase()}` + (live && q.side !== 'yes' && e >= 0.25 ? ` · pace ${fmt1(pace)}` : '');
+      res.bar = { frac: Math.min(1, v / Math.max(q.line, 0.5)), good: q.side === 'under' ? pace < q.line : pace > q.line };
+      if (q.side === 'yes') { if (v >= 1) { res.chip = fin ? 'Won' : 'Hit'; res.cls = 'win'; } else { res.chip = fin ? 'Lost' : 'Waiting'; res.cls = fin ? 'loss' : ''; } }
+      else if (q.side === 'over') { if (v > q.line) { res.chip = fin ? 'Won' : 'Hit'; res.cls = 'win'; } else if (fin) { res.chip = 'Lost'; res.cls = 'loss'; } else { const need = (Number.isInteger(q.line) ? q.line + 1 : Math.ceil(q.line)) - v; res.chip = `Needs ${fmt1(need)} more`; res.cls = pace > q.line ? 'good' : 'bad'; } }
+      else { if (v > q.line) { res.chip = 'Lost'; res.cls = 'loss'; } else if (fin) { res.chip = 'Won'; res.cls = 'win'; } else { const spare = (Number.isInteger(q.line) ? q.line - 1 : Math.floor(q.line)) - v; res.chip = spare > 0 ? `${fmt1(spare)} to spare` : 'Holding · no room'; res.cls = pace < q.line ? 'good' : 'bad'; } }
+      return res;
+    }
+    res.chip = '—'; return res;
+  };
+
+  // ---------- matching + render ----------
+  const matchGame = (p) => {
+    const [a, h] = String(p.game).split(' @ ');
+    return (st.games[p.sport] || []).find((g) => sameTeam(p.sport, a, g.away) && sameTeam(p.sport, h, g.home)) || (st.games[p.sport] || []).find((g) => sameTeam(p.sport, h, g.home) || sameTeam(p.sport, a, g.away)) || null;
+  };
+  const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
+  const render = () => {
+    const sec = document.getElementById('scores'); if (!sec) return;
+    document.getElementById('sb-date').textContent = new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+    const picks = todaysPicks(); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
+    if (!picks) { grid.replaceChildren(); return; }
+    document.getElementById('sb-empty').hidden = picks.length > 0;
+    const groups = new Map(), unmatched = [];
+    for (const p of picks) { const g = matchGame(p); if (!g) { unmatched.push(p); continue; } const k = g.sport + g.id; if (!groups.has(k)) groups.set(k, { g, picks: [] }); groups.get(k).picks.push(p); }
+    const order = { in: 0, pre: 1, post: 2 };
+    const list = [...groups.values()].sort((x, y) => (order[x.g.state] - order[y.g.state]) || String(x.g.start).localeCompare(String(y.g.start)));
+    grid.replaceChildren(...list.map(({ g, picks: ps }) => {
+      const card = el('div', 'sb-card' + (g.state === 'in' ? ' live' : ''));
+      const top = el('div', 'sb-top'); const left = el('span'); if (g.state === 'in') left.appendChild(el('span', 'live-dot'));
+      left.appendChild(document.createTextNode(g.state === 'pre' ? (ps[0].time || new Date(g.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })) : g.detail));
+      top.append(left, el('span', null, g.sport)); card.appendChild(top);
+      for (const side of ['away', 'home']) {
+        const t = g[side], o = g[side === 'away' ? 'home' : 'away'];
+        const row = el('div', 'sb-team' + (g.state !== 'pre' && (t.score || 0) > (o.score || 0) ? ' lead' : ''));
+        row.append(el('span', 'nm', g.sport === 'NHL' ? t.name : (t.location || t.name)), el('span', 'sc', g.state === 'pre' || t.score == null ? '' : String(t.score)));
+        card.appendChild(row);
+      }
+      const box = el('div', 'sb-picks');
+      for (const p of ps) {
+        const r = evaluate(p, g); const row = el('div', 'sb-pick');
+        const txt = el('span', 'txt'); if (p.kind === 'Top pick') txt.appendChild(el('span', 'star', '★ ')); txt.appendChild(document.createTextNode(clean(p.text)));
+        row.append(txt, el('span', 'chip ' + r.cls, r.chip));
+        if (r.bar) { const b = el('div', 'sb-bar ' + (r.bar.good ? 'good' : 'bad')); const s = el('span'); s.style.width = Math.round(r.bar.frac * 100) + '%'; b.appendChild(s); row.appendChild(b); }
+        row.appendChild(el('span', 'meta', [p.kind, r.bt, p.price, p.units ? p.units + 'u' : '', r.now].filter(Boolean).join(' · ')));
+        box.appendChild(row);
+      }
+      card.appendChild(box); return card;
+    }));
+    un.hidden = !unmatched.length;
+    un.textContent = unmatched.length ? 'Not found in today’s live feed (game time not set yet, or a team name that needs matching): ' + unmatched.map((p) => `${p.sport} ${p.game} — ${clean(p.text)}`).join(' · ') : '';
+    const fs = Object.entries(st.feeds).map(([k, v]) => `<span class="${v.startsWith('ok') ? 'ok' : 'bad'}">${esc(k)}: ${esc(v)}</span>`).join(' · ');
+    document.getElementById('sb-status').innerHTML = (st.last ? 'Updated ' + st.last.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit', second: '2-digit' }) + ' · ' : 'Loading… · ') + (fs || '');
+  };
+  const refresh = async () => {
+    if (st.busy) return; st.busy = true;
+    try {
+      const picks = todaysPicks(); if (!picks) return;
+      const sports = [...new Set(picks.map((p) => p.sport))];
+      await loadScoreboards(sports);
+      const needBox = new Map();
+      for (const p of picks) { if (parse(p).kind !== 'prop') continue; const g = matchGame(p); if (g && g.state !== 'pre') needBox.set(g.sport + g.id, g); }
+      await Promise.allSettled([...needBox.values()].map((g) => (g.state === 'post' && st.box[g.sport + g.id] && st.box[g.sport + g.id].final) ? null : loadBox(g).then(() => { if (g.state === 'post' && st.box[g.sport + g.id]) st.box[g.sport + g.id].final = true; })));
+      st.last = new Date();
+    } finally { st.busy = false; render(); }
+  };
+  const visible = () => { const s = document.getElementById('scores'); return s && !s.hidden && document.visibilityState === 'visible'; };
+  setInterval(() => { if (visible()) refresh(); }, REFRESH_MS);
+  document.addEventListener('visibilitychange', () => { if (visible()) refresh(); });
+  document.getElementById('sb-refresh').addEventListener('click', refresh);
+  document.querySelector('.bm .tabs button[data-tab="scores"]').addEventListener('click', () => { render(); refresh(); });
+  dash.onData(() => { if (!visible()) return; if (!st.last && !st.busy) refresh(); else render(); });
+  if (!document.getElementById('scores').hidden) refresh();
+  window.bmScoreboard = { st, refresh, render, parse, evaluate };
+})();
+</script>
 
 <script>
 (() => {
