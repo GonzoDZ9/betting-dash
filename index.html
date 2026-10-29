@@ -5,8 +5,8 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="color-scheme" content="dark">
 <title>Betting Models</title>
-<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png">
-<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png">
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png?v=2">
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png?v=2">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="Bets">
@@ -206,6 +206,12 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .mkt-seg button:first-child { border-left: 0; }
 .bm .mkt-seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
 .bm .controls .mkt-seg { margin-bottom: 0; }
+.bm .rng-lbl { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: inline-flex; gap: .5em; align-items: center; }
+.bm .rec-controls select, .bm .rec-controls input[type=date] { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); color-scheme: dark; }
+.bm .rng-custom { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: inline-flex; gap: .4em; align-items: center; }
+.bm .rng-custom[hidden] { display: none; }
+.bm .rec-h2 { margin-top: var(--cds-gap-md); }
+.bm .picks-h2 { margin-top: var(--cds-gap-xl); }
 .bm .mkt-empty { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); padding: var(--cds-pad-sm) 0; }
 .bm .chk { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: inline-flex; gap: .4em; align-items: center; }
 .bm h4.sub { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-md) 0 var(--cds-gap-xs); }
@@ -304,30 +310,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 </section>
 
   <template id="sport-tpl">
-    <h2>Current card <small class="sp-label"></small></h2>
-    <div class="mkt-seg" data-sect="card" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div>
-    <div class="card">
-      <div class="cardhead"><span><b class="sp-title"></b></span><span>Built <b class="sp-generated"></b></span><span><b class="sp-nbets"></b> bets</span><span><b class="sp-units"></b> units</span><span><b class="sp-ntop"></b> top picks</span></div>
-      <div class="empty sp-empty" hidden></div>
-      <div class="mkt-empty sp-card-mkt-empty" hidden></div>
-      <div class="scroll">
-        <table class="sp-card-table" data-source="cards" data-row-key="sport,n">
-          <thead><tr><th data-field="n">#</th><th data-field="kickoff">Game time</th><th data-field="game">Game</th><th data-field="pick">Pick</th><th data-field="market">Bet type</th><th data-field="tier">Tier</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead>
-          <tbody></tbody>
-        </table>
-      </div>
-    </div>
-    <div class="card sp-parlay-card" style="margin-top: var(--cds-gap-md)" hidden>
-      <h3>Parlay pieces</h3>
-      <p class="note">The model's likeliest legs on today's slate — for parlays, not straight bets. Market says what the leg is (shots, points, goals, moneyline…).</p>
-      <table class="sp-parlay-table" data-source="parlays" data-row-key="sport,n">
-        <thead><tr><th data-field="n">#</th><th data-field="leg">Leg</th><th data-field="market">Bet type</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead>
-        <tbody></tbody>
-      </table>
-    </div>
-
-    <h2>Track record <small class="sp-tiles-sub">graded bets this season</small></h2>
-    <div class="mkt-seg" data-sect="tiles" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div>
+    <h2 class="rec-h2">Track record <small class="sp-tiles-sub">graded bets this season</small></h2>
+    <div class="controls rec-controls"><label class="rng-lbl">Date range <select class="sp-range" aria-label="Date range for the track record"><option value="season">Season to date</option><option value="yesterday">Yesterday</option><option value="d7">Last 7 days</option><option value="d30">Last 30 days</option><option value="y1">Last 12 months</option><option value="custom">Custom range…</option></select></label><span class="rng-custom" hidden><input type="date" class="sp-from" aria-label="From date"> to <input type="date" class="sp-to" aria-label="To date"></span><div class="mkt-seg" data-sect="tiles" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div></div>
     <div class="tiles sp-tiles"></div>
 
     <div class="grid" style="margin-top: var(--cds-gap-md)">
@@ -362,6 +346,28 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
           <tbody></tbody>
         </table>
       </div>
+    </div>
+
+    <h2 class="picks-h2">Current card <small class="sp-label"></small></h2>
+    <div class="mkt-seg" data-sect="card" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div>
+    <div class="card">
+      <div class="cardhead"><span><b class="sp-title"></b></span><span>Built <b class="sp-generated"></b></span><span><b class="sp-nbets"></b> bets</span><span><b class="sp-units"></b> units</span><span><b class="sp-ntop"></b> top picks</span></div>
+      <div class="empty sp-empty" hidden></div>
+      <div class="mkt-empty sp-card-mkt-empty" hidden></div>
+      <div class="scroll">
+        <table class="sp-card-table" data-source="cards" data-row-key="sport,n">
+          <thead><tr><th data-field="n">#</th><th data-field="kickoff">Game time</th><th data-field="game">Game</th><th data-field="pick">Pick</th><th data-field="market">Bet type</th><th data-field="tier">Tier</th><th data-field="line">Line</th><th data-field="price">Price</th><th class="num" data-field="units">Units</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="limit">Bet limit</th><th data-field="tag">Tag</th></tr></thead>
+          <tbody></tbody>
+        </table>
+      </div>
+    </div>
+    <div class="card sp-parlay-card" style="margin-top: var(--cds-gap-md)" hidden>
+      <h3>Parlay pieces</h3>
+      <p class="note">The model's likeliest legs on today's slate — for parlays, not straight bets. Market says what the leg is (shots, points, goals, moneyline…).</p>
+      <table class="sp-parlay-table" data-source="parlays" data-row-key="sport,n">
+        <thead><tr><th data-field="n">#</th><th data-field="leg">Leg</th><th data-field="market">Bet type</th><th data-field="game">Game</th><th data-field="price">Price</th><th class="num" data-field="model_prob">Model %</th><th data-field="hit_rate">Hit rate</th></tr></thead>
+        <tbody></tbody>
+      </table>
     </div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
@@ -896,6 +902,17 @@ const mktOf = (r) => { const m = String(r.market || '').toLowerCase(); return /s
 const mktKeep = (sport, sect) => (r) => sport !== 'CFB' || mktSel[sect] === 'all' || mktOf(r) === mktSel[sect];
 const mktName = { ATS: 'ATS', ML: 'moneyline', TOT: 'totals' };
 const sumRows = (rows) => { rows = rows.filter((r) => r.bet !== ''); const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
+// Track record date range (shared by the three sport tabs): season, yesterday, last 7 / 30 days, last 12 months or custom
+const RNG_KEY = 'bm.recRange.v1';
+let rng = { r: 'season', from: '', to: '' };
+try { rng = { ...rng, ...JSON.parse(localStorage.getItem(RNG_KEY) || '{}') }; } catch (e) { /* storage unavailable */ }
+const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+const daysAgo = (n) => { const x = new Date(); x.setDate(x.getDate() - n); return ymd(x); };
+const rngBounds = () => ({ season: ['', ''], yesterday: [daysAgo(1), daysAgo(1)], d7: [daysAgo(7), ''], d30: [daysAgo(30), ''], y1: [daysAgo(365), ''], custom: [rng.from || '', rng.to || ''] }[rng.r] || ['', '']);
+const rngLabel = () => { const [f, t] = rngBounds(); const fd = (v) => v ? new Date(v + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; return { season: 'this season', yesterday: 'yesterday', d7: 'last 7 days', d30: 'last 30 days', y1: 'last 12 months' }[rng.r] || (f || t ? `${fd(f) || 'start'} – ${fd(t) || 'today'}` : 'this season'); };
+// graded bets inside the range; pending bets always count toward the Pending tile
+const inRange = (r) => { if (r.result === 'Pending') return true; const [f, t] = rngBounds(); const d = String(r.date || ''); return (!f || d >= f) && (!t || d <= t); };
+const groupBy = (rows, keyOf, order) => { const keys = [...new Set(rows.map(keyOf))]; keys.sort(order || ((a, b) => (isNaN(a) || isNaN(b) ? String(a).localeCompare(String(b)) : Number(a) - Number(b)))); return keys.map((k) => [k, rows.filter((r) => keyOf(r) === k)]); };
 const drawSport = (sport) => {
   const sec = document.getElementById(sport.toLowerCase());
   if (sec.hidden || !sec.dataset.built) return;
@@ -934,8 +951,16 @@ const drawSport = (sport) => {
   // tiles
   const tiles = q('.sp-tiles');
   const tileMkt = sport === 'CFB' && mktSel.tiles !== 'all';
-  const s = tileMkt ? (picks.status === 'ok' ? sumRows(picks.data.filter((r) => r.sport === sport).filter(mktKeep(sport, 'tiles'))) : null) : (sum.status === 'ok' ? sum.data.find((r) => r.sport === sport && r.window === 'season') : null);
-  q('.sp-tiles-sub').textContent = tileMkt ? `graded ${mktName[mktSel.tiles]} bets this season` : 'graded bets this season';
+  q('.sp-range').value = rng.r; q('.rng-custom').hidden = rng.r !== 'custom'; q('.sp-from').value = rng.from || ''; q('.sp-to').value = rng.to || '';
+  // the record section (tiles, chart and breakdowns) is worked out here from the bets in the chosen range and bet type
+  const recRows = picks.status === 'ok' ? picks.data.filter((r) => r.sport === sport).filter(mktKeep(sport, 'tiles')).filter(inRange) : [];
+  const s = picks.status === 'ok' ? sumRows(recRows) : null;
+  q('.sp-tiles-sub').textContent = `graded ${tileMkt ? mktName[mktSel.tiles] + ' ' : ''}bets · ${rngLabel()}`;
+  const gradedRows = recRows.filter((r) => r.result !== 'Pending');
+  const localPer = (() => { let cum = 0; return groupBy(gradedRows, (r) => String(r.period)).map(([period, rows]) => { const x = sumRows(rows); cum += x.profit; return { sport, period, ...x, cum: Math.round(cum * 10) / 10 }; }); })();
+  const localMk = groupBy(gradedRows, (r) => String(r.market)).map(([market, rows]) => ({ sport, market, ...sumRows(rows) }));
+  const localSt = groupBy(gradedRows, (r) => String(r.units)).map(([units, rows]) => ({ sport, units, ...sumRows(rows) }));
+  const localTg = [['Top picks', (r) => r.top === 'Y'], ['Other bets', (r) => r.top !== 'Y'], ['Soft lines', (r) => r.soft === 'Y']].map(([tag, f]) => ({ sport, tag, ...sumRows(gradedRows.filter(f)) }));
   if (s) {
     const mk1 = (k, f, v, sub, cls) => { const t = tile(k, v, sub, cls); t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', f); t.setAttribute('data-where', 'window=season&sport=' + sport); return t; };
     tiles.replaceChildren(
@@ -950,14 +975,14 @@ const drawSport = (sport) => {
   // period chart
   const box = q('.sp-period-chart');
   q('.sp-period-title').textContent = sport === 'NHL' ? 'Units by game day' : 'Units by week';
-  if (per.status === 'ok') window.bmC.drawPeriod(box, per.data.filter((r) => r.sport === sport && r.graded > 0), periodLabel(sport)); else box.querySelectorAll('svg').forEach((e) => e.remove());
-  skel(box, per.status === 'loading');
+  if (picks.status === 'ok') window.bmC.drawPeriod(box, localPer.filter((r) => r.graded > 0), periodLabel(sport)); else box.querySelectorAll('svg').forEach((e) => e.remove());
+  skel(box, picks.status === 'loading');
   // breakdown tables
   const recCols = (first) => [first, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) }];
-  if (mk.status === 'ok') fillTable(q('.sp-market-table'), mk.data.filter((r) => r.sport === sport), recCols({ f: 'market' }), (r) => `${r.sport},${r.market}`);
+  if (picks.status === 'ok') fillTable(q('.sp-market-table'), localMk.filter((r) => r.graded > 0), recCols({ f: 'market' }), (r) => `${r.sport},${r.market}`);
   const noRisk = (cols) => cols.filter((c) => c.f !== 'risked');
-  if (st.status === 'ok') fillTable(q('.sp-stake-table'), st.data.filter((r) => r.sport === sport), noRisk(recCols({ f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u' })), (r) => `${r.sport},${r.units}`);
-  if (tg.status === 'ok') fillTable(q('.sp-tag-table'), tg.data.filter((r) => r.sport === sport && r.graded > 0), noRisk(recCols({ f: 'tag' })), (r) => `${r.sport},${r.tag}`);
+  if (picks.status === 'ok') fillTable(q('.sp-stake-table'), localSt.filter((r) => r.graded > 0), noRisk(recCols({ f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u' })), (r) => `${r.sport},${r.units}`);
+  if (picks.status === 'ok') fillTable(q('.sp-tag-table'), localTg.filter((r) => r.graded > 0), noRisk(recCols({ f: 'tag' })), (r) => `${r.sport},${r.tag}`);
   // picks tables: upcoming vs completed
   if (picks.status === 'ok') {
     const st2 = sortState[sport] || (sortState[sport] = { f: 'date', dir: -1 });
@@ -1011,7 +1036,17 @@ for (const id of ['cfb', 'nfl', 'nhl']) {
     drawSport(sport);
   });
   sec.addEventListener('input', (ev) => { if (ev.target.classList.contains('sp-search')) drawSport(id.toUpperCase()); });
-  sec.addEventListener('change', (ev) => { if (ev.target.classList.contains('sp-betsonly')) drawSport(id.toUpperCase()); });
+  sec.addEventListener('change', (ev) => {
+    const t = ev.target;
+    if (t.classList.contains('sp-betsonly')) { drawSport(id.toUpperCase()); return; }
+    if (t.classList.contains('sp-range') || t.classList.contains('sp-from') || t.classList.contains('sp-to')) {
+      if (t.classList.contains('sp-range')) { rng.r = t.value; if (rng.r === 'custom' && !rng.from && !rng.to) { rng.from = daysAgo(14); rng.to = daysAgo(1); } }
+      if (t.classList.contains('sp-from')) rng.from = t.value;
+      if (t.classList.contains('sp-to')) rng.to = t.value;
+      try { localStorage.setItem(RNG_KEY, JSON.stringify(rng)); } catch (e) { /* storage unavailable */ }
+      drawSport(id.toUpperCase());
+    }
+  });
 }
 
 window.bmDraw = () => { drawOverview(); for (const s of ['CFB', 'NFL', 'NHL']) drawSport(s); };
