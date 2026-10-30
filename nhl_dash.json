@@ -1,18 +1,17 @@
 {
 "sport": "NHL",
-"generated_at": "2026-10-30 07:18",
-"card_info": {"sport":"NHL","name":"NHL","label":"Fri Oct 30","title":"NHL Bet Card \u2014 Friday, October 30, 2026","generated":"Oct 30, 7:18 AM","n_bets":4,"units":3,"n_top":1,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
-"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"NJD @ VGK","market":"SOG","pick":"Tomas Hertl (VGK) Under 2.5 \u00B7 proj 2.0","line":"","price":"-165","units":1,"model_prob":0.6479,"market_prob":0.5835,"edge":0.0644,"limit":"","tag":"BET","top":"","soft":""},
-{"sport":"NHL","n":2,"kickoff":"","game":"WPG @ FLA","market":"PTS","pick":"Anton Lundell (FLA) Under 0.5 \u00B7 proj 0.6","line":"","price":"-115","units":0.5,"model_prob":0.5635,"market_prob":0.5,"edge":0.0635,"limit":"","tag":"\u2605 TOP PICK","top":"Y","soft":"Y"},
-{"sport":"NHL","n":3,"kickoff":"","game":"WPG @ FLA","market":"SOG","pick":"Brady Tkachuk (FLA) Under 3.5 \u00B7 proj 3.2","line":"","price":"-115","units":0.5,"model_prob":0.5549,"market_prob":0.5,"edge":0.0549,"limit":"","tag":"BET","top":"","soft":""},
-{"sport":"NHL","n":4,"kickoff":"","game":"SEA @ CGY","market":"SOG","pick":"Matvei Gridin (CGY) Under 2.5 \u00B7 proj 2.2","line":"","price":"-135","units":1,"model_prob":0.6024,"market_prob":0.5347,"edge":0.0678,"limit":"","tag":"BET","top":"","soft":""}],
-"parlays": [{"sport":"NHL","n":1,"market":"PL","leg":"NJD@VGK NJD +1.5 puck line","game":"","price":"-250","model_prob":0.6945,"hit_rate":"75% of 53"},
-{"sport":"NHL","n":2,"market":"PL","leg":"SEA@CGY CGY +1.5 puck line","game":"","price":"-250","model_prob":0.6951,"hit_rate":"69% of 39"},
-{"sport":"NHL","n":3,"market":"PTS","leg":"WPG@FLA Elias Salomonsson (WPG) Under 0.5 proj 0.2","game":"","price":"-200","model_prob":0.686,"hit_rate":"68% of 723"},
-{"sport":"NHL","n":4,"market":"ML","leg":"WPG@FLA FLA moneyline","game":"","price":"-225","model_prob":0.6696,"hit_rate":"76% of 41"},
+"generated_at": "2026-10-30 09:09",
+"card_info": {"sport":"NHL","name":"NHL","label":"Fri Oct 30","title":"NHL Bet Card \u2014 Friday, October 30, 2026","generated":"Oct 30, 9:09 AM","n_bets":3,"units":2.5,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"NJD @ VGK","market":"SOG","pick":"Tomas Hertl (VGK) Under 2.5 \u00B7 proj 2.0","line":"","price":"-165","units":1,"model_prob":0.6476,"market_prob":0.5835,"edge":0.0641,"limit":"","tag":"BET","top":"","soft":""},
+{"sport":"NHL","n":2,"kickoff":"","game":"WPG @ FLA","market":"SOG","pick":"Brady Tkachuk (FLA) Under 3.5 \u00B7 proj 3.2","line":"","price":"-115","units":0.5,"model_prob":0.5615,"market_prob":0.5,"edge":0.0615,"limit":"","tag":"BET","top":"","soft":"Y"},
+{"sport":"NHL","n":3,"kickoff":"","game":"SEA @ CGY","market":"SOG","pick":"Matvei Gridin (CGY) Under 2.5 \u00B7 proj 2.2","line":"","price":"-135","units":1,"model_prob":0.6027,"market_prob":0.5347,"edge":0.0681,"limit":"","tag":"BET","top":"","soft":"Y"}],
+"parlays": [{"sport":"NHL","n":1,"market":"PL","leg":"NJD@VGK NJD +1.5 puck line","game":"","price":"-300","model_prob":0.6956,"hit_rate":"75% of 51"},
+{"sport":"NHL","n":2,"market":"PL","leg":"SEA@CGY CGY +1.5 puck line","game":"","price":"-250","model_prob":0.695,"hit_rate":"69% of 39"},
+{"sport":"NHL","n":3,"market":"PTS","leg":"WPG@FLA Elias Salomonsson (WPG) Under 0.5 proj 0.2","game":"","price":"-200","model_prob":0.6814,"hit_rate":"68% of 766"},
+{"sport":"NHL","n":4,"market":"ML","leg":"WPG@FLA FLA moneyline","game":"","price":"-230","model_prob":0.6728,"hit_rate":"77% of 39"},
 {"sport":"NHL","n":5,"market":"SOG","leg":"NJD@VGK Mark Stone (VGK) Under 2.5 proj 1.8","game":"","price":"-250","model_prob":0.685,"hit_rate":"66% of 187"},
-{"sport":"NHL","n":6,"market":"PTS","leg":"NJD@VGK Jack Eichel (VGK) Under 1.5 proj 1.1","game":"","price":"-200","model_prob":0.6521,"hit_rate":"67% of 984"},
-{"sport":"NHL","n":7,"market":"PTS","leg":"WPG@FLA Brady Tkachuk (FLA) Over 0.5 proj 0.9","game":"","price":"-240","model_prob":0.652,"hit_rate":"66% of 265"},
+{"sport":"NHL","n":6,"market":"PTS","leg":"WPG@FLA Brady Tkachuk (FLA) Over 0.5 proj 0.9","game":"","price":"-240","model_prob":0.652,"hit_rate":"66% of 265"},
+{"sport":"NHL","n":7,"market":"PTS","leg":"NJD@VGK Jack Eichel (VGK) Under 1.5 proj 1.1","game":"","price":"-195","model_prob":0.6488,"hit_rate":"66% of 1005"},
 {"sport":"NHL","n":8,"market":"PTS","leg":"NJD@VGK Evan Rodrigues (NJD) Under 0.5 proj 0.4","game":"","price":"-195","model_prob":0.644,"hit_rate":"65% of 1040"},
 {"sport":"NHL","n":9,"market":"PTS","leg":"WPG@FLA Sam Reinhart (FLA) Over 0.5 proj 1.0","game":"","price":"-210","model_prob":0.6448,"hit_rate":"64% of 316"},
 {"sport":"NHL","n":10,"market":"PTS","leg":"SEA@CGY Simon Nemec (CGY) Under 0.5 proj 0.5","game":"","price":"-230","model_prob":0.6423,"hit_rate":"65% of 1042"}],
