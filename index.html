@@ -167,6 +167,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .tile .k { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
 .bm .tile .v { font-family: var(--font-anthropic-serif); font-weight: 400; font-size: var(--cds-font-size-title); font-variant-numeric: tabular-nums; line-height: 1.2; }
 .bm .tile.tile-mine { border-color: var(--color-ok); }
+.bm tr.mine-row td { border-top: 1px solid var(--color-ok); color: var(--color-fg); }
+.bm tr.mine-row td:first-child { color: var(--color-ok); font-weight: var(--cds-font-weight-medium); }
 .bm .tile .s { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
 .bm .pos { color: var(--color-ok); } .bm .neg { color: var(--color-bad); }
 .bm table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; font-size: var(--cds-font-size-caption); }
@@ -826,6 +828,25 @@ const myPicksTile = (win) => {
   t.classList.add('tile-mine'); t.title = 'Bets you tracked with the + button. Tracked parlay pieces and no-bet projections are not counted, since the models put no stake on them.';
   return t;
 };
+// "My picks" lines for the overview tables: tracked bets in the window (record), and what you track on the current cards
+const myPicksRecord = (win) => {
+  const T = window.bmTrack; const pk = dash.data('picks');
+  const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
+  const keep = { season: () => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1) }[win] || (() => true);
+  const mine = pk.status === 'ok' ? pk.data.filter((r) => r.bet !== '' && T.has(T.rowKey(r)) && (r.result === 'Pending' || keep(r))) : [];
+  const x = sumRows(mine);
+  return { window: win, sport: 'MINE', ...x, avg_clv: null };
+};
+const myPicksOnCards = () => {
+  const T = window.bmTrack; const cards = dash.data('cards'), parl = dash.data('parlays');
+  let leans = []; try { const L = dash.data('leans'); if (L && L.status === 'ok' && Array.isArray(L.data)) leans = L.data; } catch (e) { /* no leans feed */ }
+  const c = cards.status === 'ok' ? cards.data.filter((r) => T.has(T.cardKey(r))) : [];
+  const legs = parl.status === 'ok' ? parl.data.filter((r) => T.has(T.legKey(r))).length : 0;
+  const ln = leans.filter((r) => T.has(T.leanKey(r))).length;
+  const extra = [legs ? `${legs} parlay piece${legs === 1 ? '' : 's'}` : '', ln ? `${ln} lean${ln === 1 ? '' : 's'}` : ''].filter(Boolean).join(' · ');
+  return { sport: 'My picks', label: c.length || extra ? 'Tracked on the current cards' + (extra ? ' · + ' + extra : '') : 'Nothing tracked on the current cards — tap + on a pick', n_bets: c.length, units: Math.round(10 * c.reduce((a, r) => a + Number(r.units || 0), 0)) / 10, n_top: c.filter((r) => r.top === 'Y').length, generated: '' };
+};
+const markMineRow = (table) => { const trs = table.querySelectorAll('tbody tr'); if (trs.length) trs[trs.length - 1].classList.add('mine-row'); };
 const drawOverview = () => {
   const win = window.bmWin;
   const sum = dash.data('summary_by_sport'), cum = dash.data('cum_by_date'), info = dash.data('card_info'), cards = dash.data('cards'), parl = dash.data('parlays'), picks = dash.data('picks');
@@ -844,11 +865,12 @@ const drawOverview = () => {
       t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', 'profit'); t.setAttribute('data-where', 'window=' + win + '&sport=' + r.sport);
       return t;
     }), myPicksTile(win));
-    fillTable(document.getElementById('ov-table'), rows, [
-      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
+    fillTable(document.getElementById('ov-table'), [...rows, myPicksRecord(win)], [
+      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v === 'MINE' ? 'My picks' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
       { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) },
-      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => `${v} (${r.pending_units}u)`, cls: 'num' },
+      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' || r.sport === 'MINE' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => `${v} (${r.pending_units}u)`, cls: 'num' },
     ], (r) => `${r.window},${r.sport}`);
+    markMineRow(document.getElementById('ov-table'));
   } else { lede.querySelectorAll('span').forEach((e) => { e.textContent = '—'; }); tiles.replaceChildren(); }
   skel(lede, sum.status === 'loading');
   const box = document.getElementById('cum-chart');
@@ -860,7 +882,7 @@ const drawOverview = () => {
     window.bmC.drawCum(box, rows, series, colors);
   } else { box.querySelectorAll('svg').forEach((s) => s.remove()); }
   skel(box, cum.status === 'loading');
-  if (info.status === 'ok') fillTable(document.getElementById('today-cards-table'), info.data, [{ f: 'sport' }, { f: 'label' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated' }], (r) => r.sport);
+  if (info.status === 'ok') { fillTable(document.getElementById('today-cards-table'), [...info.data, myPicksOnCards()], [{ f: 'sport' }, { f: 'label', cls: 'wrap' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated', fmt: (v) => v || '—' }], (r) => r.sport); markMineRow(document.getElementById('today-cards-table')); }
 
   // ---- active top picks + parlay pieces per model, and today's picks ----
   if (cards.status !== 'ok' || parl.status !== 'ok' || picks.status !== 'ok') return;
