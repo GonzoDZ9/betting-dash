@@ -1,7 +1,7 @@
 {
 "sport": "CFB",
-"generated_at": "2026-10-30 07:09",
-"card_info": {"sport":"CFB","name":"College Football","label":"Week 9","title":"Week 9 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Fri Oct 30, 2026 7:08 AM ET","n_bets":31,"units":56,"n_top":19,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
+"generated_at": "2026-10-30 08:39",
+"card_info": {"sport":"CFB","name":"College Football","label":"Week 9","title":"Week 9 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Fri Oct 30, 2026 8:38 AM ET","n_bets":31,"units":56,"n_top":19,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Fri 10:30 PM ET","game":"Kent State @ Sacramento State","market":"Spread","pick":"Sacramento State +9.5","line":"+9.5 (-105)","price":"","units":5,"model_prob":0.727,"market_prob":null,"edge":null,"limit":"Focus to +1","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 7-4","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Sat 3:30 PM ET","game":"Southern Miss @ UL Monroe","market":"Spread","pick":"Southern Miss -3.5","line":"-3.5 (-105)","price":"","units":5,"model_prob":0.658,"market_prob":null,"edge":null,"limit":"Focus to -9.5","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 7-4","top":"Y","soft":""},
 {"sport":"CFB","n":3,"kickoff":"Sat 4:15 PM ET","game":"Nevada @ UCLA","market":"Spread","pick":"UCLA -22.5","line":"-22.5 (-110)","price":"","units":5,"model_prob":0.648,"market_prob":null,"edge":null,"limit":"Focus to -31.5","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 7-4","top":"Y","soft":""},
