@@ -41,6 +41,9 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 (() => {
   const FEEDS = ['cfb_dash.json', 'nfl_dash.json', 'nhl_dash.json'];
   const sets = {}, calcs = {}, listeners = [];
+  // grades worked out on the page from final scores (see the scoreboard's autoGrade); a model grade in the feed always wins
+  const scoreGrades = {}; const gradeKey = (r) => r.id + '|' + r.date + '|' + r.selection;
+  const applyGrades = () => { let n = 0; for (const r of sets.picks || []) { const g = scoreGrades[gradeKey(r)]; if (g && r.result === 'Pending') { Object.assign(r, g); n++; } } return n; };
   let status = 'loading', message = '', loaded = {};
   const shortDay = (t) => { const p = String(t || '').replace(/,/g, '').trim().split(/\s+/); const cap = (s) => s.charAt(0).toUpperCase() + s.slice(1, 3).toLowerCase(); return p.length >= 3 ? `${cap(p[0])} ${cap(p[1])} ${p[2]}` : t; };
   const fmtGen = (g) => { const m = /^(\d{4})-(\d{2})-(\d{2}) (\d{2}):(\d{2})$/.exec(g || ''); if (!m) return g || ''; const d = new Date(+m[1], +m[2] - 1, +m[3], +m[4], +m[5]); return d.toLocaleString('en-US', { month: 'short', day: 'numeric' }) + ', ' + d.toLocaleString('en-US', { hour: 'numeric', minute: '2-digit' }); };
@@ -53,11 +56,13 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       if (ci.sport === 'NHL') { if (!ci.generated) ci.generated = fmtGen(d.generated_at); if (/,/.test(ci.label)) ci.label = shortDay(ci.label); }
       ci.feed_generated = d.generated_at; info.push(ci);
     }
-    sets.picks = picks; sets.cards = cards; sets.card_info = info; sets.parlays = parlays; sets.leans = leans;
+    sets.picks = picks; sets.cards = cards; sets.card_info = info; sets.parlays = parlays; applyGrades(); sets.leans = leans;
   };
   const load = async () => {
-    const results = await Promise.all(FEEDS.map((f) => fetch(f + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null)));
+    const get = (f) => fetch(f + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const [results, pga] = await Promise.all([Promise.all(FEEDS.map(get)), get('pga_dash.json')]);
     loaded = Object.fromEntries(FEEDS.map((f, i) => [f, !!results[i]]));
+    loaded['pga_dash.json'] = !!pga; sets.pga = pga ? [pga] : [];   // golf_engine feed, kept apart from the three betting models
     if (results.every((r) => !r)) { status = 'error'; message = 'None of the model feeds could be loaded.'; }
     else { merge(results); status = 'ok'; Object.keys(calcs).forEach((k) => { calcs[k].value = undefined; }); }
     fire();
@@ -81,6 +86,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     setLink(name) { if (location.hash.slice(1) !== name) history.replaceState(null, '', '#' + name); },
     refresh() { load(); },
     loaded() { return loaded; },
+    gradeKey,
+    setGrades(map) { Object.assign(scoreGrades, map); if (applyGrades()) { Object.keys(calcs).forEach((k) => { calcs[k].value = undefined; }); fire(); } },
   };
   window.dash = dash;
   let rw = window.innerWidth;
@@ -125,6 +132,13 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-sports button { background: var(--color-panel); border: 0; border-left: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); cursor: pointer; }
 .bm .sb-sports button:first-child { border-left: 0; }
 .bm .sb-sports button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
+.bm .sb-golf h4 { margin: var(--cds-gap-xs) 0 var(--cds-gap-xs); font-size: var(--cds-font-size-body); }
+.bm .sb-lb { width: 100%; border-collapse: collapse; font-size: var(--cds-font-size-caption); font-variant-numeric: tabular-nums; }
+.bm .sb-lb td { padding: 2px 4px; border-bottom: 1px solid var(--color-border-line); white-space: nowrap; }
+.bm .sb-lb td:nth-child(2) { width: 100%; white-space: normal; }
+.bm .sb-lb td.n { text-align: right; }
+.bm .sb-lb tr.mine td { color: var(--color-ok); }
+.bm .sb-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-sm) 0 2px; }
 .bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 </style><style>
 .bm .sync-btn { margin-left: var(--cds-gap-xs); margin-bottom: var(--cds-gap-xs); border: 1px solid var(--color-border-line) !important; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm) !important; font-size: var(--cds-font-size-caption) !important; background: var(--color-panel) !important; color: var(--color-fg-muted) !important; }
@@ -137,6 +151,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sync-panel button { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-fg); color: var(--color-bg); border: 0; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 .bm .sync-panel button.secondary { background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); }
 .bm .sync-panel .st { color: var(--color-fg); }
+</style><style>
+.bm .pga-warn { background: color-mix(in srgb, var(--color-warn) 14%, transparent); border: 1px solid var(--color-warn); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); }
 </style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
 .bm { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg); max-width: 72rem; margin-inline: auto; }
@@ -178,10 +194,15 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm th[aria-sort="ascending"] button::after { content: " ▲"; } .bm th[aria-sort="descending"] button::after { content: " ▼"; }
 .bm td.num, .bm th.num { text-align: right; }
 .bm td.wrap { white-space: normal; min-width: 12rem; }
-.bm .scroll { max-height: 32rem; overflow: auto; }
+.bm .scroll { max-height: 32rem; overflow: auto; -webkit-overflow-scrolling: touch; max-width: 100%; }
+.bm .x-scroll { max-height: none; }
+.bm .card, .bm .grid > *, .bm .model-cards > * { min-width: 0; }
+.bm .card { max-width: 100%; overflow-x: hidden; }
+.bm .card > .scroll { overflow-x: auto; }
 .bm .badge { display: inline-block; padding: 0 .4em; border-radius: var(--cds-radius); font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); }
 .bm .badge.W { color: var(--color-ok); border-color: currentColor; } .bm .badge.L { color: var(--color-bad); border-color: currentColor; }
 .bm .star { color: var(--color-warn); }
+.bm .score-tag { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-style: italic; }
 .bm .chart { min-height: 220px; position: relative; }
 .bm .chart svg { display: block; }
 .bm .chart svg text { font-family: var(--font-anthropic-sans); }
@@ -278,20 +299,24 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
     <div class="card" style="margin-top: var(--cds-gap-md)" id="ov-table-card">
       <h3 id="ov-table-title">Record by model</h3>
-      <p class="note">Win % = W ÷ (W + L). ROI = units won ÷ units risked on decided bets. CLV = average closing-line value where the model captured a close (CFB in points, NFL/NHL in probability).</p>
+      <p class="note">Win % = W ÷ (W + L). ROI = units won ÷ units risked on decided bets. CLV = average closing-line value where the model captured a close (CFB in points, NFL/NHL in probability). PGA counts flagged plays (1 unit each, a play wins if it cashed) by event start date and is kept out of the All models total.</p>
+      <div class="scroll x-scroll">
       <table data-source="summary_by_sport" data-row-key="window,sport" id="ov-table">
         <thead><tr><th data-field="sport">Model</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="risked">Risked</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th><th class="num" data-field="avg_clv">Avg CLV</th><th class="num" data-field="pending">Pending</th></tr></thead>
         <tbody></tbody>
       </table>
+      </div>
     </div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)" id="cards-now-card">
       <h3>On the cards right now</h3>
       <p class="note">Each model's current slate. Open a sport's tab for the full card.</p>
+      <div class="scroll x-scroll">
       <table data-source="card_info" data-row-key="sport" id="today-cards-table">
         <thead><tr><th data-field="sport">Model</th><th data-field="label">Slate</th><th class="num" data-field="n_bets">Bets</th><th class="num" data-field="units">Units</th><th class="num" data-field="n_top">Top picks</th><th data-field="generated">Card built</th></tr></thead>
         <tbody></tbody>
       </table>
+      </div>
     </div>
   </section>
 
@@ -299,10 +324,22 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   <section class="page" id="cfb" hidden></section>
   <section class="page" id="nfl" hidden></section>
   <section class="page" id="nhl" hidden></section>
-  <!-- ===================== PGA (golf_engine feed: pga_dash.json; not part of the betting record above) ===================== -->
-  <section class="page" id="pga" hidden>
+<section class="page" id="scores" hidden>
+  <div class="sb-head">
+    <h2>Scoreboard <small id="sb-date"></small></h2>
+    <button class="sb-refresh" id="sb-refresh">Refresh now</button>
+  </div>
+  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. On PGA tournament days (Thursday–Sunday) the golf card shows the leaderboard, the model's flagged plays and where its favourites stand. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
+  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button><button data-sport="PGA" aria-pressed="true">PGA</button></span></div>
+  <div class="sb-status" id="sb-status">Loading live data…</div>
+  <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports (or none tracked, if My picks is on).</div>
+  <div class="sb-grid" id="sb-grid"></div>
+  <div class="sb-unmatched" id="sb-unmatched" hidden></div>
+</section>
+<section class="page" id="pga" hidden>
     <h2 id="pga-title">PGA TOUR <small id="pga-sub"></small></h2>
     <p class="updated" id="pga-updated"></p>
+    <p class="updated" id="pga-wx" hidden></p>
     <p class="pga-warn" id="pga-live" hidden>These odds were pulled after the event started (in-play prices), so no plays are flagged and the blend is blank.</p>
     <div class="empty" id="pga-empty" hidden>No golf card yet. It appears after the Tuesday run.</div>
     <div class="tiles" id="pga-tiles"></div>
@@ -327,18 +364,6 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
     <p class="note" id="pga-disc" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: var(--cds-gap-md)"></p>
   </section>
-<section class="page" id="scores" hidden>
-  <div class="sb-head">
-    <h2>Scoreboard <small id="sb-date"></small></h2>
-    <button class="sb-refresh" id="sb-refresh">Refresh now</button>
-  </div>
-  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
-  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button></span></div>
-  <div class="sb-status" id="sb-status">Loading live data…</div>
-  <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports (or none tracked, if My picks is on).</div>
-  <div class="sb-grid" id="sb-grid"></div>
-  <div class="sb-unmatched" id="sb-unmatched" hidden></div>
-</section>
 
   <template id="sport-tpl">
     <h2 class="rec-h2">Track record <small class="sp-tiles-sub">graded bets this season</small></h2>
@@ -432,7 +457,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
   </template>
 
-  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. CFB games the model priced but marked "No Bet" are listed for reference and are not counted as bets. Tracked picks (the + / ✓ column) are saved in this browser only; the records and charts always count every bet the models made.</p>
+  <p class="methods">Data comes from the three Excel models (CFB Weekly_Strategy + Betting_Sheet, NFL Bet_Log + Bet_Card, NHL Bets_Ledger + Bet_Card) exported after each scheduled run. Pending bets are excluded from every record, ROI and units figure until graded. On the website, a bet whose game has gone final is graded from the final score right away (marked "final score"); the model's own grade replaces it the next time the model runs. CFB games the model priced but marked "No Bet" are listed for reference and are not counted as bets. Tracked picks (the + / ✓ column) are saved in this browser only; the records and charts always count every bet the models made.</p>
 </div>
 
 <script>(() => {
@@ -684,6 +709,27 @@ const bmTrack = (() => {
 })();
 window.bmTrack = bmTrack;
 window.bmF = { fU, fU2, fP, fPs, fOdds, fN, fD, signCls, esc, betType, gameTimes, parsePick, cleanPick, feedText, pkNorm };
+// ---- PGA (golf_engine feed). Flagged plays are 1 unit each at the best price; the record is kept per event. ----
+window.bmPGA = (() => {
+  const MKT = { win: 'Win', top_5: 'Top 5', top_10: 'Top 10', top_20: 'Top 20', make_cut: 'Make cut', mc: 'Miss cut' };
+  const feed = () => { try { const d = window.dash && dash.data('pga'); return d && d.status === 'ok' && Array.isArray(d.data) && d.data[0] ? d.data[0] : null; } catch (e) { return null; } };
+  const us = (d) => (d == null || d === '' || isNaN(d)) ? '—' : d >= 2 ? '+' + Math.round((d - 1) * 100) : String(Math.round(-100 / (d - 1)));
+  const addDays = (iso, n) => { const x = new Date(iso + 'T12:00:00'); x.setDate(x.getDate() + n); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  // tournament days: start date + 3 (Thursday to Sunday)
+  const days = (f) => (f && f.start_date ? [0, 1, 2, 3].map((i) => addDays(f.start_date, i)) : []);
+  const settledThisWeek = (f) => !!(f && ((f.history || {}).events || []).some((e) => e.settled && e.event === f.event && e.start_date === f.start_date));
+  const label = (p) => `${p.player_name} · ${MKT[p.market] || p.market}`;
+  const key = (f, p) => ['PGA', f.start_date || '', pkNorm(f.event), pkNorm(p.player_name), p.market].join('|');
+  const plays = (f) => (f && f.plays) || [];
+  // record over settled events whose start date is in the window (W = cashed plays, L = the rest)
+  const record = (f, keep) => {
+    const ev = ((f && f.history && f.history.events) || []).filter((e) => e.settled && keep(e.start_date));
+    const plays_ = ev.reduce((a, e) => a + Number(e.plays || 0), 0), w = ev.reduce((a, e) => a + Number(e.cashed || 0), 0), units = ev.reduce((a, e) => a + Number(e.units || 0), 0);
+    const pend = f && !settledThisWeek(f) ? plays(f).length : 0;
+    return { sport: 'PGA', events: ev.length, graded: plays_, w, l: plays_ - w, p: 0, record: `${w}-${plays_ - w}-0`, win_pct: plays_ ? Math.round(1000 * w / plays_) / 1000 : null, risked: plays_, profit: Math.round(100 * units) / 100, roi: plays_ ? Math.round(1000 * units / plays_) / 1000 : null, avg_clv: null, pending: pend, pending_units: pend };
+  };
+  return { MKT, feed, us, days, settledThisWeek, label, key, plays, record };
+})();
 
 // ---------- tabs ----------
 const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores', 'pga'];
@@ -876,6 +922,15 @@ const myPicksOnCards = () => {
   return { sport: 'My picks', label: c.length || extra ? 'Tracked on the current cards' + (extra ? ' · + ' + extra : '') : 'Nothing tracked on the current cards — tap + on a pick', n_bets: c.length, units: Math.round(10 * c.reduce((a, r) => a + Number(r.units || 0), 0)) / 10, n_top: c.filter((r) => r.top === 'Y').length, generated: '' };
 };
 const markMineRow = (table) => { const trs = table.querySelectorAll('tbody tr'); if (trs.length) trs[trs.length - 1].classList.add('mine-row'); };
+const winKeep = (win) => { const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); }; return { season: () => true, d30: (d) => d >= day(30), d7: (d) => d >= day(7), yesterday: (d) => d === day(1) }[win] || (() => true); };
+const pgaTile = (win) => {
+  const P = window.bmPGA, f = P.feed(); if (!f) return [];
+  const r = P.record(f, winKeep(win));
+  const t = r.graded ? tile('PGA', fU(r.profit), `${r.record} · ROI ${fPs(r.roi)} · ${r.events} event${r.events === 1 ? '' : 's'}`, signCls(r.profit)) : tile('PGA', '—', r.pending ? `${r.pending} flagged plays pending` : 'No graded events yet');
+  t.title = 'PGA flagged plays, 1 unit each at the best price. Kept separate: not in the All models total.';
+  return [t];
+};
+const pgaPlayRows = (f) => window.bmPGA.plays(f).map((p, i) => ({ key: window.bmPGA.key(f, p), sport: 'PGA', n: i + 1, type: 'Flagged play', game_time: f.event, game: f.event, date: f.start_date, pick: window.bmPGA.label(p), bet_type: window.bmPGA.MKT[p.market] || p.market, line: window.bmPGA.us(p.best_price) + (p.best_book ? ' ' + p.best_book : ''), units: 1, model_prob: p.p_model, market_prob: p.p_market_fair, note: p.ev == null ? '' : 'EV +' + Math.round(100 * p.ev) + '%', market: p.market }));
 const drawOverview = () => {
   const win = window.bmWin;
   const sum = dash.data('summary_by_sport'), cum = dash.data('cum_by_date'), info = dash.data('card_info'), cards = dash.data('cards'), parl = dash.data('parlays'), picks = dash.data('picks');
@@ -893,11 +948,12 @@ const drawOverview = () => {
       const t = tile(r.sport === 'ALL' ? 'All models' : r.sport, fU(r.profit), `${r.record} · ROI ${fPs(r.roi)}`, signCls(r.profit));
       t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', 'profit'); t.setAttribute('data-where', 'window=' + win + '&sport=' + r.sport);
       return t;
-    }), myPicksTile(win));
-    fillTable(document.getElementById('ov-table'), [...rows, myPicksRecord(win)], [
-      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v === 'MINE' ? 'My picks' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
+    }), ...pgaTile(win), myPicksTile(win));
+    const pgaRec = window.bmPGA.feed() ? [window.bmPGA.record(window.bmPGA.feed(), winKeep(win))] : [];
+    fillTable(document.getElementById('ov-table'), [...rows, ...pgaRec, myPicksRecord(win)], [
+      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v === 'MINE' ? 'My picks' : v === 'PGA' ? 'PGA (golf)' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
       { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) },
-      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' || r.sport === 'MINE' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => `${v} (${r.pending_units}u)`, cls: 'num' },
+      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' || r.sport === 'MINE' || r.sport === 'PGA' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => `${v} (${r.pending_units}u)`, cls: 'num' },
     ], (r) => `${r.window},${r.sport}`);
     markMineRow(document.getElementById('ov-table'));
   } else { lede.querySelectorAll('span').forEach((e) => { e.textContent = '—'; }); tiles.replaceChildren(); }
@@ -911,7 +967,8 @@ const drawOverview = () => {
     window.bmC.drawCum(box, rows, series, colors);
   } else { box.querySelectorAll('svg').forEach((s) => s.remove()); }
   skel(box, cum.status === 'loading');
-  if (info.status === 'ok') { fillTable(document.getElementById('today-cards-table'), [...info.data, myPicksOnCards()], [{ f: 'sport' }, { f: 'label', cls: 'wrap' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated', fmt: (v) => v || '—' }], (r) => r.sport); markMineRow(document.getElementById('today-cards-table')); }
+  if (info.status === 'ok') { const pf = window.bmPGA.feed(); const pgaNow = pf ? [{ sport: 'PGA', label: pf.event + (pf.odds_live ? ' · in play' : ''), n_bets: window.bmPGA.plays(pf).length, units: window.bmPGA.plays(pf).length, n_top: 0, generated: (() => { const d = new Date(String(pf.generated_at).replace(' ', 'T')); return isNaN(d) ? pf.generated_at : d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); })() }] : [];
+    fillTable(document.getElementById('today-cards-table'), [...info.data, ...pgaNow, myPicksOnCards()], [{ f: 'sport' }, { f: 'label', cls: 'wrap' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated', fmt: (v) => v || '—' }], (r) => r.sport); markMineRow(document.getElementById('today-cards-table')); }
 
   // ---- active top picks + parlay pieces per model, and today's picks ----
   if (cards.status !== 'ok' || parl.status !== 'ok' || picks.status !== 'ok') return;
@@ -951,8 +1008,34 @@ const drawOverview = () => {
     }
     host.appendChild(card);
   }
-  const todayKey = (r) => window.bmTrack.keyOf(r.sport, r.date, r.game, r.pick, r.market);
-  const todayRows = window.bmTrack.filter(todayCalc.status === 'ok' ? todayCalc.data : [], todayKey);
+  const pf = window.bmPGA.feed();
+  if (pf) {
+    const card = document.createElement('div'); card.className = 'card';
+    const h3 = document.createElement('h3'); h3.textContent = 'PGA TOUR'; card.appendChild(h3);
+    const note = document.createElement('p'); note.className = 'note'; note.textContent = `${pf.event}${pf.course ? ' · ' + pf.course : ''} · card built ${String(pf.generated_at).replace('T', ' ').slice(0, 16)}${pf.odds_live ? ' · odds pulled in play' : ''}`; card.appendChild(note);
+    const rowsP = window.bmTrack.filter(pgaPlayRows(pf), (r) => r.key);
+    const h4a = document.createElement('h4'); h4a.replaceChildren('Flagged plays', Object.assign(document.createElement('small'), { textContent: `${rowsP.length}` })); card.appendChild(h4a);
+    if (!rowsP.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = window.bmTrack.view() === 'mine' ? 'No tracked PGA plays.' : 'No plays flagged this week.'; card.appendChild(e); }
+    else {
+      const wrap = document.createElement('div'); wrap.className = 'scroll';
+      const t = document.createElement('table'); t.innerHTML = '<thead><tr><th data-field="pick">Play</th><th data-field="line">Best price</th><th class="num" data-field="model_prob">Model %</th><th class="num" data-field="market_prob">Market %</th><th data-field="note">EV</th></tr></thead><tbody></tbody>';
+      fillTable(t, rowsP, [{ f: 'pick', cls: 'wrap' }, { f: 'line' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'note' }], (r) => r.key);
+      window.bmTrackCol(t, rowsP, (r) => r.key); wrap.appendChild(t); card.appendChild(wrap);
+    }
+    const top = (pf.projections || []).slice(0, 5);
+    if (top.length && window.bmTrack.view() !== 'mine') {
+      const h4b = document.createElement('h4'); h4b.replaceChildren('Model favourites', Object.assign(document.createElement('small'), { textContent: 'by win %' })); card.appendChild(h4b);
+      const wrap = document.createElement('div'); wrap.className = 'scroll';
+      const t = document.createElement('table'); t.innerHTML = '<thead><tr><th>Player</th><th class="num">Win</th><th class="num">Top 10</th><th class="num">Make cut</th></tr></thead><tbody></tbody>';
+      fillTable(t, top, [{ f: 'player_name' }, { f: 'p_win', fmt: fP, cls: 'num' }, { f: 'p_top10', fmt: fP, cls: 'num' }, { f: 'p_make_cut', fmt: fP, cls: 'num' }], (r) => r.player_name);
+      wrap.appendChild(t); card.appendChild(wrap);
+    }
+    host.appendChild(card);
+  }
+  const todayKey = (r) => r.sport === 'PGA' ? r.key : window.bmTrack.keyOf(r.sport, r.date, r.game, r.pick, r.market);
+  const todayIsoL = (() => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; })();
+  const pgaToday = pf && window.bmPGA.days(pf).includes(todayIsoL) && !window.bmPGA.settledThisWeek(pf) ? pgaPlayRows(pf).map((r) => ({ ...r, game_time: 'All day' })) : [];
+  const todayRows = window.bmTrack.filter([...(todayCalc.status === 'ok' ? todayCalc.data : []), ...pgaToday], todayKey);
   const tt = document.getElementById('today-table');
   document.getElementById('today-empty').hidden = todayRows.length > 0; tt.closest('.scroll').hidden = todayRows.length === 0;
   document.getElementById('today-empty').textContent = window.bmTrack.view() === 'mine' ? 'None of today\'s top picks or parlay pieces are tracked. Switch to All picks and tap + on the ones you agree with.' : 'No top picks or parlay pieces on today\'s slate.';
@@ -1093,7 +1176,7 @@ const drawSport = (sport) => {
     const cols = [
       { f: 'id', hidden: true }, { f: 'date', fmt: fD }, { f: 'game' }, { f: 'selection', html: pickCell, cls: 'wrap' }, { f: 'market', fmt: (v, r) => betType(r.sport, v, r.selection) }, { f: 'odds', fmt: fOdds, cls: 'num' },
       { f: 'units', html: (r) => { const sp = document.createElement('span'); if (r.bet === '') { sp.className = 'nobet-tag'; sp.textContent = 'No bet'; } else sp.textContent = d3.format('.1f')(r.units) + 'u'; return sp; }, cls: 'num' },
-      { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'result', html: (r) => badge(r.result) },
+      { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'result', html: (r) => { const b = badge(r.result); if (r.graded_by !== 'score') return b; const w = document.createElement('span'); const t = document.createElement('span'); t.className = 'score-tag'; t.textContent = ' final score'; t.title = 'Graded on this page from the final score. The model\'s own grade replaces it the next time it runs.'; w.append(b, t); return w; } },
       { f: 'profit', fmt: (v, r) => (r.result === 'Pending' || r.bet === '') ? '—' : fU2(v), cls: (r) => 'num ' + signCls(r.bet === '' ? 0 : r.profit) },
       { f: 'clv', fmt: (v) => sport === 'CFB' ? (v === null || v === undefined || v === '' ? '—' : fU2(v)) : fPs(v), cls: 'num' }, { f: 'limit' }, { f: 'limit_status', cls: 'wrap' }, { f: 'score' },
     ];
@@ -1161,12 +1244,13 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
 (() => {
   const { betType, gameTimes, esc } = window.bmF;
   const ESPN = 'https://site.api.espn.com/apis/site/v2/sports/';
-  const LEAGUE = { CFB: 'football/college-football', NFL: 'football/nfl', NHL: 'hockey/nhl' };
+  const LEAGUE = { CFB: 'football/college-football', NFL: 'football/nfl', NHL: 'hockey/nhl', PGA: 'golf/pga' };
+  const ALL = ['CFB', 'NFL', 'NHL', 'PGA'];
   const NHL_API = 'https://nhl-relay.bryangonzalez1868.workers.dev/v1/';   // Cloudflare relay in front of api-web.nhle.com (adds the browser permission header)
   const REFRESH_MS = 30000;
-  const st = { feeds: {}, gamesBy: {}, box: {}, last: {}, busy: false, sel: null, sports: new Set(['CFB', 'NFL', 'NHL']) };
-  try { const saved = JSON.parse(localStorage.getItem('bm.sbSports') || 'null'); if (Array.isArray(saved) && saved.length) st.sports = new Set(saved); } catch (e) { /* storage unavailable: default to all */ }
-  const T = window.bmTrack; const pkKey = (p, iso) => T.keyOf(p.sport, iso, p.game, p.text, p.market);
+  const st = { feeds: {}, gamesBy: {}, box: {}, last: {}, busy: false, sel: null, sports: new Set(['CFB', 'NFL', 'NHL', 'PGA']), golf: {} };
+  try { const saved = JSON.parse(localStorage.getItem('bm.sbSports') || 'null'); if (Array.isArray(saved) && saved.length) { st.sports = new Set(saved); if (['CFB', 'NFL', 'NHL'].every((x) => st.sports.has(x))) st.sports.add('PGA'); } } catch (e) { /* storage unavailable: default to all */ }
+  const T = window.bmTrack; const pkKey = (p, iso) => p.key || T.keyOf(p.sport, iso, p.game, p.text, p.market);
   const shown = (list, iso) => list && T.filter(list.filter((p) => st.sports.has(p.sport)), (p) => pkKey(p, iso));
 
   // ---------- helpers ----------
@@ -1252,6 +1336,81 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     } catch (e) { st.feeds[game.sport + ' player stats'] = game.sport === 'NHL' ? 'blocked' : 'fail'; }
   };
 
+  // ---------- PGA: the event leaderboard from ESPN, the model's plays from pga_dash.json ----------
+  const P = window.bmPGA;
+  const golfOn = (iso) => { const f = P.feed(); return !!f && P.days(f).includes(iso) && st.sports.has('PGA'); };
+  const golfPicks = (iso) => { const f = P.feed(); if (!f || !P.days(f).includes(iso)) return []; return P.plays(f).map((p) => ({ sport: 'PGA', game: f.event, kind: 'Flagged play', text: P.label(p), market: p.market, units: 1, price: P.us(p.best_price) + (p.best_book ? ' ' + p.best_book : ''), key: P.key(f, p), player: p.player_name, ev: p.ev })); };
+  const toPar = (v) => { const t = String(v == null ? '' : v).trim(); if (!t || t === '-' || t === '--') return null; if (/^e$/i.test(t)) return 0; const n = parseFloat(t); return isNaN(n) ? null : n; };
+  const parTxt = (n) => n == null ? '—' : n === 0 ? 'E' : (n > 0 ? '+' : '') + n;
+  const loadGolf = async (iso) => {
+    try {
+      const j = await getJSON(ESPN + LEAGUE.PGA + '/scoreboard?dates=' + ymd(isoDate(iso), ''));
+      const f = P.feed(); const evs = j.events || [];
+      const ev = evs.find((e) => f && norm(e.name).includes(norm(f.event).split(' ').slice(-2).join(' '))) || evs[0];
+      if (!ev) { st.golf[iso] = null; st.feeds['PGA leaderboard'] = 'no event'; return; }
+      const c = (ev.competitions || [])[0] || {}; const s = ev.status || c.status || null;
+      const now = Date.now(), t0 = Date.parse(ev.date), t1 = Date.parse(ev.endDate || ev.date) + 86400000;
+      const state = s && s.type ? s.type.state : (now < t0 ? 'pre' : now > t1 ? 'post' : 'in');
+      const comp = (c.competitors || []).slice().sort((a, b) => (a.order || 999) - (b.order || 999));
+      let prevScore, prevPos = 0; const rows = comp.map((x, i) => {
+        const sc = toPar(x.score); const pos = i > 0 && sc != null && sc === prevScore ? prevPos : i + 1; prevScore = sc; prevPos = pos;
+        const ls = (x.linescores || []).filter((r) => r.value != null || (r.linescores || []).length);
+        const cur = ls[ls.length - 1]; const holes = cur && cur.linescores ? cur.linescores.length : 0;
+        return { name: (x.athlete && (x.athlete.displayName || x.athlete.fullName)) || '', score: sc, pos, round: cur ? cur.period : 0, thru: holes >= 18 || (cur && cur.value != null && !holes) ? 'F' : holes ? String(holes) : '—', today: cur ? cur.displayValue : '' };
+      });
+      for (const r of rows) r.tied = rows.filter((x) => x.pos === r.pos).length > 1;
+      const round = rows.reduce((a, r) => Math.max(a, r.round || 0), 0);
+      st.golf[iso] = { name: ev.name, state, detail: s && s.type ? s.type.shortDetail || s.type.detail : (state === 'in' ? `Round ${round || 1}` : state === 'post' ? 'Final' : 'Starts ' + new Date(ev.date).toLocaleDateString('en-US', { weekday: 'short' })), round, rows, start: ev.date };
+      st.feeds['PGA leaderboard'] = 'ok';
+    } catch (e) { st.feeds['PGA leaderboard'] = 'fail'; }
+  };
+  const posTxt = (r) => r ? (r.tied ? 'T' : '') + r.pos : '—';
+  const findGolfer = (g, name) => { const k = norm(name); const parts = k.split(' '); return g.rows.find((r) => norm(r.name) === k) || g.rows.find((r) => { const n = norm(r.name).split(' '); return n[n.length - 1] === parts[parts.length - 1] && (n[0] || '')[0] === (parts[0] || '')[0]; }) || null; };
+  const golfEval = (p, g) => {
+    const r = findGolfer(g, p.player); const res = { chip: 'Not started', cls: '', now: '' };
+    if (!r) { res.chip = g.state === 'pre' ? 'Not started' : 'Not on leaderboard'; return res; }
+    res.now = `${posTxt(r)} · ${parTxt(r.score)}${g.state === 'in' && r.thru !== '—' ? ' thru ' + r.thru : ''}`;
+    if (g.state === 'pre') return res;
+    const N = { win: 1, top_5: 5, top_10: 10, top_20: 20 }[p.market]; const fin = g.state === 'post';
+    if (N) { const inside = r.pos <= N; res.chip = fin ? (inside ? (r.tied && r.pos + g.rows.filter((x) => x.pos === r.pos).length - 1 > N ? 'Cashed (dead heat)' : 'Cashed') : 'Lost') : (inside ? (N === 1 ? 'Leading' : 'Inside top ' + N) : (N === 1 ? 'Chasing' : 'Outside top ' + N)); res.cls = fin ? (inside ? 'win' : 'loss') : (inside ? 'good' : 'bad'); return res; }
+    if (p.market === 'make_cut' || p.market === 'mc') { const made = g.round >= 3 ? (r.round >= 3) : null; if (made == null) { res.chip = 'Before the cut'; return res; } const ok = p.market === 'make_cut' ? made : !made; res.chip = ok ? 'Cashed' : 'Lost'; res.cls = ok ? 'win' : 'loss'; return res; }
+    res.chip = '—'; return res;
+  };
+  const golfCard = (iso, ps) => {
+    const g = st.golf[iso]; const f = P.feed();
+    const card = el('div', 'sb-card sb-golf' + (g && g.state === 'in' ? ' live' : ''));
+    const top = el('div', 'sb-top'); const left = el('span'); if (g && g.state === 'in') left.appendChild(el('span', 'live-dot'));
+    left.appendChild(document.createTextNode(g ? g.detail : 'Loading leaderboard…')); top.append(left, el('span', null, 'PGA')); card.appendChild(top);
+    card.appendChild(el('h4', null, (g && g.name) || f.event));
+    if (g && g.rows.length) {
+      const t = el('table', 'sb-lb'); const tb = el('tbody'); t.appendChild(tb);
+      const mine = new Set(ps.map((p) => norm(p.player)));
+      for (const r of g.rows.slice(0, 5)) { const tr = el('tr', mine.has(norm(r.name)) ? 'mine' : ''); tr.append(el('td', null, posTxt(r)), el('td', null, r.name), el('td', 'n', parTxt(r.score)), el('td', 'n', g.state === 'in' ? (r.thru === '—' ? '' : 'thru ' + r.thru) : '')); tb.appendChild(tr); }
+      card.appendChild(t);
+    }
+    const box = el('div', 'sb-picks');
+    if (!ps.length) box.appendChild(el('div', 'meta', T.view() === 'mine' ? 'No tracked PGA plays.' : 'No plays flagged this week' + (f.odds_live ? ' (odds were pulled in play).' : '.')));
+    for (const p of ps) {
+      const r = g ? golfEval(p, g) : { chip: 'Loading', cls: '', now: '' }; const row = el('div', 'sb-pick');
+      const k = pkKey(p, iso); const on = T.has(k); const tb = el('button', 'trk-btn', on ? '✓' : '+'); tb.dataset.key = k; tb.setAttribute('aria-pressed', String(on)); tb.setAttribute('aria-label', on ? 'Stop tracking this pick' : 'Track this pick');
+      if (on) row.classList.add('tracked');
+      const txt = el('span', 'txt'); txt.append(tb, document.createTextNode(' ' + p.text)); row.append(txt, el('span', 'chip ' + r.cls, r.chip));
+      row.appendChild(el('span', 'meta', [p.kind, p.price, '1u', p.ev != null ? 'EV +' + Math.round(100 * p.ev) + '%' : '', r.now].filter(Boolean).join(' · ')));
+      box.appendChild(row);
+    }
+    card.appendChild(box);
+    if (g && g.rows.length && T.view() !== 'mine') {
+      const favs = (f.projections || []).slice(0, 5);
+      if (favs.length) {
+        card.appendChild(el('div', 'sb-sub', 'Model favourites (win %) — where they stand'));
+        const t = el('table', 'sb-lb'); const tb = el('tbody'); t.appendChild(tb);
+        for (const p of favs) { const r = findGolfer(g, p.player_name); const tr = el('tr'); tr.append(el('td', null, posTxt(r)), el('td', null, p.player_name), el('td', 'n', r ? parTxt(r.score) : '—'), el('td', 'n', (Math.round(1000 * p.p_win) / 10) + '%')); tb.appendChild(tr); }
+        card.appendChild(t);
+      }
+    }
+    return card;
+  };
+
   // ---------- picks for a date: current cards (bets + parlay pieces) where they cover the date, else the graded/pending bets in the feed ----------
   const RES_WORD = { W: 'Won', L: 'Lost', P: 'Push', V: 'Void' };
   const dataReady = () => ['cards', 'parlays', 'picks'].every((k) => dash.data(k).status === 'ok');
@@ -1280,6 +1439,8 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     for (const c of dash.data('cards').data) { const d = dateFor(c.sport, c.game); if (d) { add(d, c.sport, T.cardKey(c)); cardSportDates.add(c.sport + d); } }
     for (const c of dash.data('parlays').data) { const g = c.game || (String(c.leg).split(' ')[0].includes('@') ? String(c.leg).split(' ')[0].replace('@', ' @ ') : ''); add(dateFor(c.sport, g), c.sport, T.legKey(c)); }
     for (const r of dash.data('picks').data) if (r.bet !== '' && r.date && !cardSportDates.has(r.sport + r.date)) add(r.date, r.sport, T.rowKey(r));
+    const pf = P.feed();
+    if (pf && st.sports.has('PGA')) for (const d of P.days(pf)) { const ps = golfPicks(d).filter((p) => T.view() !== 'mine' || T.has(p.key)); if (ps.length || T.view() !== 'mine') n[d] = (n[d] || 0) + ps.length; }
     const today = todayIso(); if (!n[today]) n[today] = 0;
     if (st.sel && !n[st.sel]) n[st.sel] = 0;   // keep the chosen date in the list even when the sport filter leaves it empty
     return Object.keys(n).sort().map((d) => ({ d, n: n[d] }));
@@ -1364,10 +1525,11 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     const iso = st.sel || todayIso();
     drawDateSelect();
     document.getElementById('sb-date').textContent = dayLabel(iso) + (iso === todayIso() ? ' · today' : '');
-    document.querySelectorAll('.bm .sb-sports button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sport === 'ALL' ? st.sports.size === 3 : st.sports.has(b.dataset.sport))));
+    document.querySelectorAll('.bm .sb-sports button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sport === 'ALL' ? st.sports.size === ALL.length : st.sports.has(b.dataset.sport))));
     const picks = shown(picksFor(iso), iso); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
     if (!picks) { grid.replaceChildren(); return; }
-    document.getElementById('sb-empty').hidden = picks.length > 0;
+    const gps = golfOn(iso) ? T.filter(golfPicks(iso), (p) => p.key) : []; const showGolf = golfOn(iso) && (T.view() !== 'mine' || gps.length > 0);
+    document.getElementById('sb-empty').hidden = picks.length > 0 || showGolf;
     const groups = new Map(), unmatched = [];
     for (const p of picks) { const g = matchGame(p, iso); if (!g) { unmatched.push(p); continue; } const k = g.sport + g.id; if (!groups.has(k)) groups.set(k, { g, picks: [] }); groups.get(k).picks.push(p); }
     const order = { in: 0, pre: 1, post: 2 };
@@ -1396,6 +1558,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
       }
       card.appendChild(box); return card;
     }));
+    if (showGolf) { const gc = golfCard(iso, gps); const g = st.golf[iso]; if (g && g.state === 'in') grid.prepend(gc); else grid.appendChild(gc); }
     un.hidden = !unmatched.length;
     un.textContent = unmatched.length ? 'Not found in the live feed for this date (game time not set yet, or a team name that needs matching): ' + unmatched.map((p) => `${p.sport} ${p.game} — ${clean(p.text)}${p.graded ? ' (' + p.graded + ')' : ''}`).join(' · ') : '';
     const fs = Object.entries(st.feeds).map(([k, v]) => `<span class="${v.startsWith('ok') ? 'ok' : 'bad'}">${esc(k)}: ${esc(v)}</span>`).join(' · ');
@@ -1409,15 +1572,15 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     const i = opts.findIndex((o) => o.d === cur);
     document.getElementById('sb-prev').disabled = i <= 0; document.getElementById('sb-next').disabled = i < 0 || i >= opts.length - 1;
   };
-  const markLive = () => { const iso = todayIso(); const picks = picksFor(iso); const live = !!picks && picks.some((p) => { const g = matchGame(p, iso); return g && g.state === 'in'; }); const dot = document.querySelector('.bm .tabs .tab-live'); if (dot) dot.hidden = !live; };
+  const markLive = () => { const iso = todayIso(); const picks = picksFor(iso); const live = (!!picks && picks.some((p) => { const g = matchGame(p, iso); return g && g.state === 'in'; })) || (golfPicks(iso).length > 0 && !!st.golf[iso] && st.golf[iso].state === 'in'); const dot = document.querySelector('.bm .tabs .tab-live'); if (dot) dot.hidden = !live; };
   // scores-only check, used while another tab is open (keeps the live dot on the Scores tab current)
-  const checkLive = async () => { if (st.busy) return; const iso = todayIso(); const picks = picksFor(iso); if (!picks || !picks.length) { markLive(); return; } st.busy = true; try { await loadScoreboards([...new Set(picks.map((p) => p.sport))], iso); } finally { st.busy = false; markLive(); } };
+  const checkLive = async () => { if (st.busy) return; const iso = todayIso(); const picks = picksFor(iso); const golf = golfPicks(iso).length > 0; if ((!picks || !picks.length) && !golf) { markLive(); return; } st.busy = true; try { await Promise.all([picks && picks.length ? loadScoreboards([...new Set(picks.map((p) => p.sport))], iso) : null, golf ? loadGolf(iso) : null]); } finally { st.busy = false; markLive(); } };
   const refresh = async () => {
     if (st.busy) return; st.busy = true;
     try {
       const iso = st.sel || todayIso(); const picks = shown(picksFor(iso), iso); if (!picks) return;
       const sports = [...new Set(picks.map((p) => p.sport))];
-      await loadScoreboards(sports, iso);
+      await Promise.all([loadScoreboards(sports, iso), golfOn(iso) ? loadGolf(iso) : null]);
       const needBox = new Map();
       for (const p of picks) { if (parse(p).kind !== 'prop') continue; const g = matchGame(p, iso); if (g && g.state !== 'pre') needBox.set(g.sport + g.id, g); }
       await Promise.allSettled([...needBox.values()].map((g) => (g.state === 'post' && st.box[g.sport + g.id] && st.box[g.sport + g.id].final) ? null : loadBox(g).then(() => { if (g.state === 'post' && st.box[g.sport + g.id]) st.box[g.sport + g.id].final = true; })));
@@ -1425,7 +1588,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     } finally { st.busy = false; render(); markLive(); }
   };
   const visible = () => { const s = document.getElementById('scores'); return s && !s.hidden && document.visibilityState === 'visible'; };
-  const selIsLive = () => { const iso = st.sel || todayIso(); if (iso === todayIso()) return true; const G = st.gamesBy[iso] || {}; return Object.values(G).some((l) => l.some((g) => g.state === 'in')); };
+  const selIsLive = () => { const iso = st.sel || todayIso(); if (iso === todayIso()) return true; if (st.golf[iso] && st.golf[iso].state === 'in') return true; const G = st.gamesBy[iso] || {}; return Object.values(G).some((l) => l.some((g) => g.state === 'in')); };
   const tick = () => { if (visible() && selIsLive()) refresh(); else if (document.visibilityState === 'visible') checkLive(); };
   setInterval(tick, REFRESH_MS);
   document.addEventListener('visibilitychange', tick);
@@ -1433,9 +1596,9 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   const pick = (iso) => { st.sel = iso; render(); refresh(); };
   document.querySelector('.bm .sb-sports').addEventListener('click', (e) => {
     const b = e.target.closest('button[data-sport]'); if (!b) return; const sp = b.dataset.sport;
-    if (sp === 'ALL') st.sports = new Set(['CFB', 'NFL', 'NHL']);
-    else if (st.sports.size === 3) st.sports = new Set([sp]);            // from All, a click shows just that sport
-    else if (st.sports.has(sp)) { st.sports.delete(sp); if (!st.sports.size) st.sports = new Set(['CFB', 'NFL', 'NHL']); }
+    if (sp === 'ALL') st.sports = new Set(ALL);
+    else if (st.sports.size === ALL.length) st.sports = new Set([sp]);            // from All, a click shows just that sport
+    else if (st.sports.has(sp)) { st.sports.delete(sp); if (!st.sports.size) st.sports = new Set(ALL); }
     else st.sports.add(sp);
     try { localStorage.setItem('bm.sbSports', JSON.stringify([...st.sports])); } catch (err) { /* storage unavailable */ }
     render(); refresh();
@@ -1448,7 +1611,94 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   let firstCheck = true;
   dash.onData(() => { if (!dataReady()) return; if (visible()) { if (!st.last[st.sel || todayIso()] && !st.busy) refresh(); else render(); } else if (firstCheck) { firstCheck = false; checkLive(); } });
   if (!document.getElementById('scores').hidden) refresh();
-  window.bmScoreboard = { st, refresh, render, parse, evaluate };
+  // ---------- auto-grade: pending bets whose game is final get W / L / P from the final score ----------
+  // The page marks these "graded from final score"; the model's own grade replaces them the next time it runs.
+  let grading = false, lastGrade = 0;
+  const payout = (odds) => { const o = Number(odds); if (!o || isNaN(o)) return 100 / 110; return o > 0 ? o / 100 : 100 / -o; };
+  const autoGrade = async () => {
+    if (grading || !dash.setGrades || !dataReady() || Date.now() - lastGrade < 60000) return; grading = true; lastGrade = Date.now();
+    try {
+      const today = todayIso(); const from = (() => { const x = isoDate(today); x.setDate(x.getDate() - 10); return ymd(x, '-'); })();
+      const rows = dash.data('picks').data.filter((r) => r.bet !== '' && r.result === 'Pending' && r.date && r.date <= today && r.date >= from && LEAGUE[r.sport] && r.sport !== 'PGA');
+      if (!rows.length) return;
+      const byDate = {}; for (const r of rows) (byDate[r.date] = byDate[r.date] || []).push(r);
+      const out = {};
+      for (const iso of Object.keys(byDate)) {
+        const list = byDate[iso]; const sports = [...new Set(list.map((r) => r.sport))];
+        await loadScoreboards(sports, iso);
+        const todo = [];
+        for (const r of list) {
+          const p = { sport: r.sport, game: r.game, text: feedText(r), market: r.market };
+          const g = matchGame(p, iso); if (!g || g.state !== 'post') continue;
+          todo.push({ r, p, g });
+        }
+        const boxes = new Map(); for (const t of todo) if (parse(t.p).kind === 'prop' && !(st.box[t.g.sport + t.g.id] && st.box[t.g.sport + t.g.id].final)) boxes.set(t.g.sport + t.g.id, t.g);
+        await Promise.allSettled([...boxes.values()].map((g) => loadBox(g).then(() => { if (st.box[g.sport + g.id]) st.box[g.sport + g.id].final = true; })));
+        for (const { r, p, g } of todo) {
+          const q = parse(p);
+          if (q.kind === 'prop' && (!st.box[g.sport + g.id] || !findPlayer(g, q.player, q.team))) continue;   // box score not loaded, or player not matched: leave it for the model
+          const res = evaluateLive(p, g); const code = { Won: 'W', Lost: 'L', Push: 'P' }[res.chip]; if (!code) continue;
+          const u = Number(r.units || 0);
+          out[dash.gradeKey(r)] = { result: code, profit: code === 'W' ? Math.round(1000 * u * payout(r.odds)) / 1000 : code === 'L' ? -u : 0, graded_by: 'score', score: r.score || `${g.away.abbr || g.away.name} ${g.away.score} - ${g.home.abbr || g.home.name} ${g.home.score}` };
+        }
+      }
+      if (Object.keys(out).length) dash.setGrades(out);
+    } catch (e) { console.error('auto-grade', e); } finally { grading = false; }
+  };
+  dash.onData(() => { autoGrade(); });
+  setInterval(() => { if (document.visibilityState === 'visible') autoGrade(); }, 5 * 60 * 1000);
+  window.bmScoreboard = { st, refresh, render, parse, evaluate, autoGrade };
+})();
+</script>
+<script>
+// ---------- PGA tab: reads pga_dash.json written by golf_engine (python -m golfmodel weekly / settle) ----------
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const pct = (x) => (x == null ? '—' : (100 * x).toFixed(1) + '%');
+  const us = (d) => (d == null ? '—' : d >= 2 ? '+' + Math.round((d - 1) * 100) : String(Math.round(-100 / (d - 1))));
+  const units = (u) => (u == null ? '—' : (u > 0 ? '+' : '') + u.toFixed(2) + 'u');
+  const cls = (u) => (u == null ? '' : u > 0 ? 'pos' : u < 0 ? 'neg' : '');
+  const MKT = { win: 'Win', top_5: 'Top 5', top_10: 'Top 10', top_20: 'Top 20', make_cut: 'Make cut', mc: 'Miss cut' };
+  const day = (iso) => { const d = new Date(iso + 'T12:00:00'); return isNaN(d) ? iso : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
+  const when = (iso) => { const d = new Date(String(iso).replace(' ', 'T')); return isNaN(d) ? iso : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
+  const rows = (tb, list, fn) => { tb.innerHTML = list.map(fn).join(''); };
+  let feed = null;
+  const render = () => {
+    const d = feed;
+    $('pga-empty').hidden = !!d;
+    if (!d) return;
+    $('pga-title').firstChild.textContent = (d.event || 'PGA TOUR') + ' ';
+    $('pga-sub').textContent = [d.course, d.start_date ? 'starts ' + day(d.start_date) : ''].filter(Boolean).join(' · ');
+    $('pga-updated').textContent = `Card built ${when(d.generated_at)} · model ${d.model_version} · ${Number(d.n_sims || 0).toLocaleString()} simulations · data: Data Golf`;
+    $('pga-live').hidden = !d.odds_live;
+    const wx = d.weather || {};
+    $('pga-wx').hidden = !wx.applied;
+    if (wx.applied) {
+      const r = (wx.rounds || []).map((x) => `R${x.round}: morning ${x.am_wind_mph} mph, afternoon ${x.pm_wind_mph} mph (afternoon wave ${x.pm_minus_am_strokes > 0 ? '+' : ''}${x.pm_minus_am_strokes.toFixed(2)} strokes)`).join(' · ');
+      $('pga-wx').textContent = 'Weather draw included (wind forecast ' + when(wx.forecast_at) + '): ' + r;
+    }
+    const fav = (d.projections || [])[0], h = d.history || {};
+    $('pga-tiles').innerHTML = [
+      ['Model favourite', fav ? esc(fav.player_name) : '—', fav ? 'win ' + pct(fav.p_win) + (fav.mkt_win != null ? ' · market ' + pct(fav.mkt_win) : '') : ''],
+      ['Flagged plays', String((d.plays || []).length), 'this week'],
+      ['Record (units)', `<span class="${cls(h.units)}">${h.plays ? units(h.units) : '—'}</span>`, h.plays ? `${h.plays} graded plays · ROI ${h.roi == null ? '—' : (100 * h.roi).toFixed(1) + '%'}` : 'no graded events yet'],
+    ].map(([k, v, s]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
+    $('pga-rule').textContent = 'Flag rule: ' + (d.flag_rule || '') + '. EV = model % × best decimal price − 1. Market % = margin removed from the median price.';
+    const plays = d.plays || [];
+    $('pga-plays-n').textContent = plays.length ? plays.length + ' flagged' : '';
+    $('pga-plays-empty').hidden = plays.length > 0;
+    rows($('pga-plays').tBodies[0], plays, (p) => `<tr><td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${pct(p.p_blend)}</td><td class="num">${us(p.best_price)}</td><td>${esc(p.best_book)}</td><td class="num pos">${p.ev == null ? '—' : '+' + Math.round(100 * p.ev) + '%'}</td></tr>`);
+    rows($('pga-proj').tBodies[0], d.projections || [], (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.skill_mean == null ? '—' : (p.skill_mean > 0 ? '+' : '') + p.skill_mean.toFixed(2)}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.mkt_win)}</td><td class="num">${pct(p.blend_win)}</td><td class="num">${us(p.best_win_price)}</td><td class="num">${pct(p.p_top5)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
+    const ev = h.events || [];
+    $('pga-hist-empty').hidden = ev.some((e) => e.settled);
+    rows($('pga-hist').tBodies[0], ev, (e) => `<tr><td>${esc(e.event)}</td><td>${day(e.start_date)}</td><td class="num">${e.plays}</td><td class="num">${e.settled ? e.cashed : 'pending'}</td><td class="num ${cls(e.units)}">${e.settled ? units(e.units || 0) : '—'}</td></tr>`);
+    $('pga-disc').textContent = d.disclaimer || '';
+  };
+  // the feed is loaded with the other model feeds (dash.data('pga')), so the header, All models and Scores use the same copy
+  const load = () => { const d = dash.data('pga'); feed = d.status === 'ok' && d.data[0] ? d.data[0] : null; render(); };
+  document.querySelector('.bm .tabs button[data-tab="pga"]').addEventListener('click', load);
+  dash.onData(load);
 })();
 </script>
 <script>
@@ -1524,61 +1774,12 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     if (ci.status !== 'ok') { p.textContent = ''; return; }
     const miss = Object.entries(dash.loaded()).filter(([, ok]) => !ok).map(([f]) => f.replace('_dash.json', '').toUpperCase());
     p.className = 'updated';
-    p.textContent = 'Feeds updated: ' + ci.data.map((r) => `${r.sport} ${r.feed_generated || '—'}`).join(' · ') + (miss.length ? ' · missing: ' + miss.join(', ') : '');
+    const pg = dash.data('pga'); const pf = pg.status === 'ok' && pg.data[0];
+    const pgaTxt = pf ? ' · PGA ' + String(pf.generated_at || '—').replace('T', ' ').slice(0, 16) : '';
+    p.textContent = 'Feeds updated: ' + ci.data.map((r) => `${r.sport} ${r.feed_generated || '—'}`).join(' · ') + pgaTxt + (miss.length ? ' · missing: ' + miss.join(', ') : '');
   });
 })();
 </script>
 </div>
-<style>
-.bm .pga-warn { background: color-mix(in srgb, var(--color-warn) 14%, transparent); border: 1px solid var(--color-warn); border-radius: var(--cds-radius); padding: var(--cds-pad-sm) var(--cds-pad-md); }
-</style>
-<script>
-// ---------- PGA tab: reads pga_dash.json written by golf_engine (python -m golfmodel weekly / settle) ----------
-(() => {
-  const $ = (id) => document.getElementById(id);
-  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const pct = (x) => (x == null ? '—' : (100 * x).toFixed(1) + '%');
-  const us = (d) => (d == null ? '—' : d >= 2 ? '+' + Math.round((d - 1) * 100) : String(Math.round(-100 / (d - 1))));
-  const units = (u) => (u == null ? '—' : (u > 0 ? '+' : '') + u.toFixed(2) + 'u');
-  const cls = (u) => (u == null ? '' : u > 0 ? 'pos' : u < 0 ? 'neg' : '');
-  const MKT = { win: 'Win', top_5: 'Top 5', top_10: 'Top 10', top_20: 'Top 20', make_cut: 'Make cut', mc: 'Miss cut' };
-  const day = (iso) => { const d = new Date(iso + 'T12:00:00'); return isNaN(d) ? iso : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
-  const when = (iso) => { const d = new Date(String(iso).replace(' ', 'T')); return isNaN(d) ? iso : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
-  const rows = (tb, list, fn) => { tb.innerHTML = list.map(fn).join(''); };
-  let feed = null, busy = false;
-  const render = () => {
-    const d = feed;
-    $('pga-empty').hidden = !!d;
-    if (!d) return;
-    $('pga-title').firstChild.textContent = (d.event || 'PGA TOUR') + ' ';
-    $('pga-sub').textContent = [d.course, d.start_date ? 'starts ' + day(d.start_date) : ''].filter(Boolean).join(' · ');
-    $('pga-updated').textContent = `Card built ${when(d.generated_at)} · model ${d.model_version} · ${Number(d.n_sims || 0).toLocaleString()} simulations · data: Data Golf`;
-    $('pga-live').hidden = !d.odds_live;
-    const fav = (d.projections || [])[0], h = d.history || {};
-    $('pga-tiles').innerHTML = [
-      ['Model favourite', fav ? esc(fav.player_name) : '—', fav ? 'win ' + pct(fav.p_win) + (fav.mkt_win != null ? ' · market ' + pct(fav.mkt_win) : '') : ''],
-      ['Flagged plays', String((d.plays || []).length), 'this week'],
-      ['Record (units)', `<span class="${cls(h.units)}">${h.plays ? units(h.units) : '—'}</span>`, h.plays ? `${h.plays} graded plays · ROI ${h.roi == null ? '—' : (100 * h.roi).toFixed(1) + '%'}` : 'no graded events yet'],
-    ].map(([k, v, s]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
-    $('pga-rule').textContent = 'Flag rule: ' + (d.flag_rule || '') + '. EV = model % × best decimal price − 1. Market % = margin removed from the median price.';
-    const plays = d.plays || [];
-    $('pga-plays-n').textContent = plays.length ? plays.length + ' flagged' : '';
-    $('pga-plays-empty').hidden = plays.length > 0;
-    rows($('pga-plays').tBodies[0], plays, (p) => `<tr><td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${pct(p.p_blend)}</td><td class="num">${us(p.best_price)}</td><td>${esc(p.best_book)}</td><td class="num pos">${p.ev == null ? '—' : '+' + Math.round(100 * p.ev) + '%'}</td></tr>`);
-    rows($('pga-proj').tBodies[0], d.projections || [], (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.skill_mean == null ? '—' : (p.skill_mean > 0 ? '+' : '') + p.skill_mean.toFixed(2)}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.mkt_win)}</td><td class="num">${pct(p.blend_win)}</td><td class="num">${us(p.best_win_price)}</td><td class="num">${pct(p.p_top5)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
-    const ev = h.events || [];
-    $('pga-hist-empty').hidden = ev.some((e) => e.settled);
-    rows($('pga-hist').tBodies[0], ev, (e) => `<tr><td>${esc(e.event)}</td><td>${day(e.start_date)}</td><td class="num">${e.plays}</td><td class="num">${e.settled ? e.cashed : 'pending'}</td><td class="num ${cls(e.units)}">${e.settled ? units(e.units || 0) : '—'}</td></tr>`);
-    $('pga-disc').textContent = d.disclaimer || '';
-  };
-  const load = async () => {
-    if (busy) return; busy = true;
-    try { const r = await fetch('pga_dash.json?t=' + Date.now(), { cache: 'no-store' }); feed = r.ok ? await r.json() : null; } catch (e) { feed = null; }
-    busy = false; render();
-  };
-  document.querySelector('.bm .tabs button[data-tab="pga"]').addEventListener('click', load);
-  load(); setInterval(load, 10 * 60 * 1000);
-})();
-</script>
 </body>
 </html>
