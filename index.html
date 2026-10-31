@@ -267,7 +267,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <div class="winbar">
       <h2 id="ov-title">Season to date <small>graded bets only · 1u = $10</small></h2>
       <div class="seg" role="group" aria-label="Time window">
-        <button data-win="season" aria-pressed="true">Season</button><button data-win="d30" aria-pressed="false">30 days</button><button data-win="d7" aria-pressed="false">7 days</button><button data-win="yesterday" aria-pressed="false">Yesterday</button>
+        <button data-win="season" aria-pressed="true">Season</button><button data-win="d30" aria-pressed="false">30 days</button><button data-win="d7" aria-pressed="false">7 days</button><button data-win="yesterday" aria-pressed="false">Yesterday</button><button data-win="today" aria-pressed="false">Today</button>
       </div>
     </div>
     <div class="tiles" id="ov-tiles"></div>
@@ -351,6 +351,14 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       <div class="scroll"><table id="pga-plays"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num">Best price</th><th>Book</th><th class="num">EV</th></tr></thead><tbody></tbody></table></div>
     </div>
 
+    <div class="card" id="pga-r1" style="margin-top: var(--cds-gap-md)" hidden>
+      <h3>After round 1 <small id="pga-r1-sub"></small></h3>
+      <p class="note">Forward test: re-priced from the actual round-1 scores (form updated, morning/afternoon luck removed, round-2 wind forecast) against live odds. No in-play odds archive exists, so this has no backtested record yet.</p>
+      <div class="empty" id="pga-r1-empty" hidden>No disagreements above the threshold after round 1.</div>
+      <div class="scroll"><table id="pga-r1-plays"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Best price</th><th>Book</th><th class="num">EV</th></tr></thead><tbody></tbody></table></div>
+      <div class="scroll" style="margin-top: var(--cds-gap-sm)"><table id="pga-r1-lb"><thead><tr><th>Player</th><th class="num">R1</th><th class="num">Win</th><th class="num">Top 10</th><th class="num">Top 20</th><th class="num">Make cut</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
     <div class="card" style="margin-top: var(--cds-gap-md)">
       <h3>Projections <small>top 40 by model win %</small></h3>
       <p class="note">Skill = strokes per round better than an average PGA TOUR field. Market % = bookmakers' win price with the margin removed. Blend = market and model combined (more accurate than the model alone in backtests, but no betting edge; information only). Top-N columns are dead-heat adjusted.</p>
@@ -367,7 +375,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
   <template id="sport-tpl">
     <h2 class="rec-h2">Track record <small class="sp-tiles-sub">graded bets this season</small></h2>
-    <div class="controls rec-controls"><label class="rng-lbl">Date range <select class="sp-range" aria-label="Date range for the track record"><option value="season">Season to date</option><option value="yesterday">Yesterday</option><option value="d7">Last 7 days</option><option value="d30">Last 30 days</option><option value="y1">Last 12 months</option><option value="custom">Custom range…</option></select></label><span class="rng-custom" hidden><input type="date" class="sp-from" aria-label="From date"> to <input type="date" class="sp-to" aria-label="To date"></span><div class="mkt-seg" data-sect="tiles" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div></div>
+    <div class="controls rec-controls"><label class="rng-lbl">Date range <select class="sp-range" aria-label="Date range for the track record"><option value="season">Season to date</option><option value="today">Today</option><option value="yesterday">Yesterday</option><option value="d7">Last 7 days</option><option value="d30">Last 30 days</option><option value="y1">Last 12 months</option><option value="custom">Custom range…</option></select></label><span class="rng-custom" hidden><input type="date" class="sp-from" aria-label="From date"> to <input type="date" class="sp-to" aria-label="To date"></span><div class="mkt-seg" data-sect="tiles" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div></div>
     <div class="tiles sp-tiles"></div>
 
     <div class="grid" style="margin-top: var(--cds-gap-md)">
@@ -467,13 +475,13 @@ const SPORTS = ['CFB', 'NFL', 'NHL'];
 
 dash.calc('summary_by_sport', {
   title: 'Record by model and time window',
-  description: 'W-L-P, units risked, profit, ROI and average CLV per model and for all three together, graded bets only, for four windows: season to date, last 30 days, last 7 days and yesterday (by game date).',
+  description: 'W-L-P, units risked, profit, ROI and average CLV per model and for all three together, graded bets only, for five windows: season to date, last 30 days, last 7 days, yesterday and today (by game date).',
   inputs: ['picks'],
   fn: (picks) => {
     const S = (rows) => { rows = rows.filter((r) => r.bet !== ''); const g = rows.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P'); const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length; const risked = g.filter((r) => r.result !== 'P').reduce((a, r) => a + Number(r.units || 0), 0); const profit = g.reduce((a, r) => a + Number(r.profit || 0), 0); const clv = g.filter((r) => r.clv !== null && r.clv !== undefined && r.clv !== '').map((r) => Number(r.clv)); const pend = rows.filter((r) => r.result === 'Pending'); return { graded: g.length, w, l, p, record: `${w}-${l}-${p}`, win_pct: w + l ? Math.round(1000 * w / (w + l)) / 1000 : null, risked: Math.round(risked * 10) / 10, profit: Math.round(profit * 10) / 10, roi: risked ? Math.round(1000 * profit / risked) / 1000 : null, avg_clv: clv.length ? Math.round(1000 * clv.reduce((a, b) => a + b, 0) / clv.length) / 1000 : null, clv_n: clv.length, pending: pend.length, pending_units: Math.round(10 * pend.reduce((a, r) => a + Number(r.units || 0), 0)) / 10 }; };
-    const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
+    const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
     const today = day(0);
-    const windows = { season: (r) => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1) };
+    const windows = { season: (r) => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1), today: (r) => r.date === day(0) };
     const out = [];
     for (const [win, keep] of Object.entries(windows)) {
       const inWin = picks.filter((r) => r.result === 'Pending' || keep(r));
@@ -485,13 +493,13 @@ dash.calc('summary_by_sport', {
 
 dash.calc('cum_by_date', {
   title: 'Cumulative units by date',
-  description: 'Running total of graded profit (units) by game date, per model and combined, restarted at zero for each window: season to date, last 30 days, last 7 days, yesterday.',
+  description: 'Running total of graded profit (units) by game date, per model and combined, restarted at zero for each window: season to date, last 30 days, last 7 days, yesterday, today.',
   inputs: ['picks'],
   fn: (picks) => {
-    const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
+    const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
     const graded = picks.filter((r) => r.result === 'W' || r.result === 'L' || r.result === 'P');
     const dates = [...new Set(graded.map((r) => r.date))].sort();
-    const starts = { season: '0000-00-00', d30: day(30), d7: day(7), yesterday: day(1) };
+    const starts = { season: '0000-00-00', d30: day(30), d7: day(7), yesterday: day(1), today: day(0) };
     const out = [];
     for (const [win, from] of Object.entries(starts)) {
       const run = { CFB: 0, NFL: 0, NHL: 0 };
@@ -881,7 +889,7 @@ const T = window.bmTrack;
 const sortState = {};
 const skel = (el, on) => el.classList.toggle('dash-skeleton', !!on);
 
-const WIN_LABEL = { season: 'Season to date', d30: 'Last 30 days', d7: 'Last 7 days', yesterday: 'Yesterday' };
+const WIN_LABEL = { season: 'Season to date', d30: 'Last 30 days', d7: 'Last 7 days', yesterday: 'Yesterday', today: 'Today' };
 window.bmWin = window.bmWin || 'season';
 const marketName = (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: 'Assists', PPP: 'PP points', SAVES: 'Saves', BLK: 'Blocks', PL: 'Puck line', ML: 'Moneyline', TOTAL: 'Total' })[v] || esc(v);
 
@@ -889,8 +897,8 @@ const marketName = (v) => ({ SOG: 'Shots', PTS: 'Points', GOALS: 'Goals', AST: '
 // no-bet projections you track have no stake in the models' records, so only tracked bets are counted.
 const myPicksTile = (win) => {
   const T = window.bmTrack; const pk = dash.data('picks');
-  const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
-  const keep = { season: () => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1) }[win] || (() => true);
+  const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const keep = { season: () => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1), today: (r) => r.date === day(0) }[win] || (() => true);
   const mine = pk.status === 'ok' ? pk.data.filter((r) => r.bet !== '' && T.has(T.rowKey(r))) : [];
   const g = mine.filter((r) => (r.result === 'W' || r.result === 'L' || r.result === 'P') && keep(r));
   const w = g.filter((r) => r.result === 'W').length, l = g.filter((r) => r.result === 'L').length, p = g.filter((r) => r.result === 'P').length;
@@ -906,8 +914,8 @@ const myPicksTile = (win) => {
 // "My picks" lines for the overview tables: tracked bets in the window (record), and what you track on the current cards
 const myPicksRecord = (win) => {
   const T = window.bmTrack; const pk = dash.data('picks');
-  const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); };
-  const keep = { season: () => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1) }[win] || (() => true);
+  const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  const keep = { season: () => true, d30: (r) => r.date >= day(30), d7: (r) => r.date >= day(7), yesterday: (r) => r.date === day(1), today: (r) => r.date === day(0) }[win] || (() => true);
   const mine = pk.status === 'ok' ? pk.data.filter((r) => r.bet !== '' && T.has(T.rowKey(r)) && (r.result === 'Pending' || keep(r))) : [];
   const x = sumRows(mine);
   return { window: win, sport: 'MINE', ...x, avg_clv: null };
@@ -922,7 +930,7 @@ const myPicksOnCards = () => {
   return { sport: 'My picks', label: c.length || extra ? 'Tracked on the current cards' + (extra ? ' · + ' + extra : '') : 'Nothing tracked on the current cards — tap + on a pick', n_bets: c.length, units: Math.round(10 * c.reduce((a, r) => a + Number(r.units || 0), 0)) / 10, n_top: c.filter((r) => r.top === 'Y').length, generated: '' };
 };
 const markMineRow = (table) => { const trs = table.querySelectorAll('tbody tr'); if (trs.length) trs[trs.length - 1].classList.add('mine-row'); };
-const winKeep = (win) => { const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return x.toISOString().slice(0, 10); }; return { season: () => true, d30: (d) => d >= day(30), d7: (d) => d >= day(7), yesterday: (d) => d === day(1) }[win] || (() => true); };
+const winKeep = (win) => { const day = (d) => { const x = new Date(); x.setDate(x.getDate() - d); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; }; return { season: () => true, d30: (d) => d >= day(30), d7: (d) => d >= day(7), yesterday: (d) => d === day(1), today: (d) => d === day(0) }[win] || (() => true); };
 const pgaTile = (win) => {
   const P = window.bmPGA, f = P.feed(); if (!f) return [];
   const r = P.record(f, winKeep(win));
@@ -1060,8 +1068,8 @@ let rng = { r: 'season', from: '', to: '' };
 try { rng = { ...rng, ...JSON.parse(localStorage.getItem(RNG_KEY) || '{}') }; } catch (e) { /* storage unavailable */ }
 const ymd = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
 const daysAgo = (n) => { const x = new Date(); x.setDate(x.getDate() - n); return ymd(x); };
-const rngBounds = () => ({ season: ['', ''], yesterday: [daysAgo(1), daysAgo(1)], d7: [daysAgo(7), ''], d30: [daysAgo(30), ''], y1: [daysAgo(365), ''], custom: [rng.from || '', rng.to || ''] }[rng.r] || ['', '']);
-const rngLabel = () => { const [f, t] = rngBounds(); const fd = (v) => v ? new Date(v + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; return { season: 'this season', yesterday: 'yesterday', d7: 'last 7 days', d30: 'last 30 days', y1: 'last 12 months' }[rng.r] || (f || t ? `${fd(f) || 'start'} – ${fd(t) || 'today'}` : 'this season'); };
+const rngBounds = () => ({ season: ['', ''], today: [daysAgo(0), daysAgo(0)], yesterday: [daysAgo(1), daysAgo(1)], d7: [daysAgo(7), ''], d30: [daysAgo(30), ''], y1: [daysAgo(365), ''], custom: [rng.from || '', rng.to || ''] }[rng.r] || ['', '']);
+const rngLabel = () => { const [f, t] = rngBounds(); const fd = (v) => v ? new Date(v + 'T12:00:00').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' }) : ''; return { season: 'this season', today: 'today', yesterday: 'yesterday', d7: 'last 7 days', d30: 'last 30 days', y1: 'last 12 months' }[rng.r] || (f || t ? `${fd(f) || 'start'} – ${fd(t) || 'today'}` : 'this season'); };
 // graded bets inside the range; pending bets always count toward the Pending tile
 const inRange = (r) => { if (r.result === 'Pending') return true; const [f, t] = rngBounds(); const d = String(r.date || ''); return (!f || d >= f) && (!t || d <= t); };
 const groupBy = (rows, keyOf, order) => { const keys = [...new Set(rows.map(keyOf))]; keys.sort(order || ((a, b) => (isNaN(a) || isNaN(b) ? String(a).localeCompare(String(b)) : Number(a) - Number(b)))); return keys.map((k) => [k, rows.filter((r) => keyOf(r) === k)]); };
@@ -1694,6 +1702,17 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     $('pga-hist-empty').hidden = ev.some((e) => e.settled);
     rows($('pga-hist').tBodies[0], ev, (e) => `<tr><td>${esc(e.event)}</td><td>${day(e.start_date)}</td><td class="num">${e.plays}</td><td class="num">${e.settled ? e.cashed : 'pending'}</td><td class="num ${cls(e.units)}">${e.settled ? units(e.units || 0) : '—'}</td></tr>`);
     $('pga-disc').textContent = d.disclaimer || '';
+    const a = d.after_r1;
+    $('pga-r1').hidden = !a;
+    if (a) {
+      const hr = a.history || {};
+      $('pga-r1-sub').textContent = 'built ' + when(a.generated_at) + (hr.plays ? ` · record ${units(hr.units)} on ${hr.plays} graded plays` : '');
+      const ap = a.plays || [];
+      $('pga-r1-empty').hidden = ap.length > 0;
+      $('pga-r1-plays').closest('.scroll').hidden = ap.length === 0;
+      rows($('pga-r1-plays').tBodies[0], ap, (p) => `<tr><td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${us(p.best_price)}</td><td>${esc(p.best_book)}</td><td class="num pos">${p.ev == null ? '—' : '+' + Math.round(100 * p.ev) + '%'}</td></tr>`);
+      rows($('pga-r1-lb').tBodies[0], (a.leaderboard || []).slice(0, 25), (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.r1_score == null ? '—' : p.r1_score}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
+    }
   };
   // the feed is loaded with the other model feeds (dash.data('pga')), so the header, All models and Scores use the same copy
   const load = () => { const d = dash.data('pga'); feed = d.status === 'ok' && d.data[0] ? d.data[0] : null; render(); };
