@@ -139,6 +139,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-lb td.n { text-align: right; }
 .bm .sb-lb tr.mine td { color: var(--color-ok); }
 .bm .sb-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-sm) 0 2px; }
+.bm .sb-tally { margin: var(--cds-gap-sm) 0 var(--cds-gap-md); }
+.bm .sb-tally .tile .v { font-size: 1.5rem; }
 .bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 </style><style>
 .bm .sync-btn { margin-left: var(--cds-gap-xs); margin-bottom: var(--cds-gap-xs); border: 1px solid var(--color-border-line) !important; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm) !important; font-size: var(--cds-font-size-caption) !important; background: var(--color-panel) !important; color: var(--color-fg-muted) !important; }
@@ -331,6 +333,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   </div>
   <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. On PGA tournament days (Thursday–Sunday) the golf card shows the leaderboard, the model's flagged plays and where its favourites stand. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
   <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button><button data-sport="PGA" aria-pressed="true">PGA</button></span></div>
+  <div class="tiles sb-tally" id="sb-tally"></div>
   <div class="sb-status" id="sb-status">Loading live data…</div>
   <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports (or none tracked, if My picks is on).</div>
   <div class="sb-grid" id="sb-grid"></div>
@@ -349,14 +352,6 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       <p class="note" id="pga-rule"></p>
       <div class="empty" id="pga-plays-empty" hidden>No disagreements above the threshold this week.</div>
       <div class="scroll"><table id="pga-plays"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num">Best price</th><th>Book</th><th class="num">EV</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <div class="card" id="pga-r1" style="margin-top: var(--cds-gap-md)" hidden>
-      <h3>After round 1 <small id="pga-r1-sub"></small></h3>
-      <p class="note">Forward test: re-priced from the actual round-1 scores (form updated, morning/afternoon luck removed, round-2 wind forecast) against live odds. No in-play odds archive exists, so this has no backtested record yet.</p>
-      <div class="empty" id="pga-r1-empty" hidden>No disagreements above the threshold after round 1.</div>
-      <div class="scroll"><table id="pga-r1-plays"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Best price</th><th>Book</th><th class="num">EV</th></tr></thead><tbody></tbody></table></div>
-      <div class="scroll" style="margin-top: var(--cds-gap-sm)"><table id="pga-r1-lb"><thead><tr><th>Player</th><th class="num">R1</th><th class="num">Win</th><th class="num">Top 10</th><th class="num">Top 20</th><th class="num">Make cut</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
@@ -1527,6 +1522,30 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     const [a, h] = String(p.game).split(' @ '); const list = ((st.gamesBy[iso] || {})[p.sport]) || [];
     return list.find((g) => sameTeam(p.sport, a, g.away) && sameTeam(p.sport, h, g.home)) || list.find((g) => sameTeam(p.sport, h, g.home) || sameTeam(p.sport, a, g.away)) || null;
   };
+  // ---------- tally for the date on view (follows the sport buttons and My picks) ----------
+  const oddsOf = (price) => { const t = String(price || ''); const m = /\(([+-]\d{3,})\)/.exec(t) || /(?:^|\s)([+-]\d{3,})(?:\s|$)/.exec(t); return m ? +m[1] : -110; };
+  const winUnits = (units, price) => { const o = oddsOf(price); return units * (o > 0 ? o / 100 : 100 / -o); };
+  const drawTally = (iso, picks, golf) => {
+    const box = document.getElementById('sb-tally'); if (!box) return;
+    const items = [];
+    for (const p of picks) { const g = matchGame(p, iso); items.push({ p, r: g ? evaluate(p, g) : (p.graded ? { chip: p.graded, cls: p.graded === 'Won' ? 'win' : p.graded === 'Lost' ? 'loss' : '' } : null) }); }
+    for (const p of golf) { const g = st.golf[iso]; items.push({ p, r: g ? golfEval(p, g) : null }); }
+    let w = 0, l = 0, pu = 0, up = 0, dn = 0, todo = 0, units = 0, decided = 0;
+    for (const { p, r } of items) {
+      const done = r && (r.cls === 'win' || r.cls === 'loss' || r.chip === 'Push');
+      if (r && r.cls === 'win') w++; else if (r && r.cls === 'loss') l++; else if (r && r.chip === 'Push') pu++;
+      else if (r && r.cls === 'good') up++; else if (r && r.cls === 'bad') dn++; else todo++;
+      if (done && p.units) { decided++; units += p.graded && p.profit != null ? Number(p.profit) : r.cls === 'win' ? winUnits(Number(p.units), p.price) : r.cls === 'loss' ? -Number(p.units) : 0; }
+    }
+    if (!items.length) { box.replaceChildren(); return; }
+    const t = window.bmT.tile, f = window.bmF;
+    box.replaceChildren(
+      t('Record', `${w}-${l}-${pu}`, `${items.length} pick${items.length === 1 ? '' : 's'} on this date`),
+      t('Units +/-', decided ? f.fU(Math.round(100 * units) / 100) : '—', decided ? `${decided} settled bet${decided === 1 ? '' : 's'} · parlay pieces not counted` : 'nothing settled yet', f.signCls(units)),
+      t('In progress', up + dn ? `${up}–${dn}` : '—', up + dn ? 'winning – losing right now' : 'no games live'),
+      t('Not started', String(todo), todo ? 'still to play (or not in the feed)' : 'every pick has started'),
+    );
+  };
   const el = (tag, cls, txt) => { const e = document.createElement(tag); if (cls) e.className = cls; if (txt != null) e.textContent = txt; return e; };
   const render = () => {
     const sec = document.getElementById('scores'); if (!sec) return;
@@ -1535,7 +1554,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     document.getElementById('sb-date').textContent = dayLabel(iso) + (iso === todayIso() ? ' · today' : '');
     document.querySelectorAll('.bm .sb-sports button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.sport === 'ALL' ? st.sports.size === ALL.length : st.sports.has(b.dataset.sport))));
     const picks = shown(picksFor(iso), iso); const grid = document.getElementById('sb-grid'), un = document.getElementById('sb-unmatched');
-    if (!picks) { grid.replaceChildren(); return; }
+    if (!picks) { grid.replaceChildren(); document.getElementById('sb-tally').replaceChildren(); return; }
     const gps = golfOn(iso) ? T.filter(golfPicks(iso), (p) => p.key) : []; const showGolf = golfOn(iso) && (T.view() !== 'mine' || gps.length > 0);
     document.getElementById('sb-empty').hidden = picks.length > 0 || showGolf;
     const groups = new Map(), unmatched = [];
@@ -1566,6 +1585,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
       }
       card.appendChild(box); return card;
     }));
+    drawTally(iso, picks, showGolf ? gps : []);
     if (showGolf) { const gc = golfCard(iso, gps); const g = st.golf[iso]; if (g && g.state === 'in') grid.prepend(gc); else grid.appendChild(gc); }
     un.hidden = !unmatched.length;
     un.textContent = unmatched.length ? 'Not found in the live feed for this date (game time not set yet, or a team name that needs matching): ' + unmatched.map((p) => `${p.sport} ${p.game} — ${clean(p.text)}${p.graded ? ' (' + p.graded + ')' : ''}`).join(' · ') : '';
@@ -1702,17 +1722,6 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     $('pga-hist-empty').hidden = ev.some((e) => e.settled);
     rows($('pga-hist').tBodies[0], ev, (e) => `<tr><td>${esc(e.event)}</td><td>${day(e.start_date)}</td><td class="num">${e.plays}</td><td class="num">${e.settled ? e.cashed : 'pending'}</td><td class="num ${cls(e.units)}">${e.settled ? units(e.units || 0) : '—'}</td></tr>`);
     $('pga-disc').textContent = d.disclaimer || '';
-    const a = d.after_r1;
-    $('pga-r1').hidden = !a;
-    if (a) {
-      const hr = a.history || {};
-      $('pga-r1-sub').textContent = 'built ' + when(a.generated_at) + (hr.plays ? ` · record ${units(hr.units)} on ${hr.plays} graded plays` : '');
-      const ap = a.plays || [];
-      $('pga-r1-empty').hidden = ap.length > 0;
-      $('pga-r1-plays').closest('.scroll').hidden = ap.length === 0;
-      rows($('pga-r1-plays').tBodies[0], ap, (p) => `<tr><td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${us(p.best_price)}</td><td>${esc(p.best_book)}</td><td class="num pos">${p.ev == null ? '—' : '+' + Math.round(100 * p.ev) + '%'}</td></tr>`);
-      rows($('pga-r1-lb').tBodies[0], (a.leaderboard || []).slice(0, 25), (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.r1_score == null ? '—' : p.r1_score}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
-    }
   };
   // the feed is loaded with the other model feeds (dash.data('pga')), so the header, All models and Scores use the same copy
   const load = () => { const d = dash.data('pga'); feed = d.status === 'ok' && d.data[0] ? d.data[0] : null; render(); };
