@@ -102,6 +102,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 22rem), 1fr)); gap: var(--cds-gap-md); }
 .bm .sb-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md) var(--cds-pad-lg); min-width: 0; }
 .bm .sb-card.live { border-color: var(--color-ok); }
+.bm .sb-card.done { background: color-mix(in srgb, var(--color-panel) 55%, var(--color-bg)); border-color: color-mix(in srgb, var(--color-border-line) 60%, var(--color-bg)); }
+.bm .sb-card.done .sb-team, .bm .sb-card.done .sb-top, .bm .sb-card.done h4, .bm .sb-card.done .sb-lb, .bm .sb-card.done .sb-pick .txt, .bm .sb-card.done .sb-pick .meta { opacity: .55; }
 .bm .sb-top { display: flex; justify-content: space-between; align-items: center; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin-bottom: var(--cds-gap-xs); }
 .bm .sb-top .live-dot { display: inline-block; width: .5rem; height: .5rem; border-radius: 50%; background: var(--color-bad); margin-right: .35rem; animation: sbpulse 1.6s infinite; }
 @keyframes sbpulse { 50% { opacity: .25; } }
@@ -1381,7 +1383,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   };
   const golfCard = (iso, ps) => {
     const g = st.golf[iso]; const f = P.feed();
-    const card = el('div', 'sb-card sb-golf' + (g && g.state === 'in' ? ' live' : ''));
+    const card = el('div', 'sb-card sb-golf' + (g && g.state === 'in' ? ' live' : g && g.state === 'post' ? ' done' : ''));
     const top = el('div', 'sb-top'); const left = el('span'); if (g && g.state === 'in') left.appendChild(el('span', 'live-dot'));
     left.appendChild(document.createTextNode(g ? g.detail : 'Loading leaderboard…')); top.append(left, el('span', null, 'PGA')); card.appendChild(top);
     card.appendChild(el('h4', null, (g && g.name) || f.event));
@@ -1562,7 +1564,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     const order = { in: 0, pre: 1, post: 2 };
     const list = [...groups.values()].sort((x, y) => (order[x.g.state] - order[y.g.state]) || String(x.g.start).localeCompare(String(y.g.start)));
     grid.replaceChildren(...list.map(({ g, picks: ps }) => {
-      const card = el('div', 'sb-card' + (g.state === 'in' ? ' live' : ''));
+      const card = el('div', 'sb-card' + (g.state === 'in' ? ' live' : g.state === 'post' ? ' done' : ''));
       const top = el('div', 'sb-top'); const left = el('span'); if (g.state === 'in') left.appendChild(el('span', 'live-dot'));
       left.appendChild(document.createTextNode(g.state === 'pre' ? (ps[0].time || new Date(g.start).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })) : g.detail));
       top.append(left, el('span', null, g.sport)); card.appendChild(top);
