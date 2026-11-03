@@ -1,13 +1,15 @@
 {
  "sport": "PGA",
- "generated_at": "2026-11-03T14:46:46",
+ "generated_at": "2026-11-03T15:03:57",
  "event": "World Wide Technology Championship",
  "course": "El Cardonal at Diamante",
  "start_date": "2026-11-05",
  "model_version": "A-4ad5549c",
  "odds_live": false,
  "n_sims": 10000,
- "flag_rule": "EV > 10% at best price, odds <= 25/1, 3+ books, model <= 2x market",
+ "bet_at": "Hard Rock",
+ "price_label": "US median",
+ "flag_rule": "EV > 10% at the US median price, odds <= 25/1, 3+ books, model <= 2x market",
  "disclaimer": "Tracking sheet, not betting advice. Backtests 2022-2026 found no demonstrated edge over the market; flags mark where the model disagrees with the best available price.",
  "history": {
   "events": [
@@ -15,7 +17,7 @@
     "event": "World Wide Technology Championship",
     "start_date": "2026-11-05",
     "settled": false,
-    "plays": 34,
+    "plays": 2,
     "cashed": null,
     "units": null
    }
@@ -35,7 +37,7 @@
    "p_win": 0.0563,
    "mkt_win": 0.0547,
    "blend_win": 0.0586,
-   "best_win_price": 15.94,
+   "best_win_price": 14.375,
    "p_top5": 0.2033,
    "p_top10": 0.3268,
    "p_top20": 0.502,
@@ -47,7 +49,7 @@
    "p_win": 0.0491,
    "mkt_win": 0.0425,
    "blend_win": 0.0473,
-   "best_win_price": 19.0,
+   "best_win_price": 17.75,
    "p_top5": 0.1847,
    "p_top10": 0.2988,
    "p_top20": 0.4529,
@@ -71,7 +73,7 @@
    "p_win": 0.0401,
    "mkt_win": 0.021,
    "blend_win": 0.0279,
-   "best_win_price": 46.0,
+   "best_win_price": 34.0,
    "p_top5": 0.1667,
    "p_top10": 0.2877,
    "p_top20": 0.4534,
@@ -83,7 +85,7 @@
    "p_win": 0.0396,
    "mkt_win": 0.0485,
    "blend_win": 0.0471,
-   "best_win_price": 17.0,
+   "best_win_price": 15.0,
    "p_top5": 0.1669,
    "p_top10": 0.2801,
    "p_top20": 0.4555,
@@ -95,7 +97,7 @@
    "p_win": 0.0291,
    "mkt_win": 0.0195,
    "blend_win": 0.0234,
-   "best_win_price": 41.0,
+   "best_win_price": 36.0,
    "p_top5": 0.1364,
    "p_top10": 0.2336,
    "p_top20": 0.3869,
@@ -107,7 +109,7 @@
    "p_win": 0.0248,
    "mkt_win": 0.0179,
    "blend_win": 0.0207,
-   "best_win_price": 45.0,
+   "best_win_price": 41.0,
    "p_top5": 0.1147,
    "p_top10": 0.2032,
    "p_top20": 0.3496,
@@ -119,7 +121,7 @@
    "p_win": 0.0229,
    "mkt_win": 0.0194,
    "blend_win": 0.0211,
-   "best_win_price": 46.81,
+   "best_win_price": 35.0,
    "p_top5": 0.1207,
    "p_top10": 0.2129,
    "p_top20": 0.3545,
@@ -131,7 +133,7 @@
    "p_win": 0.0222,
    "mkt_win": 0.0179,
    "blend_win": 0.0198,
-   "best_win_price": 48.7,
+   "best_win_price": 38.5,
    "p_top5": 0.1049,
    "p_top10": 0.1888,
    "p_top20": 0.3313,
@@ -143,7 +145,7 @@
    "p_win": 0.0215,
    "mkt_win": 0.0159,
    "blend_win": 0.0182,
-   "best_win_price": 51.49,
+   "best_win_price": 41.0,
    "p_top5": 0.0971,
    "p_top10": 0.1726,
    "p_top20": 0.3103,
@@ -155,7 +157,7 @@
    "p_win": 0.0195,
    "mkt_win": 0.0167,
    "blend_win": 0.018,
-   "best_win_price": 49.66,
+   "best_win_price": 41.0,
    "p_top5": 0.1005,
    "p_top10": 0.1864,
    "p_top20": 0.3361,
@@ -167,7 +169,7 @@
    "p_win": 0.0193,
    "mkt_win": 0.0255,
    "blend_win": 0.0234,
-   "best_win_price": 36.0,
+   "best_win_price": 29.5,
    "p_top5": 0.1002,
    "p_top10": 0.1871,
    "p_top20": 0.3304,
@@ -179,7 +181,7 @@
    "p_win": 0.0173,
    "mkt_win": 0.0099,
    "blend_win": 0.0123,
-   "best_win_price": 81.82,
+   "best_win_price": 69.0,
    "p_top5": 0.0871,
    "p_top10": 0.1693,
    "p_top20": 0.3116,
@@ -191,7 +193,7 @@
    "p_win": 0.0163,
    "mkt_win": 0.0133,
    "blend_win": 0.0144,
-   "best_win_price": 67.29,
+   "best_win_price": 51.0,
    "p_top5": 0.0745,
    "p_top10": 0.1365,
    "p_top20": 0.249,
@@ -203,7 +205,7 @@
    "p_win": 0.0162,
    "mkt_win": 0.0224,
    "blend_win": 0.0201,
-   "best_win_price": 41.0,
+   "best_win_price": 31.0,
    "p_top5": 0.0928,
    "p_top10": 0.1709,
    "p_top20": 0.3116,
@@ -215,7 +217,7 @@
    "p_win": 0.0154,
    "mkt_win": 0.0158,
    "blend_win": 0.0158,
-   "best_win_price": 51.0,
+   "best_win_price": 43.5,
    "p_top5": 0.0856,
    "p_top10": 0.1644,
    "p_top20": 0.2949,
@@ -227,7 +229,7 @@
    "p_win": 0.0152,
    "mkt_win": 0.0162,
    "blend_win": 0.0159,
-   "best_win_price": 47.66,
+   "best_win_price": 43.0,
    "p_top5": 0.0803,
    "p_top10": 0.1514,
    "p_top20": 0.2744,
@@ -239,7 +241,7 @@
    "p_win": 0.0147,
    "mkt_win": 0.0191,
    "blend_win": 0.0174,
-   "best_win_price": 46.12,
+   "best_win_price": 36.0,
    "p_top5": 0.0841,
    "p_top10": 0.1589,
    "p_top20": 0.2935,
@@ -251,7 +253,7 @@
    "p_win": 0.0142,
    "mkt_win": 0.0194,
    "blend_win": 0.0174,
-   "best_win_price": 51.0,
+   "best_win_price": 36.5,
    "p_top5": 0.0887,
    "p_top10": 0.1711,
    "p_top20": 0.3102,
@@ -263,7 +265,7 @@
    "p_win": 0.0137,
    "mkt_win": 0.0194,
    "blend_win": 0.0171,
-   "best_win_price": 44.44,
+   "best_win_price": 37.5,
    "p_top5": 0.0843,
    "p_top10": 0.1595,
    "p_top20": 0.2931,
@@ -275,7 +277,7 @@
    "p_win": 0.0134,
    "mkt_win": 0.0149,
    "blend_win": 0.0144,
-   "best_win_price": 59.81,
+   "best_win_price": 46.0,
    "p_top5": 0.0785,
    "p_top10": 0.1428,
    "p_top20": 0.27,
@@ -287,7 +289,7 @@
    "p_win": 0.0129,
    "mkt_win": 0.0117,
    "blend_win": 0.0121,
-   "best_win_price": 71.0,
+   "best_win_price": 61.0,
    "p_top5": 0.0733,
    "p_top10": 0.1414,
    "p_top20": 0.2671,
@@ -299,7 +301,7 @@
    "p_win": 0.0123,
    "mkt_win": 0.0167,
    "blend_win": 0.0149,
-   "best_win_price": 51.0,
+   "best_win_price": 41.0,
    "p_top5": 0.0744,
    "p_top10": 0.1429,
    "p_top20": 0.264,
@@ -311,7 +313,7 @@
    "p_win": 0.0122,
    "mkt_win": 0.0099,
    "blend_win": 0.0107,
-   "best_win_price": 81.0,
+   "best_win_price": 66.0,
    "p_top5": 0.0729,
    "p_top10": 0.1412,
    "p_top20": 0.2681,
@@ -323,7 +325,7 @@
    "p_win": 0.0121,
    "mkt_win": 0.0063,
    "blend_win": 0.008,
-   "best_win_price": 128.37,
+   "best_win_price": 95.0,
    "p_top5": 0.0667,
    "p_top10": 0.1221,
    "p_top20": 0.2306,
@@ -335,7 +337,7 @@
    "p_win": 0.012,
    "mkt_win": 0.0157,
    "blend_win": 0.0142,
-   "best_win_price": 61.0,
+   "best_win_price": 43.5,
    "p_top5": 0.073,
    "p_top10": 0.1476,
    "p_top20": 0.2803,
@@ -347,7 +349,7 @@
    "p_win": 0.0118,
    "mkt_win": 0.0086,
    "blend_win": 0.0096,
-   "best_win_price": 89.44,
+   "best_win_price": 81.0,
    "p_top5": 0.0779,
    "p_top10": 0.1478,
    "p_top20": 0.2787,
@@ -359,7 +361,7 @@
    "p_win": 0.0111,
    "mkt_win": 0.0081,
    "blend_win": 0.009,
-   "best_win_price": 94.64,
+   "best_win_price": 81.0,
    "p_top5": 0.0681,
    "p_top10": 0.1323,
    "p_top20": 0.2472,
@@ -371,7 +373,7 @@
    "p_win": 0.011,
    "mkt_win": 0.0166,
    "blend_win": 0.0142,
-   "best_win_price": 49.91,
+   "best_win_price": 41.0,
    "p_top5": 0.0731,
    "p_top10": 0.1427,
    "p_top20": 0.2718,
@@ -383,7 +385,7 @@
    "p_win": 0.0109,
    "mkt_win": 0.0086,
    "blend_win": 0.0093,
-   "best_win_price": 83.81,
+   "best_win_price": 72.5,
    "p_top5": 0.0738,
    "p_top10": 0.1412,
    "p_top20": 0.269,
@@ -395,7 +397,7 @@
    "p_win": 0.0108,
    "mkt_win": 0.0089,
    "blend_win": 0.0095,
-   "best_win_price": 82.61,
+   "best_win_price": 73.5,
    "p_top5": 0.0698,
    "p_top10": 0.1395,
    "p_top20": 0.2622,
@@ -407,7 +409,7 @@
    "p_win": 0.0105,
    "mkt_win": 0.0118,
    "blend_win": 0.0112,
-   "best_win_price": 69.33,
+   "best_win_price": 56.0,
    "p_top5": 0.0734,
    "p_top10": 0.1381,
    "p_top20": 0.2553,
@@ -419,7 +421,7 @@
    "p_win": 0.0104,
    "mkt_win": 0.0157,
    "blend_win": 0.0134,
-   "best_win_price": 56.0,
+   "best_win_price": 41.0,
    "p_top5": 0.0686,
    "p_top10": 0.1321,
    "p_top20": 0.2491,
@@ -431,7 +433,7 @@
    "p_win": 0.01,
    "mkt_win": 0.0084,
    "blend_win": 0.0089,
-   "best_win_price": 95.63,
+   "best_win_price": 76.0,
    "p_top5": 0.0678,
    "p_top10": 0.132,
    "p_top20": 0.2503,
@@ -443,7 +445,7 @@
    "p_win": 0.0095,
    "mkt_win": 0.0005,
    "blend_win": 0.0015,
-   "best_win_price": 1901.0,
+   "best_win_price": 1001.0,
    "p_top5": 0.0462,
    "p_top10": 0.0833,
    "p_top20": 0.1568,
@@ -455,7 +457,7 @@
    "p_win": 0.0095,
    "mkt_win": 0.012,
    "blend_win": 0.0109,
-   "best_win_price": 71.6,
+   "best_win_price": 57.5,
    "p_top5": 0.0579,
    "p_top10": 0.1168,
    "p_top20": 0.2482,
@@ -467,7 +469,7 @@
    "p_win": 0.0091,
    "mkt_win": 0.0074,
    "blend_win": 0.0078,
-   "best_win_price": 133.21,
+   "best_win_price": 89.0,
    "p_top5": 0.0609,
    "p_top10": 0.1192,
    "p_top20": 0.2313,
@@ -479,7 +481,7 @@
    "p_win": 0.0091,
    "mkt_win": 0.0064,
    "blend_win": 0.0071,
-   "best_win_price": 127.92,
+   "best_win_price": 101.0,
    "p_top5": 0.0544,
    "p_top10": 0.1072,
    "p_top20": 0.2178,
@@ -491,7 +493,7 @@
    "p_win": 0.009,
    "mkt_win": 0.0079,
    "blend_win": 0.0082,
-   "best_win_price": 111.0,
+   "best_win_price": 84.0,
    "p_top5": 0.0604,
    "p_top10": 0.1215,
    "p_top20": 0.2427,
@@ -503,7 +505,7 @@
    "p_win": 0.009,
    "mkt_win": 0.0062,
    "blend_win": 0.007,
-   "best_win_price": 139.38,
+   "best_win_price": 101.0,
    "p_top5": 0.0531,
    "p_top10": 0.1079,
    "p_top20": 0.2131,
@@ -512,14 +514,39 @@
  ],
  "plays": [
   {
+   "player_name": "Willie Mack III",
+   "market": "top_20",
+   "p_model": 0.0478,
+   "p_market_fair": 0.0281,
+   "p_blend": 0.0369,
+   "best_price": 23.5,
+   "best_book": "US median",
+   "ev": 0.1238,
+   "need_price": 23.0016
+  },
+  {
    "player_name": "Rasmus Hojgaard",
    "market": "top_5",
    "p_model": 0.0575,
    "p_market_fair": 0.0331,
    "p_blend": 0.0421,
-   "best_price": 26.0,
-   "best_book": "betonline",
-   "ev": 0.4942
+   "best_price": 19.5,
+   "best_book": "US median",
+   "ev": 0.1207,
+   "need_price": 19.1405
+  }
+ ],
+ "watch": [
+  {
+   "player_name": "Keith Mitchell",
+   "market": "top_10",
+   "p_model": 0.259,
+   "p_market_fair": 0.1883,
+   "p_blend": 0.2143,
+   "best_price": 4.2,
+   "best_book": "US median",
+   "ev": 0.088,
+   "need_price": 4.2464
   },
   {
    "player_name": "Lucas Glover",
@@ -527,9 +554,10 @@
    "p_model": 0.0798,
    "p_market_fair": 0.0538,
    "p_blend": 0.0591,
-   "best_price": 17.0,
-   "best_book": "fanduel",
-   "ev": 0.356
+   "best_price": 13.5,
+   "best_book": "US median",
+   "ev": 0.0769,
+   "need_price": 13.7901
   },
   {
    "player_name": "Matt Kuchar",
@@ -537,149 +565,10 @@
    "p_model": 0.1771,
    "p_market_fair": 0.1261,
    "p_blend": 0.151,
-   "best_price": 7.5,
-   "best_book": "skybet",
-   "ev": 0.3279
-  },
-  {
-   "player_name": "Keith Mitchell",
-   "market": "top_10",
-   "p_model": 0.259,
-   "p_market_fair": 0.1883,
-   "p_blend": 0.2143,
-   "best_price": 5.0,
-   "best_book": "skybet",
-   "ev": 0.2952
-  },
-  {
-   "player_name": "Mark Hubbard",
-   "market": "top_20",
-   "p_model": 0.117,
-   "p_market_fair": 0.0789,
-   "p_blend": 0.0982,
-   "best_price": 11.0,
-   "best_book": "fanduel",
-   "ev": 0.2875
-  },
-  {
-   "player_name": "Jimmy Stanger",
-   "market": "top_20",
-   "p_model": 0.067,
-   "p_market_fair": 0.0437,
-   "p_blend": 0.0557,
-   "best_price": 19.0,
-   "best_book": "skybet",
-   "ev": 0.2731
-  },
-  {
-   "player_name": "Mark Hubbard",
-   "market": "top_10",
-   "p_model": 0.0488,
-   "p_market_fair": 0.0316,
-   "p_blend": 0.0369,
-   "best_price": 26.0,
-   "best_book": "fanduel",
-   "ev": 0.2682
-  },
-  {
-   "player_name": "Matt Kuchar",
-   "market": "top_10",
-   "p_model": 0.0825,
-   "p_market_fair": 0.0538,
-   "p_blend": 0.0635,
-   "best_price": 15.0,
-   "best_book": "fanduel",
-   "ev": 0.2376
-  },
-  {
-   "player_name": "Rasmus Hojgaard",
-   "market": "top_20",
-   "p_model": 0.206,
-   "p_market_fair": 0.1793,
-   "p_blend": 0.1903,
    "best_price": 6.0,
-   "best_book": "skybet",
-   "ev": 0.2362
-  },
-  {
-   "player_name": "Keith Mitchell",
-   "market": "top_5",
-   "p_model": 0.1451,
-   "p_market_fair": 0.1049,
-   "p_blend": 0.1205,
-   "best_price": 8.5,
-   "best_book": "skybet",
-   "ev": 0.2333
-  },
-  {
-   "player_name": "Lucas Glover",
-   "market": "top_20",
-   "p_model": 0.1641,
-   "p_market_fair": 0.1203,
-   "p_blend": 0.1434,
-   "best_price": 7.5,
-   "best_book": "skybet",
-   "ev": 0.2307
-  },
-  {
-   "player_name": "David Skinns",
-   "market": "top_10",
-   "p_model": 0.0467,
-   "p_market_fair": 0.033,
-   "p_blend": 0.0363,
-   "best_price": 26.0,
-   "best_book": "skybet",
-   "ev": 0.2153
-  },
-  {
-   "player_name": "Rasmus Hojgaard",
-   "market": "top_10",
-   "p_model": 0.1074,
-   "p_market_fair": 0.077,
-   "p_blend": 0.0878,
-   "best_price": 11.0,
-   "best_book": "fanduel",
-   "ev": 0.1819
-  },
-  {
-   "player_name": "Billy Horschel",
-   "market": "top_5",
-   "p_model": 0.0621,
-   "p_market_fair": 0.0483,
-   "p_blend": 0.0539,
-   "best_price": 19.0,
-   "best_book": "skybet",
-   "ev": 0.1794
-  },
-  {
-   "player_name": "David Skinns",
-   "market": "top_20",
-   "p_model": 0.1072,
-   "p_market_fair": 0.0789,
-   "p_blend": 0.0958,
-   "best_price": 11.0,
-   "best_book": "skybet",
-   "ev": 0.1793
-  },
-  {
-   "player_name": "Hank Lebioda",
-   "market": "top_20",
-   "p_model": 0.0783,
-   "p_market_fair": 0.0516,
-   "p_blend": 0.0677,
-   "best_price": 15.0,
-   "best_book": "skybet",
-   "ev": 0.174
-  },
-  {
-   "player_name": "Taylor Pendrith",
-   "market": "top_5",
-   "p_model": 0.045,
-   "p_market_fair": 0.0331,
-   "p_blend": 0.0389,
-   "best_price": 26.0,
-   "best_book": "betonline",
-   "ev": 0.1701
+   "best_book": "US median",
+   "ev": 0.0623,
+   "need_price": 6.2127
   },
   {
    "player_name": "Keith Mitchell",
@@ -687,149 +576,32 @@
    "p_model": 0.423,
    "p_market_fair": 0.3469,
    "p_blend": 0.3869,
-   "best_price": 2.75,
-   "best_book": "skybet",
-   "ev": 0.1633
+   "best_price": 2.5,
+   "best_book": "US median",
+   "ev": 0.0575,
+   "need_price": 2.6004
   },
   {
-   "player_name": "Kevin Streelman",
-   "market": "top_20",
-   "p_model": 0.1449,
-   "p_market_fair": 0.1101,
-   "p_blend": 0.1304,
-   "best_price": 8.0,
-   "best_book": "skybet",
-   "ev": 0.1596
-  },
-  {
-   "player_name": "Emiliano Grillo",
+   "player_name": "Keith Mitchell",
    "market": "top_5",
-   "p_model": 0.0497,
-   "p_market_fair": 0.0382,
-   "p_blend": 0.0411,
-   "best_price": 23.0,
-   "best_book": "betway",
-   "ev": 0.1431
+   "p_model": 0.1451,
+   "p_market_fair": 0.1049,
+   "p_blend": 0.1205,
+   "best_price": 7.275,
+   "best_book": "US median",
+   "ev": 0.0556,
+   "need_price": 7.5811
   },
   {
-   "player_name": "Austin Hitt",
+   "player_name": "Mark Hubbard",
    "market": "top_20",
-   "p_model": 0.1905,
-   "p_market_fair": 0.1557,
-   "p_blend": 0.1744,
-   "best_price": 6.0,
-   "best_book": "skybet",
-   "ev": 0.1429
-  },
-  {
-   "player_name": "Haotong Li",
-   "market": "top_10",
-   "p_model": 0.1035,
-   "p_market_fair": 0.0818,
-   "p_blend": 0.0888,
-   "best_price": 11.0,
-   "best_book": "skybet",
-   "ev": 0.1387
-  },
-  {
-   "player_name": "Haotong Li",
-   "market": "top_20",
-   "p_model": 0.2066,
-   "p_market_fair": 0.1652,
-   "p_blend": 0.1911,
-   "best_price": 5.5,
-   "best_book": "skybet",
-   "ev": 0.1365
-  },
-  {
-   "player_name": "Nick Taylor",
-   "market": "top_20",
-   "p_model": 0.2513,
-   "p_market_fair": 0.2015,
-   "p_blend": 0.2289,
-   "best_price": 4.5,
-   "best_book": "skybet",
-   "ev": 0.1309
-  },
-  {
-   "player_name": "Emiliano Grillo",
-   "market": "top_10",
-   "p_model": 0.1028,
-   "p_market_fair": 0.0818,
-   "p_blend": 0.0867,
-   "best_price": 11.0,
-   "best_book": "skybet",
-   "ev": 0.1303
-  },
-  {
-   "player_name": "David Lipsky",
-   "market": "top_10",
-   "p_model": 0.049,
-   "p_market_fair": 0.0349,
-   "p_blend": 0.0397,
-   "best_price": 23.0,
-   "best_book": "skybet",
-   "ev": 0.128
-  },
-  {
-   "player_name": "Sudarshan Yellamaraju",
-   "market": "top_20",
-   "p_model": 0.2255,
-   "p_market_fair": 0.1834,
-   "p_blend": 0.2103,
-   "best_price": 5.0,
-   "best_book": "skybet",
-   "ev": 0.1276
-  },
-  {
-   "player_name": "Pontus Nyholm",
-   "market": "top_20",
-   "p_model": 0.0937,
-   "p_market_fair": 0.0699,
-   "p_blend": 0.0814,
-   "best_price": 12.0,
-   "best_book": "skybet",
-   "ev": 0.125
-  },
-  {
-   "player_name": "Kevin Yu",
-   "market": "top_20",
-   "p_model": 0.2249,
-   "p_market_fair": 0.2015,
-   "p_blend": 0.2102,
-   "best_price": 5.0,
-   "best_book": "skybet",
-   "ev": 0.1245
-  },
-  {
-   "player_name": "Austin Hitt",
-   "market": "top_10",
-   "p_model": 0.0931,
-   "p_market_fair": 0.0726,
-   "p_blend": 0.0802,
-   "best_price": 12.0,
-   "best_book": "fanduel",
-   "ev": 0.1167
-  },
-  {
-   "player_name": "Jesper Svensson",
-   "market": "top_5",
-   "p_model": 0.0426,
-   "p_market_fair": 0.0299,
-   "p_blend": 0.0344,
-   "best_price": 26.0,
-   "best_book": "fanduel",
-   "ev": 0.1089
-  },
-  {
-   "player_name": "Kevin Yu",
-   "market": "top_5",
-   "p_model": 0.0583,
-   "p_market_fair": 0.0434,
-   "p_blend": 0.05,
-   "best_price": 19.0,
-   "best_book": "skybet",
-   "ev": 0.1069
+   "p_model": 0.117,
+   "p_market_fair": 0.0789,
+   "p_blend": 0.0982,
+   "best_price": 9.0,
+   "best_book": "US median",
+   "ev": 0.0534,
+   "need_price": 9.3984
   },
   {
    "player_name": "Nick Taylor",
@@ -837,19 +609,43 @@
    "p_model": 0.0649,
    "p_market_fair": 0.0483,
    "p_blend": 0.0542,
-   "best_price": 17.0,
-   "best_book": "skybet",
-   "ev": 0.104
+   "best_price": 15.75,
+   "best_book": "US median",
+   "ev": 0.0228,
+   "need_price": 16.9388
   },
   {
-   "player_name": "Nick Taylor",
+   "player_name": "Hank Lebioda",
+   "market": "top_20",
+   "p_model": 0.0783,
+   "p_market_fair": 0.0516,
+   "p_blend": 0.0677,
+   "best_price": 13.0,
+   "best_book": "US median",
+   "ev": 0.0175,
+   "need_price": 14.0546
+  },
+  {
+   "player_name": "Kevin Streelman",
+   "market": "top_20",
+   "p_model": 0.1449,
+   "p_market_fair": 0.1101,
+   "p_blend": 0.1304,
+   "best_price": 7.0,
+   "best_book": "US median",
+   "ev": 0.0146,
+   "need_price": 7.5888
+  },
+  {
+   "player_name": "Mark Hubbard",
    "market": "top_10",
-   "p_model": 0.1294,
-   "p_market_fair": 0.1007,
-   "p_blend": 0.1105,
-   "best_price": 8.5,
-   "best_book": "fanduel",
-   "ev": 0.1001
+   "p_model": 0.0488,
+   "p_market_fair": 0.0316,
+   "p_blend": 0.0369,
+   "best_price": 20.75,
+   "best_book": "US median",
+   "ev": 0.0121,
+   "need_price": 22.5523
   }
  ],
  "blend_win": [
@@ -858,21 +654,21 @@
    "p_model": 0.0563,
    "p_market_books": 0.0547,
    "p_blend": 0.0586,
-   "best_price": 15.94
+   "best_price": 14.375
   },
   {
    "player_name": "Ben James",
    "p_model": 0.0491,
    "p_market_books": 0.0425,
    "p_blend": 0.0473,
-   "best_price": 19.0
+   "best_price": 17.75
   },
   {
    "player_name": "Ben Griffin",
    "p_model": 0.0396,
    "p_market_books": 0.0485,
    "p_blend": 0.0471,
-   "best_price": 17.0
+   "best_price": 15.0
   },
   {
    "player_name": "Jackson Koivun",
@@ -886,77 +682,77 @@
    "p_model": 0.0401,
    "p_market_books": 0.021,
    "p_blend": 0.0279,
-   "best_price": 46.0
+   "best_price": 34.0
   },
   {
    "player_name": "Blades Brown",
    "p_model": 0.0193,
    "p_market_books": 0.0255,
    "p_blend": 0.0234,
-   "best_price": 36.0
+   "best_price": 29.5
   },
   {
    "player_name": "Jordan Smith",
    "p_model": 0.0291,
    "p_market_books": 0.0195,
    "p_blend": 0.0234,
-   "best_price": 41.0
+   "best_price": 36.0
   },
   {
    "player_name": "Marco Penge",
    "p_model": 0.0229,
    "p_market_books": 0.0194,
    "p_blend": 0.0211,
-   "best_price": 46.81
+   "best_price": 35.0
   },
   {
    "player_name": "Ben Kohles",
    "p_model": 0.0248,
    "p_market_books": 0.0179,
    "p_blend": 0.0207,
-   "best_price": 45.0
+   "best_price": 41.0
   },
   {
    "player_name": "Harry Hall",
    "p_model": 0.0162,
    "p_market_books": 0.0224,
    "p_blend": 0.0201,
-   "best_price": 41.0
+   "best_price": 31.0
   },
   {
    "player_name": "Michael Kim",
    "p_model": 0.0222,
    "p_market_books": 0.0179,
    "p_blend": 0.0198,
-   "best_price": 48.7
+   "best_price": 38.5
   },
   {
    "player_name": "Johnny Keefer",
    "p_model": 0.0215,
    "p_market_books": 0.0159,
    "p_blend": 0.0182,
-   "best_price": 51.49
+   "best_price": 41.0
   },
   {
    "player_name": "Chris Kirk",
    "p_model": 0.0195,
    "p_market_books": 0.0167,
    "p_blend": 0.018,
-   "best_price": 49.66
+   "best_price": 41.0
   },
   {
    "player_name": "Kristoffer Ventura",
    "p_model": 0.0147,
    "p_market_books": 0.0191,
    "p_blend": 0.0174,
-   "best_price": 46.12
+   "best_price": 36.0
   },
   {
    "player_name": "Christiaan Bezuidenhout",
    "p_model": 0.0142,
    "p_market_books": 0.0194,
    "p_blend": 0.0174,
-   "best_price": 51.0
+   "best_price": 36.5
   }
  ]
 }
