@@ -1,6 +1,6 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-03 08:36",
+"generated_at": "2026-11-04 09:18",
 "card_info": {"sport":"CFB","name":"College Football","label":"Week 10","title":"Week 10 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Tue Nov 3, 2026 8:34 AM ET","n_bets":47,"units":90.5,"n_top":33,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Tue 8:00 PM ET","game":"Buffalo @ Miami (OH)","market":"Spread","pick":"Miami (OH) -5.5","line":"-5.5 (-115)","price":"","units":5,"model_prob":0.668,"market_prob":null,"edge":null,"limit":"Focus to -12","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 10-5","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Sat 3:30 PM ET","game":"Western Kentucky @ Middle Tennessee","market":"Spread","pick":"Western Kentucky -1.5","line":"-1.5 (-105)","price":"","units":5,"model_prob":0.676,"market_prob":null,"edge":null,"limit":"Focus to -8","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 10-5","top":"Y","soft":""},
