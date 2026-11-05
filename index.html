@@ -355,10 +355,16 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <div class="tiles" id="pga-tiles"></div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
-      <h3>Model vs market <small id="pga-plays-n"></small></h3>
+      <h3>Flagged plays <small id="pga-plays-n"></small></h3>
       <p class="note" id="pga-rule"></p>
-      <div class="empty" id="pga-plays-empty" hidden>No disagreements above the threshold this week.</div>
-      <div class="scroll"><table id="pga-plays"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num">Best price</th><th>Book</th><th class="num">EV</th></tr></thead><tbody></tbody></table></div>
+      <div class="empty" id="pga-plays-empty" hidden>No plays flagged this week.</div>
+      <div class="scroll"><table id="pga-plays"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num" id="pga-price-h">Price</th><th class="num">EV</th><th class="num" id="pga-need-h">Need</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
+    <div class="card" style="margin-top: var(--cds-gap-md)" id="pga-watch-card" hidden>
+      <h3 id="pga-watch-h">Worth checking <small id="pga-watch-n"></small></h3>
+      <p class="note" id="pga-watch-note"></p>
+      <div class="scroll"><table id="pga-watch"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num" id="pga-price-h2">Price</th><th class="num">EV</th><th class="num" id="pga-need-h2">Need</th></tr></thead><tbody></tbody></table></div>
     </div>
 
     <h2>Pick your finishes <small id="pga-mine-n"></small></h2>
@@ -372,7 +378,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
-      <h3>Flagged-play record <small>1 unit each at the best price, last pre-tournament card per event</small></h3>
+      <h3>Flagged-play record <small>1 unit each at the card price, last pre-tournament card per event</small></h3>
       <div class="empty" id="pga-hist-empty" hidden>No graded events yet.</div>
       <div class="scroll"><table id="pga-hist"><thead><tr><th>Event</th><th>Start</th><th class="num">Plays</th><th class="num">Cashed</th><th class="num">Units +/-</th></tr></thead><tbody></tbody></table></div>
     </div>
@@ -957,7 +963,7 @@ const pgaTile = (win) => {
   const P = window.bmPGA, f = P.feed(); if (!f) return [];
   const r = P.record(f, winKeep(win));
   const t = r.graded ? tile('PGA', fU(r.profit), `${r.record} · ROI ${fPs(r.roi)} · ${r.events} event${r.events === 1 ? '' : 's'}`, signCls(r.profit)) : tile('PGA', '—', r.pending ? `${r.pending} flagged plays pending` : 'No graded events yet');
-  t.title = 'PGA flagged plays, 1 unit each at the best price. Kept separate: not in the All models total.';
+  t.title = 'PGA flagged plays, 1 unit each at the card price. Kept separate: not in the All models total.';
   return [t];
 };
 const pgaPlayRows = (f) => window.bmPGA.picks(f).map((p, i) => ({ key: window.bmPGA.key(f, p), sport: 'PGA', n: i + 1, type: p.flagged ? 'Flagged play' : 'Your pick', game_time: f.event, game: f.event, date: f.start_date, pick: window.bmPGA.label(p), bet_type: window.bmPGA.MKT[p.market] || p.market, line: p.best_price ? window.bmPGA.us(p.best_price) + (p.best_book ? ' ' + p.best_book : '') : 'model fair ' + window.bmPGA.fair(p.p_model), units: p.flagged ? 1 : null, model_prob: p.p_model, market_prob: p.p_market_fair, note: !p.flagged ? 'Your pick' : p.ev == null ? '' : 'EV +' + Math.round(100 * p.ev) + '%', market: p.market }));
@@ -1752,11 +1758,21 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
       ['Flagged plays', String((d.plays || []).length), 'this week'],
       ['Record (units)', `<span class="${cls(h.units)}">${h.plays ? units(h.units) : '—'}</span>`, h.plays ? `${h.plays} graded plays · ROI ${h.roi == null ? '—' : (100 * h.roi).toFixed(1) + '%'}` : 'no graded events yet'],
     ].map(([k, v, s]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
-    $('pga-rule').textContent = 'Flag rule: ' + (d.flag_rule || '') + '. EV = model % × best decimal price − 1. Market % = margin removed from the median price.';
+    const betAt = d.bet_at || 'your book', priceLabel = d.price_label || 'Best price';
+    $('pga-rule').textContent = (d.book_note ? d.book_note.charAt(0).toUpperCase() + d.book_note.slice(1) + '. ' : '') + 'Flag rule: ' + (d.flag_rule || '') + '. EV = model % × the ' + priceLabel + ' decimal price − 1. Market % = margin removed from the median price. Need = the longest price at which the play still clears the rule: bet it at ' + betAt + ' only at that price or longer.';
+    for (const id of ['pga-price-h', 'pga-price-h2']) $(id).textContent = priceLabel;
+    for (const id of ['pga-need-h', 'pga-need-h2']) $(id).textContent = 'Need at ' + betAt;
+    const playRow = (p, open = '<tr>') => `${open}<td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${pct(p.p_blend)}</td><td class="num">${us(p.best_price)}${p.best_book && p.best_book !== priceLabel ? ' (' + esc(p.best_book) + ')' : ''}</td><td class="num ${p.ev > 0 ? 'pos' : ''}">${p.ev == null ? '—' : (p.ev > 0 ? '+' : '') + Math.round(100 * p.ev) + '%'}</td><td class="num"><b>${us(p.need_price)}</b></td></tr>`;
     const plays = d.plays || [];
-    $('pga-plays-n').textContent = plays.length ? plays.length + ' flagged' : '';
+    $('pga-plays-n').textContent = plays.length ? plays.length + ' flagged · 1 unit each' : '';
     $('pga-plays-empty').hidden = plays.length > 0; $('pga-plays').closest('.scroll').hidden = !plays.length;
-    rows($('pga-plays').tBodies[0], plays, (p) => `<tr${T.has(P.key(d, p)) ? ' class="tracked"' : ''}><td class="trk-c">${trk(P.key(d, p))}</td><td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${pct(p.p_blend)}</td><td class="num">${us(p.best_price)}</td><td>${esc(p.best_book)}</td><td class="num pos">${p.ev == null ? '—' : '+' + Math.round(100 * p.ev) + '%'}</td></tr>`);
+    rows($('pga-plays').tBodies[0], plays, (p) => playRow(p, `<tr${T.has(P.key(d, p)) ? ' class="tracked"' : ''}><td class="trk-c">${trk(P.key(d, p))}</td>`));
+    const watch = d.odds_live ? [] : (d.watch || []);
+    $('pga-watch-card').hidden = !watch.length;
+    $('pga-watch-h').firstChild.textContent = 'Worth checking at ' + betAt + ' ';
+    $('pga-watch-n').textContent = watch.length + ' close to the threshold';
+    $('pga-watch-note').textContent = 'Just short of the flag rule at the ' + priceLabel + ' price. Bet one only if ' + betAt + ' offers the need price or longer; otherwise leave it.';
+    rows($('pga-watch').tBodies[0], watch, playRow);
     rows($('pga-proj').tBodies[0], d.projections || [], (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.skill_mean == null ? '—' : (p.skill_mean > 0 ? '+' : '') + p.skill_mean.toFixed(2)}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.mkt_win)}</td><td class="num">${pct(p.blend_win)}</td><td class="num">${us(p.best_win_price)}</td><td class="num">${pct(p.p_top5)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
     // one card per finish: every projected player, sorted by the model's chance, each with a track button
     const flagged = new Set(plays.map((p) => p.player_name + '|' + p.market));
