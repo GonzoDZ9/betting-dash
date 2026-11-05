@@ -143,6 +143,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .sb-sub { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); margin: var(--cds-gap-sm) 0 2px; }
 .bm .sb-tally { margin: var(--cds-gap-sm) 0 var(--cds-gap-md); }
 .bm .sb-tally .tile .v { font-size: 1.5rem; }
+.bm .sb-dates input[type=date] { font: inherit; font-size: var(--cds-font-size-body); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); color-scheme: dark; }
 .bm .sb-refresh { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-md); cursor: pointer; }
 </style><style>
 .bm .sync-btn { margin-left: var(--cds-gap-xs); margin-bottom: var(--cds-gap-xs); border: 1px solid var(--color-border-line) !important; border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm) !important; font-size: var(--cds-font-size-caption) !important; background: var(--color-panel) !important; color: var(--color-fg-muted) !important; }
@@ -338,7 +339,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <button class="sb-refresh" id="sb-refresh">Refresh now</button>
   </div>
   <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Every game with a bet or parlay piece on the chosen date, with each pick's status. On PGA tournament days (Thursday–Sunday) the golf card shows the leaderboard, the model's flagged plays and where its favourites stand. Today refreshes every 30 seconds while this tab is open; past dates show final scores with the model's graded result, future dates show the scheduled games. Parlay pieces are only kept for the current cards. Scores and stats come from ESPN's and the NHL's public feeds — unofficial, a little behind the broadcast, and for tracking only.</p>
-  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><select id="sb-datesel" aria-label="Date"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button><button data-sport="PGA" aria-pressed="true">PGA</button></span></div>
+  <div class="sb-dates"><button class="sb-refresh" id="sb-prev" aria-label="Previous date">‹</button><input type="date" id="sb-cal" aria-label="Pick any date"><select id="sb-datesel" aria-label="Dates with picks"></select><button class="sb-refresh" id="sb-next" aria-label="Next date">›</button><button class="sb-refresh" id="sb-today">Today</button><span class="sb-sports" role="group" aria-label="Sports"><button data-sport="ALL" aria-pressed="true">All</button><button data-sport="CFB" aria-pressed="true">CFB</button><button data-sport="NFL" aria-pressed="true">NFL</button><button data-sport="NHL" aria-pressed="true">NHL</button><button data-sport="PGA" aria-pressed="true">PGA</button></span></div>
   <div class="tiles sb-tally" id="sb-tally"></div>
   <div class="sb-status" id="sb-status">Loading live data…</div>
   <div class="empty" id="sb-empty" hidden>No games with a pick on this date for the selected sports (or none tracked, if My picks is on).</div>
@@ -1622,9 +1623,10 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     const sel = document.getElementById('sb-datesel'); const opts = dateOptions(); const today = todayIso(); const cur = st.sel || today;
     const sig = opts.map((o) => o.d + ':' + o.n).join(',') + '|' + today;
     if (sel.dataset.sig !== sig) { sel.replaceChildren(...opts.map((o) => { const op = new Option(`${dayLabel(o.d)}${o.d === today ? ' (today)' : ''} — ${o.n} pick${o.n === 1 ? '' : 's'}`, o.d); return op; })); sel.dataset.sig = sig; }
-    sel.value = cur;
+    sel.value = cur; if (sel.value !== cur) { const op = new Option(`${dayLabel(cur)} — no picks`, cur); sel.add(op, 0); sel.value = cur; sel.dataset.sig = ''; }
+    document.getElementById('sb-cal').value = cur;
     const i = opts.findIndex((o) => o.d === cur);
-    document.getElementById('sb-prev').disabled = i <= 0; document.getElementById('sb-next').disabled = i < 0 || i >= opts.length - 1;
+    document.getElementById('sb-prev').disabled = false; document.getElementById('sb-next').disabled = false;
   };
   const markLive = () => { const iso = todayIso(); const picks = picksFor(iso); const live = (!!picks && picks.some((p) => { const g = matchGame(p, iso); return g && g.state === 'in'; })) || (golfPicks(iso).length > 0 && !!st.golf[iso] && st.golf[iso].state === 'in'); const dot = document.querySelector('.bm .tabs .tab-live'); if (dot) dot.hidden = !live; };
   // scores-only check, used while another tab is open (keeps the live dot on the Scores tab current)
@@ -1658,8 +1660,11 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     render(); refresh();
   });
   document.getElementById('sb-datesel').addEventListener('change', (e) => pick(e.target.value));
-  document.getElementById('sb-prev').addEventListener('click', () => { const o = dateOptions(); const i = o.findIndex((x) => x.d === (st.sel || todayIso())); if (i > 0) pick(o[i - 1].d); });
-  document.getElementById('sb-next').addEventListener('click', () => { const o = dateOptions(); const i = o.findIndex((x) => x.d === (st.sel || todayIso())); if (i >= 0 && i < o.length - 1) pick(o[i + 1].d); });
+  // ‹ › step one day at a time (any date, picks or not); the calendar jumps anywhere; the list jumps to dates that have picks
+  const shift = (n) => { const x = isoDate(st.sel || todayIso()); x.setDate(x.getDate() + n); pick(ymd(x, '-')); };
+  document.getElementById('sb-prev').addEventListener('click', () => shift(-1));
+  document.getElementById('sb-next').addEventListener('click', () => shift(1));
+  document.getElementById('sb-cal').addEventListener('change', (e) => { if (/^\d{4}-\d{2}-\d{2}$/.test(e.target.value)) pick(e.target.value); });
   document.getElementById('sb-today').addEventListener('click', () => pick(todayIso()));
   document.querySelector('.bm .tabs button[data-tab="scores"]').addEventListener('click', () => { render(); refresh(); });
   let firstCheck = true;
