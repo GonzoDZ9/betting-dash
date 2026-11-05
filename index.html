@@ -409,8 +409,8 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
         </table>
       </div>
       <div class="card">
-        <h3>Top picks vs the rest</h3>
-        <p class="note">Top picks are the starred rows on the card; soft lines are where Hard Rock's number beat the other books.</p>
+        <h3 class="sp-tag-title">Top picks vs the rest</h3>
+        <p class="note sp-tag-note">Top picks are the starred rows on the card; soft lines are where Hard Rock's number beat the other books.</p>
         <table class="sp-tag-table" data-source="by_tag" data-row-key="sport,tag">
           <thead><tr><th data-field="tag">Group</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th></tr></thead>
           <tbody></tbody>
@@ -1166,7 +1166,14 @@ const drawSport = (sport) => {
   const localPer = (() => { let cum = 0; return groupBy(gradedRows, (r) => String(r.period)).map(([period, rows]) => { const x = sumRows(rows); cum += x.profit; return { sport, period, ...x, cum: Math.round(cum * 10) / 10 }; }); })();
   const localMk = groupBy(gradedRows, (r) => String(r.market)).map(([market, rows]) => ({ sport, market, ...sumRows(rows) }));
   const localSt = groupBy(gradedRows, (r) => String(r.units)).map(([units, rows]) => ({ sport, units, ...sumRows(rows) }));
-  const localTg = [['Top picks', (r) => r.top === 'Y'], ['Other bets', (r) => r.top !== 'Y'], ['Soft lines', (r) => r.soft === 'Y']].map(([tag, f]) => ({ sport, tag, ...sumRows(gradedRows.filter(f)) }));
+  // NHL: the card calls a bet a STRONG BET when its stake is 2u or more (Config Stake_Strong_Units) and it isn't a top pick
+  const STRONG_U = 2;
+  const tagGroups = sport === 'NHL'
+    ? [['Top picks', (r) => r.top === 'Y'], ['Strong bets', (r) => r.top !== 'Y' && Number(r.units) >= STRONG_U], ['Other bets', (r) => r.top !== 'Y' && Number(r.units) < STRONG_U], ['Soft lines', (r) => r.soft === 'Y']]
+    : [['Top picks', (r) => r.top === 'Y'], ['Other bets', (r) => r.top !== 'Y'], ['Soft lines', (r) => r.soft === 'Y']];
+  q('.sp-tag-title').textContent = sport === 'NHL' ? 'Top picks vs strong bets vs the rest' : 'Top picks vs the rest';
+  q('.sp-tag-note').textContent = sport === 'NHL' ? "Top picks are the starred rows on the card. Strong bets are the other bets staked 2u or more (the card's STRONG BET); other bets are everything below 2u. Soft lines are where Hard Rock's number beat the other books, and overlap the groups above." : "Top picks are the starred rows on the card; soft lines are where Hard Rock's number beat the other books.";
+  const localTg = tagGroups.map(([tag, f]) => ({ sport, tag, ...sumRows(gradedRows.filter(f)) }));
   if (s) {
     const mk1 = (k, f, v, sub, cls) => { const t = tile(k, v, sub, cls); t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', f); t.setAttribute('data-where', 'window=season&sport=' + sport); return t; };
     tiles.replaceChildren(
