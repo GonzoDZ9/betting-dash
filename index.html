@@ -369,6 +369,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
     <h2>Pick your finishes <small id="pga-mine-n"></small></h2>
     <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0">Tap + on the players and finishes you're betting. They're saved with your other tracked picks, show under My picks, and follow live on the Scores tab Thursday to Sunday. Fair odds are the model's own price (no margin); ★ marks a play the model flagged against the books.</p>
+    <input class="search" id="pga-search" type="search" placeholder="Find a player in every finish (e.g. Rasmus Hojgaard)…" aria-label="Find a player" style="margin-top: var(--cds-gap-sm); width: min(100%, 26rem)">
     <div class="pga-cuts" id="pga-cuts"></div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)">
@@ -751,10 +752,19 @@ window.bmPGA = (() => {
     const field = (CUTS.find((c) => c[0] === market) || [])[2];
     return { player_name: pr.player_name, market, p_model: field ? pr[field] : null, p_market_fair: market === 'win' ? pr.mkt_win : null, best_price: market === 'win' ? pr.best_win_price : null, best_book: '', ev: null, flagged: false };
   };
+  // the full field: the model's projections plus any other player in the event's field (from ESPN), who then has no model numbers
+  let fieldX = { k: '', names: [] };
+  const srch = (t) => pkNorm(String(t || '').replace(/[øØ]/g, 'o').replace(/[æÆ]/g, 'ae').replace(/ß/g, 'ss').replace(/[łŁ]/g, 'l').replace(/[đĐð]/g, 'd'));
+  const setField = (f, names) => { fieldX = { k: f ? f.event + '|' + f.start_date : '', names: names || [] }; };
+  const field = (f) => {
+    if (!f) return []; const proj = f.projections || []; const have = new Set(proj.map((p) => srch(p.player_name)));
+    const extra = fieldX.k === f.event + '|' + f.start_date ? fieldX.names.filter((n) => !have.has(srch(n))).map((n) => ({ player_name: n, extra: true })) : [];
+    return [...proj, ...extra];
+  };
   // flagged plays plus every board selection you've tracked this week
   const picks = (f) => {
     if (!f) return []; const T = window.bmTrack; const out = plays(f).map((x) => ({ ...x, flagged: true })); const seen = new Set(out.map((x) => key(f, x)));
-    for (const pr of f.projections || []) for (const [m] of CUTS) { const k = key(f, { player_name: pr.player_name, market: m }); if (!seen.has(k) && T && T.has(k)) { out.push(selection(f, pr, m)); seen.add(k); } }
+    for (const pr of field(f)) for (const [m] of CUTS) { const k = key(f, { player_name: pr.player_name, market: m }); if (!seen.has(k) && T && T.has(k)) { out.push(selection(f, pr, m)); seen.add(k); } }
     return out;
   };
   // record over settled events whose start date is in the window (W = cashed plays, L = the rest)
@@ -764,7 +774,7 @@ window.bmPGA = (() => {
     const pend = f && !settledThisWeek(f) ? plays(f).length : 0;
     return { sport: 'PGA', events: ev.length, graded: plays_, w, l: plays_ - w, p: 0, record: `${w}-${plays_ - w}-0`, win_pct: plays_ ? Math.round(1000 * w / plays_) / 1000 : null, risked: plays_, profit: Math.round(100 * units) / 100, roi: plays_ ? Math.round(1000 * units / plays_) / 1000 : null, avg_clv: null, pending: pend, pending_units: pend };
   };
-  return { MKT, CUTS, feed, us, fair, days, settledThisWeek, label, key, plays, picks, selection, record };
+  return { MKT, CUTS, feed, us, fair, days, settledThisWeek, label, key, plays, picks, selection, record, field, setField, srch };
 })();
 
 // ---------- tabs ----------
@@ -1776,14 +1786,18 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     rows($('pga-proj').tBodies[0], d.projections || [], (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.skill_mean == null ? '—' : (p.skill_mean > 0 ? '+' : '') + p.skill_mean.toFixed(2)}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.mkt_win)}</td><td class="num">${pct(p.blend_win)}</td><td class="num">${us(p.best_win_price)}</td><td class="num">${pct(p.p_top5)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
     // one card per finish: every projected player, sorted by the model's chance, each with a track button
     const flagged = new Set(plays.map((p) => p.player_name + '|' + p.market));
-    const proj = d.projections || [];
+    const all = P.field(d); const needle = P.srch($('pga-search').value);
+    const nameOk = (p) => !needle || P.srch(p.player_name).includes(needle);
     $('pga-cuts').innerHTML = P.CUTS.map(([m, name, fld]) => {
-      const list = proj.filter((p) => p[fld] != null).slice().sort((a, b) => b[fld] - a[fld]);
+      // every player in the field: model's chance first (highest on top), then players the model didn't project, A-Z
+      const ranked = all.slice().sort((a, b) => (b[fld] == null ? -1 : b[fld]) - (a[fld] == null ? -1 : a[fld]) || String(a.player_name).localeCompare(String(b.player_name)));
+      const list = ranked.filter(nameOk);
       const nMine = list.filter((p) => T.has(P.key(d, { player_name: p.player_name, market: m }))).length;
       const win = m === 'win';
       const head = `<tr><th class="trk-h">Track</th><th>Player</th><th class="num">Model %</th><th class="num">Fair</th>${win ? '<th class="num">Market %</th><th class="num">Best price</th>' : ''}</tr>`;
       const body = list.map((p) => { const k = P.key(d, { player_name: p.player_name, market: m }); const on = T.has(k); return `<tr${on ? ' class="tracked"' : ''}><td class="trk-c">${trk(k)}</td><td>${flagged.has(p.player_name + '|' + m) ? '<span class="pga-flag">★ </span>' : ''}${esc(p.player_name)}</td><td class="num">${pct(p[fld])}</td><td class="num">${P.fair(p[fld])}</td>${win ? `<td class="num">${pct(p.mkt_win)}</td><td class="num">${us(p.best_win_price)}</td>` : ''}</tr>`; }).join('');
-      return `<div class="card"><h3>${name} <small>${nMine ? nMine + ' picked' : list.length + ' players'}</small></h3><div class="scroll"><table data-pga-cut="${m}"><thead>${head}</thead><tbody>${body}</tbody></table></div></div>`;
+      const sub = [nMine ? nMine + ' picked' : '', needle ? `${list.length} of ${ranked.length} players` : `${ranked.length} players`].filter(Boolean).join(' · ');
+      return `<div class="card"><h3>${name} <small>${sub}</small></h3>${list.length ? `<div class="scroll"><table data-pga-cut="${m}"><thead>${head}</thead><tbody>${body}</tbody></table></div>` : '<div class="empty">No player in the field matches.</div>'}</div>`;
     }).join('');
     const nTracked = P.picks(d).filter((p) => T.has(P.key(d, p))).length;
     $('pga-mine-n').textContent = nTracked ? `${nTracked} tracked this week` : '';
@@ -1796,6 +1810,20 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   const load = () => { const d = dash.data('pga'); feed = d.status === 'ok' && d.data[0] ? d.data[0] : null; render(); };
   document.querySelector('.bm .tabs button[data-tab="pga"]').addEventListener('click', load);
   dash.onData(load);
+  // the event's full field from ESPN, so players the model didn't project can still be picked and found
+  let fieldFor = '';
+  const loadField = async () => {
+    const d = P.feed(); if (!d || !d.start_date) return; const k = d.event + '|' + d.start_date; if (fieldFor === k) return; fieldFor = k;
+    try {
+      const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?dates=' + d.start_date.replace(/-/g, ''), { cache: 'no-store' });
+      const j = await r.json(); const evs = j.events || []; const want = P.srch(d.event).split(' ').slice(-2).join(' ');
+      const ev = evs.find((e) => P.srch(e.name).includes(want)) || (evs.length === 1 ? evs[0] : null); if (!ev) return;
+      const names = (((ev.competitions || [])[0] || {}).competitors || []).map((c) => c.athlete && (c.athlete.displayName || c.athlete.fullName)).filter(Boolean);
+      P.setField(d, names); if (!document.getElementById('pga').hidden) render();
+    } catch (e) { fieldFor = ''; }
+  };
+  dash.onData(loadField);
+  $('pga-search').addEventListener('input', () => render());
   T.onChange(() => { if (!document.getElementById('pga').hidden) render(); });
 })();
 </script>
