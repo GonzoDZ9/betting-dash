@@ -361,6 +361,13 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       <div class="scroll"><table id="pga-plays"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num" id="pga-price-h">Price</th><th class="num">EV</th><th class="num" id="pga-need-h">Need</th></tr></thead><tbody></tbody></table></div>
     </div>
 
+    <div class="card" style="margin-top: var(--cds-gap-md); border-color: var(--color-ok)" id="pga-mysel-card">
+      <h3>My selections <small id="pga-mysel-n"></small></h3>
+      <p class="note">Everything you've checked off this week, from the flagged plays and the finish cards below. Tap ✓ to remove a pick. Status follows the live leaderboard during the tournament, the same as on the Scores tab.</p>
+      <div class="empty" id="pga-mysel-empty" hidden>Nothing selected yet. Tap + next to a player in the finish cards below (or on a flagged play) to add it here.</div>
+      <div class="scroll"><table id="pga-mysel"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Finish</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Fair</th><th class="num">Price</th><th class="num">EV</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+    </div>
+
     <div class="card" style="margin-top: var(--cds-gap-md)" id="pga-watch-card" hidden>
       <h3 id="pga-watch-h">Worth checking <small id="pga-watch-n"></small></h3>
       <p class="note" id="pga-watch-note"></p>
@@ -1729,7 +1736,11 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   };
   dash.onData(() => { autoGrade(); });
   setInterval(() => { if (document.visibilityState === 'visible') autoGrade(); }, 5 * 60 * 1000);
-  window.bmScoreboard = { st, refresh, render, parse, evaluate, autoGrade };
+  const golfStatus = (pk) => { const f = P.feed(); if (!f) return ''; const iso = P.days(f).filter((x) => st.golf[x]).pop(); const g = iso && st.golf[iso]; if (!g) return ''; const r = golfEval({ market: pk.market, player: pk.player_name }, g); return [r.chip, r.now].filter(Boolean).join(' · '); };
+  let golfAt = 0;
+  // load the leaderboard for the latest tournament day so far (used by the PGA tab's My selections)
+  const golfRefresh = async () => { const f = P.feed(); if (!f || Date.now() - golfAt < 60000) return false; const today = todayIso(); const iso = P.days(f).filter((x) => x <= today).pop(); if (!iso) return false; golfAt = Date.now(); await loadGolf(iso); return !!st.golf[iso]; };
+  window.bmScoreboard = { st, refresh, render, parse, evaluate, autoGrade, golfStatus, golfRefresh };
 })();
 </script>
 <script>
@@ -1741,6 +1752,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   const us = (d) => (d == null ? '—' : d >= 2 ? '+' + Math.round((d - 1) * 100) : String(Math.round(-100 / (d - 1))));
   const units = (u) => (u == null ? '—' : (u > 0 ? '+' : '') + u.toFixed(2) + 'u');
   const cls = (u) => (u == null ? '' : u > 0 ? 'pos' : u < 0 ? 'neg' : '');
+  const todayL = () => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
   const MKT = { win: 'Win', top_5: 'Top 5', top_10: 'Top 10', top_20: 'Top 20', make_cut: 'Make cut', mc: 'Miss cut' };
   const day = (iso) => { const d = new Date(iso + 'T12:00:00'); return isNaN(d) ? iso : d.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }); };
   const when = (iso) => { const d = new Date(String(iso).replace(' ', 'T')); return isNaN(d) ? iso : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
@@ -1799,7 +1811,15 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
       const sub = [nMine ? nMine + ' picked' : '', needle ? `${list.length} of ${ranked.length} players` : `${ranked.length} players`].filter(Boolean).join(' · ');
       return `<div class="card"><h3>${name} <small>${sub}</small></h3>${list.length ? `<div class="scroll"><table data-pga-cut="${m}"><thead>${head}</thead><tbody>${body}</tbody></table></div>` : '<div class="empty">No player in the field matches.</div>'}</div>`;
     }).join('');
-    const nTracked = P.picks(d).filter((p) => T.has(P.key(d, p))).length;
+    // My selections: every tracked pick this week, in finish order (Winner first), then by name
+    const ord = Object.fromEntries(P.CUTS.map(([m], i) => [m, i]));
+    const mySel = P.picks(d).filter((p) => T.has(P.key(d, p))).sort((a, b) => (ord[a.market] ?? 9) - (ord[b.market] ?? 9) || String(a.player_name).localeCompare(String(b.player_name)));
+    const golfNow = (() => { const sb = window.bmScoreboard; if (!sb || !sb.golfStatus) return null; return sb.golfStatus; })();
+    $('pga-mysel-empty').hidden = mySel.length > 0; $('pga-mysel').closest('.scroll').hidden = !mySel.length;
+    $('pga-mysel-n').textContent = mySel.length ? `${mySel.length} pick${mySel.length === 1 ? '' : 's'}` : '';
+    rows($('pga-mysel').tBodies[0], mySel, (p) => { const k = P.key(d, p); const stt = golfNow ? golfNow(p) : ''; return `<tr class="tracked"><td class="trk-c">${trk(k)}</td><td>${p.flagged ? '<span class="pga-flag">★ </span>' : ''}${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${P.fair(p.p_model)}</td><td class="num">${p.best_price ? us(p.best_price) : '—'}</td><td class="num ${p.ev > 0 ? 'pos' : ''}">${p.ev == null ? '—' : (p.ev > 0 ? '+' : '') + Math.round(100 * p.ev) + '%'}</td><td>${esc(stt || (P.days(d)[0] > todayL() ? 'Not started' : '—'))}</td></tr>`; });
+    const nTracked = mySel.length;
+    if (mySel.length && window.bmScoreboard && window.bmScoreboard.golfRefresh && P.days(d)[0] <= todayL()) window.bmScoreboard.golfRefresh().then((ok) => { if (ok && !document.getElementById('pga').hidden) render(); });
     $('pga-mine-n').textContent = nTracked ? `${nTracked} tracked this week` : '';
     const ev = h.events || [];
     $('pga-hist-empty').hidden = ev.some((e) => e.settled);
