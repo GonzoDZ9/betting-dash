@@ -60,9 +60,9 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   };
   const load = async () => {
     const get = (f) => fetch(f + '?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : null)).catch(() => null);
-    const [results, pga] = await Promise.all([Promise.all(FEEDS.map(get)), get('pga_dash.json')]);
+    const [results, pga, dpw] = await Promise.all([Promise.all(FEEDS.map(get)), get('pga_dash.json'), get('dpw_dash.json')]);
     loaded = Object.fromEntries(FEEDS.map((f, i) => [f, !!results[i]]));
-    loaded['pga_dash.json'] = !!pga; sets.pga = pga ? [pga] : [];   // golf_engine feed, kept apart from the three betting models
+    loaded['pga_dash.json'] = !!pga; sets.pga = pga ? [pga] : []; sets.dpw = dpw ? [dpw] : [];   // golf_engine feed, kept apart from the three betting models
     if (results.every((r) => !r)) { status = 'error'; message = 'None of the model feeds could be loaded.'; }
     else { merge(results); status = 'ok'; Object.keys(calcs).forEach((k) => { calcs[k].value = undefined; }); }
     fire();
@@ -162,6 +162,16 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .pga-cuts .card .scroll { max-height: 26rem; }
 .bm .pga-flag { color: var(--color-warn); }
 .bm .pga-cuts td:nth-child(2) { white-space: normal; min-width: 9rem; }
+.bm .pga-event { border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); background: var(--color-bg); margin-top: var(--cds-gap-md); }
+.bm .pga-event > summary { cursor: pointer; list-style: none; padding: var(--cds-pad-md) var(--cds-pad-lg); display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); align-items: baseline; }
+.bm .pga-event > summary::-webkit-details-marker { display: none; }
+.bm .pga-event > summary::before { content: '▸'; color: var(--color-fg-muted); width: 1em; }
+.bm .pga-event[open] > summary::before { content: '▾'; }
+.bm .pga-event > summary .ev-name { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); }
+.bm .pga-event > summary .ev-tour { font-size: var(--cds-font-size-caption); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: 0 .45em; color: var(--color-fg-muted); }
+.bm .pga-event > summary .ev-meta { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
+.bm .pga-event > .ev-body { padding: 0 var(--cds-pad-lg) var(--cds-pad-lg); }
+.bm .pga-event h3.ev-h { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-lg) 0 var(--cds-gap-xs); }
 </style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
 .bm { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg); max-width: 72rem; margin-inline: auto; }
@@ -347,51 +357,60 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
   <div class="sb-unmatched" id="sb-unmatched" hidden></div>
 </section>
 <section class="page" id="pga" hidden>
-    <h2 id="pga-title">PGA TOUR <small id="pga-sub"></small></h2>
-    <p class="updated" id="pga-updated"></p>
-    <p class="updated" id="pga-wx" hidden></p>
-    <p class="pga-warn" id="pga-live" hidden>These odds were pulled after the event started (in-play prices), so no plays are flagged and the blend is blank.</p>
+    <h2 id="pga-title">Golf <small id="pga-sub"></small></h2>
     <div class="empty" id="pga-empty" hidden>No golf card yet. It appears after the Tuesday run.</div>
-    <div class="tiles" id="pga-tiles"></div>
-
-    <div class="card" style="margin-top: var(--cds-gap-md)">
-      <h3>Flagged plays <small id="pga-plays-n"></small></h3>
-      <p class="note" id="pga-rule"></p>
-      <div class="empty" id="pga-plays-empty" hidden>No plays flagged this week.</div>
-      <div class="scroll"><table id="pga-plays"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num" id="pga-price-h">Price</th><th class="num">EV</th><th class="num" id="pga-need-h">Need</th></tr></thead><tbody></tbody></table></div>
-    </div>
 
     <div class="card" style="margin-top: var(--cds-gap-md); border-color: var(--color-ok)" id="pga-mysel-card">
       <h3>My selections <small id="pga-mysel-n"></small></h3>
-      <p class="note">Everything you've checked off this week, from the flagged plays and the finish cards below. Tap ✓ to remove a pick. Status follows the live leaderboard during the tournament, the same as on the Scores tab.</p>
-      <div class="empty" id="pga-mysel-empty" hidden>Nothing selected yet. Tap + next to a player in the finish cards below (or on a flagged play) to add it here.</div>
-      <div class="scroll"><table id="pga-mysel"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Finish</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Fair</th><th class="num">Price</th><th class="num">EV</th><th>Status</th></tr></thead><tbody></tbody></table></div>
+      <p class="note">Everything you've checked off this week, across every tournament below. Tap ✓ to remove a pick. Status follows the live leaderboard during the tournament (PGA TOUR events, the same as on the Scores tab).</p>
+      <div class="empty" id="pga-mysel-empty" hidden>Nothing selected yet. Open a tournament below and tap + next to a player in its finish cards (or on a flagged play) to add it here.</div>
+      <div class="scroll"><table id="pga-mysel"><thead><tr><th class="trk-h">Track</th><th>Tournament</th><th>Player</th><th>Finish</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Fair</th><th class="num">Price</th><th class="num">EV</th><th>Status</th></tr></thead><tbody></tbody></table></div>
     </div>
 
-    <div class="card" style="margin-top: var(--cds-gap-md)" id="pga-watch-card" hidden>
-      <h3 id="pga-watch-h">Worth checking <small id="pga-watch-n"></small></h3>
-      <p class="note" id="pga-watch-note"></p>
-      <div class="scroll"><table id="pga-watch"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num" id="pga-price-h2">Price</th><th class="num">EV</th><th class="num" id="pga-need-h2">Need</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <h2>Pick your finishes <small id="pga-mine-n"></small></h2>
-    <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0">Tap + on the players and finishes you're betting. They're saved with your other tracked picks, show under My picks, and follow live on the Scores tab Thursday to Sunday. Fair odds are the model's own price (no margin); ★ marks a play the model flagged against the books.</p>
-    <input class="search" id="pga-search" type="search" placeholder="Find a player in every finish (e.g. Rasmus Hojgaard)…" aria-label="Find a player" style="margin-top: var(--cds-gap-sm); width: min(100%, 26rem)">
-    <div class="pga-cuts" id="pga-cuts"></div>
-
-    <div class="card" style="margin-top: var(--cds-gap-md)">
-      <h3>Projections <small>top 40 by model win %</small></h3>
-      <p class="note">Skill = strokes per round better than an average PGA TOUR field. Market % = bookmakers' win price with the margin removed. Blend = market and model combined (more accurate than the model alone in backtests, but no betting edge; information only). Top-N columns are dead-heat adjusted.</p>
-      <div class="scroll"><table id="pga-proj"><thead><tr><th>Player</th><th class="num">Skill</th><th class="num">Win</th><th class="num">Market</th><th class="num">Blend</th><th class="num">Best price</th><th class="num">Top 5</th><th class="num">Top 10</th><th class="num">Top 20</th><th class="num">Make cut</th></tr></thead><tbody></tbody></table></div>
-    </div>
-
-    <div class="card" style="margin-top: var(--cds-gap-md)">
-      <h3>Flagged-play record <small>1 unit each at the card price, last pre-tournament card per event</small></h3>
-      <div class="empty" id="pga-hist-empty" hidden>No graded events yet.</div>
-      <div class="scroll"><table id="pga-hist"><thead><tr><th>Event</th><th>Start</th><th class="num">Plays</th><th class="num">Cashed</th><th class="num">Units +/-</th></tr></thead><tbody></tbody></table></div>
-    </div>
-    <p class="note" id="pga-disc" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: var(--cds-gap-md)"></p>
+    <div id="pga-events"></div>
   </section>
+<template id="pga-event-tpl">
+  <details class="pga-event">
+    <summary><span class="ev-tour"></span><span class="ev-name"></span><span class="ev-meta"></span></summary>
+    <div class="ev-body">
+      <p class="updated ev-updated"></p>
+      <p class="updated ev-wx" hidden></p>
+      <p class="pga-warn ev-live" hidden>These odds were pulled after the event started (in-play prices), so no plays are flagged and the blend is blank.</p>
+      <div class="tiles ev-tiles"></div>
+
+      <div class="card" style="margin-top: var(--cds-gap-md)">
+        <h3>Flagged plays <small class="ev-plays-n"></small></h3>
+        <p class="note ev-rule"></p>
+        <div class="empty ev-plays-empty" hidden>No plays flagged this week.</div>
+        <div class="scroll"><table class="ev-plays"><thead><tr><th class="trk-h">Track</th><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num ev-price-h">Price</th><th class="num">EV</th><th class="num ev-need-h">Need</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="card ev-watch-card" style="margin-top: var(--cds-gap-md)" hidden>
+        <h3 class="ev-watch-h">Worth checking <small class="ev-watch-n"></small></h3>
+        <p class="note ev-watch-note"></p>
+        <div class="scroll"><table class="ev-watch"><thead><tr><th>Player</th><th>Market</th><th class="num">Model %</th><th class="num">Market %</th><th class="num">Blend %</th><th class="num ev-price-h">Price</th><th class="num">EV</th><th class="num ev-need-h">Need</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <h3 class="ev-h">Pick your finishes <small class="ev-mine-n"></small></h3>
+      <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0">Tap + on the players and finishes you're betting. They're saved with your other tracked picks, show in My selections above and under My picks, and PGA TOUR picks follow live on the Scores tab Thursday to Sunday. Fair odds are the model's own price (no margin); ★ marks a play the model flagged against the books.</p>
+      <input class="search ev-search" type="search" placeholder="Find a player in every finish (e.g. Rasmus Hojgaard)…" aria-label="Find a player" style="margin-top: var(--cds-gap-sm); width: min(100%, 26rem)">
+      <div class="pga-cuts ev-cuts"></div>
+
+      <div class="card" style="margin-top: var(--cds-gap-md)">
+        <h3>Projections <small class="ev-proj-n">top 40 by model win %</small></h3>
+        <p class="note ev-proj-note"></p>
+        <div class="scroll"><table class="ev-proj"><thead><tr><th>Player</th><th class="num">Skill</th><th class="num">Win</th><th class="num">Market</th><th class="num">Blend</th><th class="num">Best price</th><th class="num">Top 5</th><th class="num">Top 10</th><th class="num">Top 20</th><th class="num">Make cut</th></tr></thead><tbody></tbody></table></div>
+      </div>
+
+      <div class="card" style="margin-top: var(--cds-gap-md)">
+        <h3>Flagged-play record <small>1 unit each at the card price, last pre-tournament card per event</small></h3>
+        <div class="empty ev-hist-empty" hidden>No graded events yet.</div>
+        <div class="scroll"><table class="ev-hist"><thead><tr><th>Event</th><th>Start</th><th class="num">Plays</th><th class="num">Cashed</th><th class="num">Units +/-</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <p class="note ev-disc" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: var(--cds-gap-md)"></p>
+    </div>
+  </details>
+</template>
 
   <template id="sport-tpl">
     <h2 class="rec-h2">Track record <small class="sp-tiles-sub">graded bets this season</small></h2>
@@ -760,12 +779,12 @@ window.bmPGA = (() => {
     return { player_name: pr.player_name, market, p_model: field ? pr[field] : null, p_market_fair: market === 'win' ? pr.mkt_win : null, best_price: market === 'win' ? pr.best_win_price : null, best_book: '', ev: null, flagged: false };
   };
   // the full field: the model's projections plus any other player in the event's field (from ESPN), who then has no model numbers
-  let fieldX = { k: '', names: [] };
+  const fieldX = {};   // event key -> full field names
   const srch = (t) => pkNorm(String(t || '').replace(/[øØ]/g, 'o').replace(/[æÆ]/g, 'ae').replace(/ß/g, 'ss').replace(/[łŁ]/g, 'l').replace(/[đĐð]/g, 'd'));
-  const setField = (f, names) => { fieldX = { k: f ? f.event + '|' + f.start_date : '', names: names || [] }; };
+  const setField = (f, names) => { if (f) fieldX[f.event + '|' + f.start_date] = names || []; };
   const field = (f) => {
     if (!f) return []; const proj = f.projections || []; const have = new Set(proj.map((p) => srch(p.player_name)));
-    const extra = fieldX.k === f.event + '|' + f.start_date ? fieldX.names.filter((n) => !have.has(srch(n))).map((n) => ({ player_name: n, extra: true })) : [];
+    const extra = (fieldX[f.event + '|' + f.start_date] || []).filter((n) => !have.has(srch(n))).map((n) => ({ player_name: n, extra: true }));
     return [...proj, ...extra];
   };
   // flagged plays plus every board selection you've tracked this week
@@ -781,7 +800,9 @@ window.bmPGA = (() => {
     const pend = f && !settledThisWeek(f) ? plays(f).length : 0;
     return { sport: 'PGA', events: ev.length, graded: plays_, w, l: plays_ - w, p: 0, record: `${w}-${plays_ - w}-0`, win_pct: plays_ ? Math.round(1000 * w / plays_) / 1000 : null, risked: plays_, profit: Math.round(100 * units) / 100, roi: plays_ ? Math.round(1000 * units / plays_) / 1000 : null, avg_clv: null, pending: pend, pending_units: pend };
   };
-  return { MKT, CUTS, feed, us, fair, days, settledThisWeek, label, key, plays, picks, selection, record, field, setField, srch };
+  // every golf feed this week (PGA TOUR first, then DP World Tour)
+  const feeds = () => ['pga', 'dpw'].map((id) => { try { const d = window.dash && dash.data(id); return d && d.status === 'ok' && Array.isArray(d.data) ? d.data[0] : null; } catch (e) { return null; } }).filter(Boolean);
+  return { MKT, CUTS, feed, feeds, us, fair, days, settledThisWeek, label, key, plays, picks, selection, record, field, setField, srch };
 })();
 
 // ---------- tabs ----------
@@ -1736,7 +1757,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   };
   dash.onData(() => { autoGrade(); });
   setInterval(() => { if (document.visibilityState === 'visible') autoGrade(); }, 5 * 60 * 1000);
-  const golfStatus = (pk) => { const f = P.feed(); if (!f) return ''; const iso = P.days(f).filter((x) => st.golf[x]).pop(); const g = iso && st.golf[iso]; if (!g) return ''; const r = golfEval({ market: pk.market, player: pk.player_name }, g); return [r.chip, r.now].filter(Boolean).join(' · '); };
+  const golfStatus = (pk, ef) => { const f = P.feed(); if (!f || (ef && ef !== f)) return ''; const iso = P.days(f).filter((x) => st.golf[x]).pop(); const g = iso && st.golf[iso]; if (!g) return ''; const r = golfEval({ market: pk.market, player: pk.player_name }, g); return [r.chip, r.now].filter(Boolean).join(' · '); };
   let golfAt = 0;
   // load the leaderboard for the latest tournament day so far (used by the PGA tab's My selections)
   const golfRefresh = async () => { const f = P.feed(); if (!f || Date.now() - golfAt < 60000) return false; const today = todayIso(); const iso = P.days(f).filter((x) => x <= today).pop(); if (!iso) return false; golfAt = Date.now(); await loadGolf(iso); return !!st.golf[iso]; };
@@ -1744,7 +1765,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
 })();
 </script>
 <script>
-// ---------- PGA tab: reads pga_dash.json written by golf_engine (python -m golfmodel weekly / settle) ----------
+// ---------- Golf tab: one drop-down per tournament (pga_dash.json, dpw_dash.json from golf_engine), My selections across all of them ----------
 (() => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -1758,50 +1779,62 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   const when = (iso) => { const d = new Date(String(iso).replace(' ', 'T')); return isNaN(d) ? iso : d.toLocaleString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); };
   const rows = (tb, list, fn) => { tb.innerHTML = list.map(fn).join(''); };
   const T = window.bmTrack, P = window.bmPGA;
-  const trk = (k) => { const on = T.has(k); return `<button class="trk-btn" data-key="${esc(k)}" aria-pressed="${on}" aria-label="${on ? 'Stop tracking this pick' : 'Track this pick'}">${on ? '\u2713' : '+'}</button>`; };
-  let feed = null;
-  const render = () => {
-    const d = feed;
-    $('pga-empty').hidden = !!d;
-    if (!d) return;
-    $('pga-title').firstChild.textContent = (d.event || 'PGA TOUR') + ' ';
-    $('pga-sub').textContent = [d.course, d.start_date ? 'starts ' + day(d.start_date) : ''].filter(Boolean).join(' · ');
-    $('pga-updated').textContent = `Card built ${when(d.generated_at)} · model ${d.model_version} · ${Number(d.n_sims || 0).toLocaleString()} simulations · data: Data Golf`;
-    $('pga-live').hidden = !d.odds_live;
+  const trk = (k) => { const on = T.has(k); return `<button class="trk-btn" data-key="${esc(k)}" aria-pressed="${on}" aria-label="${on ? 'Stop tracking this pick' : 'Track this pick'}">${on ? '✓' : '+'}</button>`; };
+  const OPEN = 'bm.golfOpen.v1'; let openSet = new Set(); try { openSet = new Set(JSON.parse(localStorage.getItem(OPEN) || '[]')); } catch (e) { /* storage unavailable */ }
+  const evKey = (d) => (d.tour || d.sport) + '|' + d.event + '|' + d.start_date;
+  const boxes = new Map();   // event key -> its <details>, built once so the search box keeps focus while typing
+
+  const box = (d) => {
+    const k = evKey(d); if (boxes.has(k)) return boxes.get(k);
+    const el = $('pga-event-tpl').content.firstElementChild.cloneNode(true); el.dataset.ev = k; el.open = openSet.has(k);
+    el.addEventListener('toggle', () => { if (el.open) openSet.add(k); else openSet.delete(k); try { localStorage.setItem(OPEN, JSON.stringify([...openSet])); } catch (e) { /* storage unavailable */ } });
+    el.querySelector('.ev-search').addEventListener('input', () => drawEvent(el, el._feed));
+    boxes.set(k, el); return el;
+  };
+
+  const drawEvent = (el, d) => {
+    el._feed = d; const q = (s) => el.querySelector(s);
+    const tour = d.tour || d.sport || 'Golf';
+    const plays = d.plays || [];
+    const nPicked = P.picks(d).filter((p) => T.has(P.key(d, p))).length;
+    q('.ev-tour').textContent = tour; q('.ev-name').textContent = d.event || tour;
+    q('.ev-meta').textContent = [d.course, d.start_date ? 'starts ' + day(d.start_date) : '', plays.length ? plays.length + ' flagged' : 'no flagged plays', nPicked ? nPicked + ' picked' : ''].filter(Boolean).join(' · ');
+    q('.ev-updated').textContent = `Card built ${when(d.generated_at)} · model ${d.model_version} · ${Number(d.n_sims || 0).toLocaleString()} simulations · data: Data Golf`;
+    q('.ev-live').hidden = !d.odds_live;
     const wx = d.weather || {};
-    $('pga-wx').hidden = !wx.applied;
+    q('.ev-wx').hidden = !wx.applied;
     if (wx.applied) {
       const r = (wx.rounds || []).map((x) => `R${x.round}: morning ${x.am_wind_mph} mph, afternoon ${x.pm_wind_mph} mph (afternoon wave ${x.pm_minus_am_strokes > 0 ? '+' : ''}${x.pm_minus_am_strokes.toFixed(2)} strokes)`).join(' · ');
-      $('pga-wx').textContent = 'Weather draw included (wind forecast ' + when(wx.forecast_at) + '): ' + r;
+      q('.ev-wx').textContent = 'Weather draw included (wind forecast ' + when(wx.forecast_at) + '): ' + r;
     }
     const fav = (d.projections || [])[0], h = d.history || {};
-    $('pga-tiles').innerHTML = [
+    q('.ev-tiles').innerHTML = [
       ['Model favourite', fav ? esc(fav.player_name) : '—', fav ? 'win ' + pct(fav.p_win) + (fav.mkt_win != null ? ' · market ' + pct(fav.mkt_win) : '') : ''],
-      ['Flagged plays', String((d.plays || []).length), 'this week'],
+      ['Flagged plays', String(plays.length), 'this week'],
       ['Record (units)', `<span class="${cls(h.units)}">${h.plays ? units(h.units) : '—'}</span>`, h.plays ? `${h.plays} graded plays · ROI ${h.roi == null ? '—' : (100 * h.roi).toFixed(1) + '%'}` : 'no graded events yet'],
     ].map(([k, v, s]) => `<div class="tile"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${s}</div></div>`).join('');
     const betAt = d.bet_at || 'your book', priceLabel = d.price_label || 'Best price';
-    $('pga-rule').textContent = (d.book_note ? d.book_note.charAt(0).toUpperCase() + d.book_note.slice(1) + '. ' : '') + 'Flag rule: ' + (d.flag_rule || '') + '. EV = model % × the ' + priceLabel + ' decimal price − 1. Market % = margin removed from the median price. Need = the longest price at which the play still clears the rule: bet it at ' + betAt + ' only at that price or longer.';
-    for (const id of ['pga-price-h', 'pga-price-h2']) $(id).textContent = priceLabel;
-    for (const id of ['pga-need-h', 'pga-need-h2']) $(id).textContent = 'Need at ' + betAt;
+    q('.ev-rule').textContent = (d.book_note ? d.book_note.charAt(0).toUpperCase() + d.book_note.slice(1) + '. ' : '') + 'Flag rule: ' + (d.flag_rule || '') + '. EV = model % × the ' + priceLabel + ' decimal price − 1. Market % = margin removed from the median price. Need = the longest price at which the play still clears the rule: bet it at ' + betAt + ' only at that price or longer.';
+    el.querySelectorAll('.ev-price-h').forEach((x) => { x.textContent = priceLabel; });
+    el.querySelectorAll('.ev-need-h').forEach((x) => { x.textContent = 'Need at ' + betAt; });
     const playRow = (p, open = '<tr>') => `${open}<td>${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${pct(p.p_blend)}</td><td class="num">${us(p.best_price)}${p.best_book && p.best_book !== priceLabel ? ' (' + esc(p.best_book) + ')' : ''}</td><td class="num ${p.ev > 0 ? 'pos' : ''}">${p.ev == null ? '—' : (p.ev > 0 ? '+' : '') + Math.round(100 * p.ev) + '%'}</td><td class="num"><b>${us(p.need_price)}</b></td></tr>`;
-    const plays = d.plays || [];
-    $('pga-plays-n').textContent = plays.length ? plays.length + ' flagged · 1 unit each' : '';
-    $('pga-plays-empty').hidden = plays.length > 0; $('pga-plays').closest('.scroll').hidden = !plays.length;
-    rows($('pga-plays').tBodies[0], plays, (p) => playRow(p, `<tr${T.has(P.key(d, p)) ? ' class="tracked"' : ''}><td class="trk-c">${trk(P.key(d, p))}</td>`));
+    q('.ev-plays-n').textContent = plays.length ? plays.length + ' flagged · 1 unit each' : '';
+    q('.ev-plays-empty').hidden = plays.length > 0; q('.ev-plays').closest('.scroll').hidden = !plays.length;
+    rows(q('.ev-plays').tBodies[0], plays, (p) => playRow(p, `<tr${T.has(P.key(d, p)) ? ' class="tracked"' : ''}><td class="trk-c">${trk(P.key(d, p))}</td>`));
     const watch = d.odds_live ? [] : (d.watch || []);
-    $('pga-watch-card').hidden = !watch.length;
-    $('pga-watch-h').firstChild.textContent = 'Worth checking at ' + betAt + ' ';
-    $('pga-watch-n').textContent = watch.length + ' close to the threshold';
-    $('pga-watch-note').textContent = 'Just short of the flag rule at the ' + priceLabel + ' price. Bet one only if ' + betAt + ' offers the need price or longer; otherwise leave it.';
-    rows($('pga-watch').tBodies[0], watch, playRow);
-    rows($('pga-proj').tBodies[0], d.projections || [], (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.skill_mean == null ? '—' : (p.skill_mean > 0 ? '+' : '') + p.skill_mean.toFixed(2)}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.mkt_win)}</td><td class="num">${pct(p.blend_win)}</td><td class="num">${us(p.best_win_price)}</td><td class="num">${pct(p.p_top5)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
-    // one card per finish: every projected player, sorted by the model's chance, each with a track button
+    q('.ev-watch-card').hidden = !watch.length;
+    q('.ev-watch-h').firstChild.textContent = 'Worth checking at ' + betAt + ' ';
+    q('.ev-watch-n').textContent = watch.length + ' close to the threshold';
+    q('.ev-watch-note').textContent = 'Just short of the flag rule at the ' + priceLabel + ' price. Bet one only if ' + betAt + ' offers the need price or longer; otherwise leave it.';
+    rows(q('.ev-watch').tBodies[0], watch, playRow);
+    q('.ev-proj-note').textContent = `Skill = strokes per round better than an average ${tour} field. Market % = bookmakers' win price with the margin removed. Blend = market and model combined (more accurate than the model alone in backtests, but no betting edge; information only). Top-N columns are dead-heat adjusted.`;
+    q('.ev-proj-n').textContent = `top ${(d.projections || []).length} by model win %`;
+    rows(q('.ev-proj').tBodies[0], d.projections || [], (p) => `<tr><td>${esc(p.player_name)}</td><td class="num">${p.skill_mean == null ? '—' : (p.skill_mean > 0 ? '+' : '') + p.skill_mean.toFixed(2)}</td><td class="num">${pct(p.p_win)}</td><td class="num">${pct(p.mkt_win)}</td><td class="num">${pct(p.blend_win)}</td><td class="num">${us(p.best_win_price)}</td><td class="num">${pct(p.p_top5)}</td><td class="num">${pct(p.p_top10)}</td><td class="num">${pct(p.p_top20)}</td><td class="num">${pct(p.p_make_cut)}</td></tr>`);
+    // one card per finish: every player in the field, sorted by the model's chance, each with a track button
     const flagged = new Set(plays.map((p) => p.player_name + '|' + p.market));
-    const all = P.field(d); const needle = P.srch($('pga-search').value);
+    const all = P.field(d); const needle = P.srch(q('.ev-search').value);
     const nameOk = (p) => !needle || P.srch(p.player_name).includes(needle);
-    $('pga-cuts').innerHTML = P.CUTS.map(([m, name, fld]) => {
-      // every player in the field: model's chance first (highest on top), then players the model didn't project, A-Z
+    q('.ev-cuts').innerHTML = P.CUTS.map(([m, name, fld]) => {
       const ranked = all.slice().sort((a, b) => (b[fld] == null ? -1 : b[fld]) - (a[fld] == null ? -1 : a[fld]) || String(a.player_name).localeCompare(String(b.player_name)));
       const list = ranked.filter(nameOk);
       const nMine = list.filter((p) => T.has(P.key(d, { player_name: p.player_name, market: m }))).length;
@@ -1811,40 +1844,51 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
       const sub = [nMine ? nMine + ' picked' : '', needle ? `${list.length} of ${ranked.length} players` : `${ranked.length} players`].filter(Boolean).join(' · ');
       return `<div class="card"><h3>${name} <small>${sub}</small></h3>${list.length ? `<div class="scroll"><table data-pga-cut="${m}"><thead>${head}</thead><tbody>${body}</tbody></table></div>` : '<div class="empty">No player in the field matches.</div>'}</div>`;
     }).join('');
-    // My selections: every tracked pick this week, in finish order (Winner first), then by name
+    q('.ev-mine-n').textContent = nPicked ? `${nPicked} tracked this week` : '';
+    const ev = h.events || [];
+    q('.ev-hist-empty').hidden = ev.some((e) => e.settled);
+    rows(q('.ev-hist').tBodies[0], ev, (e) => `<tr><td>${esc(e.event)}</td><td>${day(e.start_date)}</td><td class="num">${e.plays}</td><td class="num">${e.settled ? e.cashed : 'pending'}</td><td class="num ${cls(e.units)}">${e.settled ? units(e.units || 0) : '—'}</td></tr>`);
+    q('.ev-disc').textContent = d.disclaimer || '';
+  };
+
+  const render = () => {
+    const feeds = P.feeds();
+    $('pga-empty').hidden = feeds.length > 0;
+    $('pga-sub').textContent = feeds.length ? `${feeds.length} tournament${feeds.length === 1 ? '' : 's'} this week` : '';
+    // My selections across every tournament: tournament order, then finish (Winner first), then name
     const ord = Object.fromEntries(P.CUTS.map(([m], i) => [m, i]));
-    const mySel = P.picks(d).filter((p) => T.has(P.key(d, p))).sort((a, b) => (ord[a.market] ?? 9) - (ord[b.market] ?? 9) || String(a.player_name).localeCompare(String(b.player_name)));
-    const golfNow = (() => { const sb = window.bmScoreboard; if (!sb || !sb.golfStatus) return null; return sb.golfStatus; })();
+    const mySel = feeds.flatMap((d, i) => P.picks(d).filter((p) => T.has(P.key(d, p))).map((p) => ({ ...p, _d: d, _i: i })))
+      .sort((a, b) => a._i - b._i || (ord[a.market] ?? 9) - (ord[b.market] ?? 9) || String(a.player_name).localeCompare(String(b.player_name)));
+    const sb = window.bmScoreboard;
     $('pga-mysel-empty').hidden = mySel.length > 0; $('pga-mysel').closest('.scroll').hidden = !mySel.length;
     $('pga-mysel-n').textContent = mySel.length ? `${mySel.length} pick${mySel.length === 1 ? '' : 's'}` : '';
-    rows($('pga-mysel').tBodies[0], mySel, (p) => { const k = P.key(d, p); const stt = golfNow ? golfNow(p) : ''; return `<tr class="tracked"><td class="trk-c">${trk(k)}</td><td>${p.flagged ? '<span class="pga-flag">★ </span>' : ''}${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${P.fair(p.p_model)}</td><td class="num">${p.best_price ? us(p.best_price) : '—'}</td><td class="num ${p.ev > 0 ? 'pos' : ''}">${p.ev == null ? '—' : (p.ev > 0 ? '+' : '') + Math.round(100 * p.ev) + '%'}</td><td>${esc(stt || (P.days(d)[0] > todayL() ? 'Not started' : '—'))}</td></tr>`; });
-    const nTracked = mySel.length;
-    if (mySel.length && window.bmScoreboard && window.bmScoreboard.golfRefresh && P.days(d)[0] <= todayL()) window.bmScoreboard.golfRefresh().then((ok) => { if (ok && !document.getElementById('pga').hidden) render(); });
-    $('pga-mine-n').textContent = nTracked ? `${nTracked} tracked this week` : '';
-    const ev = h.events || [];
-    $('pga-hist-empty').hidden = ev.some((e) => e.settled);
-    rows($('pga-hist').tBodies[0], ev, (e) => `<tr><td>${esc(e.event)}</td><td>${day(e.start_date)}</td><td class="num">${e.plays}</td><td class="num">${e.settled ? e.cashed : 'pending'}</td><td class="num ${cls(e.units)}">${e.settled ? units(e.units || 0) : '—'}</td></tr>`);
-    $('pga-disc').textContent = d.disclaimer || '';
+    rows($('pga-mysel').tBodies[0], mySel, (p) => {
+      const d = p._d, k = P.key(d, p); const stt = sb && sb.golfStatus ? sb.golfStatus(p, d) : '';
+      return `<tr class="tracked"><td class="trk-c">${trk(k)}</td><td>${esc(d.event)}<span class="type-tag"> · ${esc(d.tour || d.sport)}</span></td><td>${p.flagged ? '<span class="pga-flag">★ </span>' : ''}${esc(p.player_name)}</td><td>${MKT[p.market] || esc(p.market)}</td><td class="num">${pct(p.p_model)}</td><td class="num">${pct(p.p_market_fair)}</td><td class="num">${P.fair(p.p_model)}</td><td class="num">${p.best_price ? us(p.best_price) : '—'}</td><td class="num ${p.ev > 0 ? 'pos' : ''}">${p.ev == null ? '—' : (p.ev > 0 ? '+' : '') + Math.round(100 * p.ev) + '%'}</td><td>${esc(stt || (P.days(d)[0] > todayL() ? 'Not started' : '—'))}</td></tr>`;
+    });
+    if (mySel.some((p) => p._d === P.feed()) && sb && sb.golfRefresh && P.feed() && P.days(P.feed())[0] <= todayL()) sb.golfRefresh().then((ok) => { if (ok && !$('pga').hidden) render(); });
+    // one drop-down per tournament, in feed order (PGA TOUR first)
+    const host = $('pga-events'); const els = feeds.map((d) => box(d));
+    host.replaceChildren(...els);
+    feeds.forEach((d, i) => drawEvent(els[i], d));
   };
-  // the feed is loaded with the other model feeds (dash.data('pga')), so the header, All models and Scores use the same copy
-  const load = () => { const d = dash.data('pga'); feed = d.status === 'ok' && d.data[0] ? d.data[0] : null; render(); };
-  document.querySelector('.bm .tabs button[data-tab="pga"]').addEventListener('click', load);
-  dash.onData(load);
-  // the event's full field from ESPN, so players the model didn't project can still be picked and found
-  let fieldFor = '';
-  const loadField = async () => {
-    const d = P.feed(); if (!d || !d.start_date) return; const k = d.event + '|' + d.start_date; if (fieldFor === k) return; fieldFor = k;
+  document.querySelector('.bm .tabs button[data-tab="pga"]').addEventListener('click', render);
+  dash.onData(render);
+  // each event's full field from ESPN, so players the model didn't project can still be picked and found
+  const ESPN_TOUR = { PGA: 'golf/pga', DPW: 'golf/eur' };
+  const fieldDone = new Set();
+  const loadField = async (d) => {
+    const lg = ESPN_TOUR[d.sport]; if (!lg || !d.start_date) return; const k = evKey(d); if (fieldDone.has(k)) return; fieldDone.add(k);
     try {
-      const r = await fetch('https://site.api.espn.com/apis/site/v2/sports/golf/pga/scoreboard?dates=' + d.start_date.replace(/-/g, ''), { cache: 'no-store' });
+      const r = await fetch(`https://site.api.espn.com/apis/site/v2/sports/${lg}/scoreboard?dates=` + d.start_date.replace(/-/g, ''), { cache: 'no-store' });
       const j = await r.json(); const evs = j.events || []; const want = P.srch(d.event).split(' ').slice(-2).join(' ');
       const ev = evs.find((e) => P.srch(e.name).includes(want)) || (evs.length === 1 ? evs[0] : null); if (!ev) return;
       const names = (((ev.competitions || [])[0] || {}).competitors || []).map((c) => c.athlete && (c.athlete.displayName || c.athlete.fullName)).filter(Boolean);
-      P.setField(d, names); if (!document.getElementById('pga').hidden) render();
-    } catch (e) { fieldFor = ''; }
+      P.setField(d, names); if (!$('pga').hidden) render();
+    } catch (e) { fieldDone.delete(k); }
   };
-  dash.onData(loadField);
-  $('pga-search').addEventListener('input', () => render());
-  T.onChange(() => { if (!document.getElementById('pga').hidden) render(); });
+  dash.onData(() => P.feeds().forEach(loadField));
+  T.onChange(() => { if (!$('pga').hidden) render(); });
 })();
 </script>
 <script>
@@ -1921,7 +1965,8 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
     const miss = Object.entries(dash.loaded()).filter(([, ok]) => !ok).map(([f]) => f.replace('_dash.json', '').toUpperCase());
     p.className = 'updated';
     const pg = dash.data('pga'); const pf = pg.status === 'ok' && pg.data[0];
-    const pgaTxt = pf ? ' · PGA ' + String(pf.generated_at || '—').replace('T', ' ').slice(0, 16) : '';
+    const dg = dash.data('dpw'); const df = dg.status === 'ok' && dg.data[0];
+    const pgaTxt = (pf ? ' · PGA ' + String(pf.generated_at || '—').replace('T', ' ').slice(0, 16) : '') + (df ? ' · DP World ' + String(df.generated_at || '—').replace('T', ' ').slice(0, 16) : '');
     p.textContent = 'Feeds updated: ' + ci.data.map((r) => `${r.sport} ${r.feed_generated || '—'}`).join(' · ') + pgaTxt + (miss.length ? ' · missing: ' + miss.join(', ') : '');
   });
 })();
