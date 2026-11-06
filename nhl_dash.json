@@ -1,18 +1,20 @@
 {
 "sport": "NHL",
-"generated_at": "2026-11-06 09:11",
-"card_info": {"sport":"NHL","name":"NHL","label":"Fri Nov 6","title":"NHL Bet Card \u2014 Friday, November 6, 2026","generated":"Nov 6, 9:11 AM","n_bets":1,"units":0.5,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
-"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"ANA @ CGY","market":"SOG","pick":"Matt Coronato (CGY) Under 2.5 \u00B7 proj 2.4","line":"","price":"-115","units":0.5,"model_prob":0.5553,"market_prob":0.5,"edge":0.0553,"limit":"","tag":"BET","top":"","soft":"Y"}],
-"parlays": [{"sport":"NHL","n":1,"market":"PL","leg":"ANA@CGY ANA +1.5 puck line","game":"","price":"-230","model_prob":0.6697,"hit_rate":"70% of 88"},
-{"sport":"NHL","n":2,"market":"PTS","leg":"CBJ@BUF Tage Thompson (BUF) Under 1.5 proj 1.1","game":"","price":"-250","model_prob":0.6686,"hit_rate":"68% of 1102"},
-{"sport":"NHL","n":3,"market":"PTS","leg":"SJS@MIN Macklin Celebrini (SJS) Over 0.5 proj 1.3","game":"","price":"-230","model_prob":0.6491,"hit_rate":"66% of 371"},
-{"sport":"NHL","n":4,"market":"PTS","leg":"ANA@CGY Tristan Luneau (ANA) Under 0.5 proj 0.4","game":"","price":"-230","model_prob":0.6448,"hit_rate":"65% of 1360"},
-{"sport":"NHL","n":5,"market":"PTS","leg":"ANA@CGY Judd Caulfield (ANA) Under 0.5 proj 0.5","game":"","price":"-220","model_prob":0.6403,"hit_rate":"65% of 1385"},
-{"sport":"NHL","n":6,"market":"PTS","leg":"SJS@MIN Kiefer Sherwood (SJS) Under 0.5 proj 0.4","game":"","price":"-210","model_prob":0.6337,"hit_rate":"64% of 1456"},
-{"sport":"NHL","n":7,"market":"PTS","leg":"ANA@CGY Alex Killorn (ANA) Under 0.5 proj 0.4","game":"","price":"-180","model_prob":0.621,"hit_rate":"63% of 1492"},
-{"sport":"NHL","n":8,"market":"PTS","leg":"CBJ@BUF Rasmus Dahlin (BUF) Over 0.5 proj 0.9","game":"","price":"-220","model_prob":0.6202,"hit_rate":"64% of 622"},
-{"sport":"NHL","n":9,"market":"PTS","leg":"SJS@MIN Matt Boldy (MIN) Under 1.5 proj 1.3","game":"","price":"-170","model_prob":0.6182,"hit_rate":"62% of 1497"},
-{"sport":"NHL","n":10,"market":"PL","leg":"CBJ@BUF CBJ +1.5 puck line","game":"","price":"-185","model_prob":0.6179,"hit_rate":"70% of 87"}],
+"generated_at": "2026-11-06 17:55",
+"card_info": {"sport":"NHL","name":"NHL","label":"Fri Nov 6","title":"NHL Bet Card \u2014 Friday, November 6, 2026","generated":"Nov 6, 5:55 PM","n_bets":3,"units":2,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"CBJ @ BUF","market":"SOG","pick":"Olen Zellweger (BUF) Over 1.5 \u00B7 proj 2.0","line":"","price":"-120","units":0.5,"model_prob":0.5715,"market_prob":0.5101,"edge":0.0614,"limit":"","tag":"BET","top":"","soft":"Y"},
+{"sport":"NHL","n":2,"kickoff":"","game":"ANA @ CGY","market":"SOG","pick":"Matvei Gridin (CGY) Under 2.5 \u00B7 proj 2.1","line":"","price":"-150","units":1,"model_prob":0.6231,"market_prob":0.5575,"edge":0.0656,"limit":"","tag":"BET","top":"","soft":"Y"},
+{"sport":"NHL","n":3,"kickoff":"","game":"ANA @ CGY","market":"SOG","pick":"Matt Coronato (CGY) Under 2.5 \u00B7 proj 2.4 (given 9:11 AM, no longer a bet)","line":"","price":"-115","units":0.5,"model_prob":0.5553,"market_prob":0.5,"edge":0.0553,"limit":"","tag":"LOCKED BET","top":"","soft":"Y"}],
+"parlays": [{"sport":"NHL","n":1,"market":"PTS","leg":"ANA@CGY Zach Whitecloud (CGY) Under 0.5 proj 0.3","game":"","price":"-300","model_prob":0.7169,"hit_rate":"72% of 506"},
+{"sport":"NHL","n":2,"market":"PTS","leg":"ANA@CGY Kevin Bahl (CGY) Under 0.5 proj 0.3","game":"","price":"-260","model_prob":0.6986,"hit_rate":"70% of 714"},
+{"sport":"NHL","n":3,"market":"PTS","leg":"CBJ@BUF Denton Mateychuk (CBJ) Under 0.5 proj 0.4","game":"","price":"-300","model_prob":0.6956,"hit_rate":"69% of 772"},
+{"sport":"NHL","n":4,"market":"PTS","leg":"SJS@MIN Olli Maatta (MIN) Under 0.5 proj 0.3","game":"","price":"-220","model_prob":0.6888,"hit_rate":"68% of 877"},
+{"sport":"NHL","n":5,"market":"PTS","leg":"CBJ@BUF Ivan Provorov (CBJ) Under 0.5 proj 0.4","game":"","price":"-250","model_prob":0.6826,"hit_rate":"68% of 955"},
+{"sport":"NHL","n":6,"market":"PTS","leg":"CBJ@BUF Tage Thompson (BUF) Under 1.5 proj 1.1","game":"","price":"-250","model_prob":0.6648,"hit_rate":"68% of 1152"},
+{"sport":"NHL","n":7,"market":"PTS","leg":"SJS@MIN Macklin Celebrini (SJS) Over 0.5 proj 1.3","game":"","price":"-240","model_prob":0.6566,"hit_rate":"68% of 301"},
+{"sport":"NHL","n":8,"market":"PTS","leg":"CBJ@BUF Olen Zellweger (BUF) Under 0.5 proj 0.4","game":"","price":"-240","model_prob":0.6549,"hit_rate":"66% of 1259"},
+{"sport":"NHL","n":9,"market":"PL","leg":"ANA@CGY ANA +1.5 puck line","game":"","price":"-210","model_prob":0.6523,"hit_rate":"71% of 93"},
+{"sport":"NHL","n":10,"market":"PTS","leg":"SJS@MIN Michael McCarron (MIN) Under 0.5 proj 0.3","game":"","price":"-225","model_prob":0.6509,"hit_rate":"66% of 1296"}],
 "picks": [
 {"id":"NHL-0001","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Kent Johnson (CBJ) Under 1.5 \u00B7 proj 1.2","line":1.5,"odds":146,"units":1,"model_prob":0.6704,"market_prob":0.3848,"result":"W","profit":1.46,"clv":0.0525,"top":"Y","soft":"","score":"1 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0002","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Conor Garland (CBJ) Under 1.5 \u00B7 proj 1.4","line":1.5,"odds":122,"units":1,"model_prob":0.6075,"market_prob":0.4267,"result":"W","profit":1.22,"clv":0.0902,"top":"Y","soft":"","score":"0 SOG","limit":"","limit_status":"","bet":"Y"},
@@ -655,6 +657,8 @@
 {"id":"NHL-0639","sport":"NHL","period":"2026-11-05","date":"2026-11-05","kickoff":"19:00","game":"CHI @ TBL","market":"Prop \u00B7 shots","selection":"Anthony Cirelli (TBL) Under 2.5 \u00B7 proj 1.8 MODEL","line":2.5,"odds":-190,"units":2,"model_prob":0.69,"market_prob":0.6113,"result":"W","profit":1.053,"clv":null,"top":"","soft":"","score":"2 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0640","sport":"NHL","period":"2026-11-05","date":"2026-11-05","kickoff":"21:30","game":"NSH @ COL","market":"Prop \u00B7 shots","selection":"Ross Colton (NSH) Over 1.5 \u00B7 proj 2.0 MODEL","line":1.5,"odds":-120,"units":0.5,"model_prob":0.5726,"market_prob":0.5101,"result":"W","profit":0.417,"clv":-0.0461,"top":"","soft":"","score":"2 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0641","sport":"NHL","period":"2026-11-05","date":"2026-11-05","kickoff":"19:00","game":"PHI @ NYR","market":"Prop \u00B7 shots","selection":"Trevor Zegras (PHI) Over 1.5 \u00B7 proj 2.2 MODEL","line":1.5,"odds":-130,"units":1,"model_prob":0.5871,"market_prob":0.5306,"result":"W","profit":0.769,"clv":-0.0365,"top":"","soft":"","score":"3 SOG","limit":"","limit_status":"","bet":"Y"},
-{"id":"NHL-0642","sport":"NHL","period":"2026-11-06","date":"2026-11-06","kickoff":"20:00","game":"ANA @ CGY","market":"Prop \u00B7 shots","selection":"Matt Coronato (CGY) Under 2.5 \u00B7 proj 2.4 MODEL SOFT","line":2.5,"odds":-115,"units":0.5,"model_prob":0.5553,"market_prob":0.5,"result":"Pending","profit":0,"clv":null,"top":"","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"}
+{"id":"NHL-0642","sport":"NHL","period":"2026-11-06","date":"2026-11-06","kickoff":"20:00","game":"ANA @ CGY","market":"Prop \u00B7 shots","selection":"Matt Coronato (CGY) Under 2.5 \u00B7 proj 2.4 MODEL SOFT","line":2.5,"odds":-115,"units":0.5,"model_prob":0.5553,"market_prob":0.5,"result":"Pending","profit":0,"clv":null,"top":"","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"},
+{"id":"NHL-0643","sport":"NHL","period":"2026-11-06","date":"2026-11-06","kickoff":"20:00","game":"ANA @ CGY","market":"Prop \u00B7 shots","selection":"Matvei Gridin (CGY) Under 2.5 \u00B7 proj 2.1 MODEL SOFT","line":2.5,"odds":-150,"units":1,"model_prob":0.6231,"market_prob":0.5575,"result":"Pending","profit":0,"clv":null,"top":"","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"},
+{"id":"NHL-0644","sport":"NHL","period":"2026-11-06","date":"2026-11-06","kickoff":"19:00","game":"CBJ @ BUF","market":"Prop \u00B7 shots","selection":"Olen Zellweger (BUF) Over 1.5 \u00B7 proj 2.0 MODEL SOFT","line":1.5,"odds":-120,"units":0.5,"model_prob":0.5715,"market_prob":0.5101,"result":"Pending","profit":0,"clv":null,"top":"","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"}
 ]
 }
