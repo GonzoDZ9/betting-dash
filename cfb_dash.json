@@ -1,6 +1,6 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-06 19:02",
+"generated_at": "2026-11-07 08:00",
 "card_info": {"sport":"CFB","name":"College Football","label":"Week 10","title":"Week 10 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Fri Nov 6, 2026 7:00 PM ET","n_bets":41,"units":74.5,"n_top":29,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Sat 3:30 PM ET","game":"Western Kentucky @ Middle Tennessee","market":"Spread","pick":"Western Kentucky -1.5","line":"-1.5 (-105)","price":"","units":5,"model_prob":0.676,"market_prob":null,"edge":null,"limit":"Focus to -8  \u00B7 now -2.5 (-110) @ Fri 6:30 PM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 10-5","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Sat 10:30 PM ET","game":"Texas State @ Oregon State","market":"Spread","pick":"Texas State +6.5","line":"+6.5 (-105)","price":"","units":5,"model_prob":0.693,"market_prob":null,"edge":null,"limit":"Focus to PK  \u00B7 now +6.5 (-115) @ Fri 6:30 PM: unchanged","tag":"\u2605 TOP PICK  \u00B7  8-12: 57.0% / 10-5","top":"Y","soft":""},
