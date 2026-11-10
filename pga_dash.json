@@ -18,15 +18,15 @@
    {
     "event": "World Wide Technology Championship",
     "start_date": "2026-11-05",
-    "settled": false,
+    "settled": true,
     "plays": 9,
-    "cashed": null,
-    "units": null
+    "cashed": 1,
+    "units": -5.83
    }
   ],
-  "plays": 0,
-  "units": 0.0,
-  "roi": null
+  "plays": 9,
+  "units": -5.83,
+  "roi": -0.6479
  },
  "weather": {
   "applied": false,
