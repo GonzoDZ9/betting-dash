@@ -451,6 +451,69 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       </div>
     </div>
 
+    <div class="sp-bd" hidden>
+    <h2>Bet performance breakdown <small class="sp-bd-sub"></small></h2>
+    <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin: 0 0 var(--cds-gap-sm)">Every table follows the Date range and bet-type buttons at the top of this tab. Groups with only a handful of bets swing a lot, so read small rows with care.</p>
+    <div class="grid" style="grid-template-columns: repeat(auto-fit, minmax(min(100%, 30rem), 1fr))">
+      <div class="card">
+        <h3>By bet size</h3>
+        <p class="note">Record by units staked.</p>
+        <p class="note sp-bd-cov" data-bd="size"></p>
+        <div class="empty sp-bd-empty" data-bd="size" hidden>No graded bets with this information in the range.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="size"><thead><tr><th>Group</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>By model confidence</h3>
+        <p class="note">Grouped by the model’s win probability for the pick.</p>
+        <p class="note sp-bd-cov" data-bd="conf"></p>
+        <div class="empty sp-bd-empty" data-bd="conf" hidden>No graded bets with this information in the range.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="conf"><thead><tr><th>Group</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Model vs market disagreement <small>win probability</small></h3>
+        <p class="note">Model % minus the market’s %: how much more the model liked the pick than the price implied.</p>
+        <p class="note sp-bd-cov" data-bd="gap"></p>
+        <div class="empty sp-bd-empty" data-bd="gap" hidden>No graded bets with this information in the range.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="gap"><thead><tr><th>Group</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Model vs market disagreement <small>points</small></h3>
+        <p class="note">Cushion: how many points the line at the bet sat inside the worst line the model would still back. Bigger cushion = bigger disagreement with the market.</p>
+        <p class="note sp-bd-cov" data-bd="cush"></p>
+        <div class="empty sp-bd-empty" data-bd="cush" hidden>No graded bets with this information in the range.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="cush"><thead><tr><th>Group</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>By line movement after the bet</h3>
+        <p class="note">Closing line against the line you bet. “Toward the pick” means the market moved to agree with the model (you beat the close); “against” means it moved the other way.</p>
+        <p class="note sp-bd-cov" data-bd="move"></p>
+        <div class="empty sp-bd-empty" data-bd="move" hidden>No graded bets with this information in the range.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="move"><thead><tr><th>Group</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>By model cover % <small>raw simulation</small></h3>
+        <p class="note">Grouped by the model’s raw simulated chance that the pick covers (the Model Prob/Cover% column), before any calibration.</p>
+        <p class="note sp-bd-cov" data-bd="cover"></p>
+        <div class="empty sp-bd-empty" data-bd="cover" hidden>No graded bets with this information in the range.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="cover"><thead><tr><th>Group</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Model vs the opening line and the closing line</h3>
+        <p class="note">The same picks graded three ways: at the opening line, at the line you bet, and at the closing line. It shows whether the model beats the market’s first number, and whether it still wins against the final one. Spread and total bets only; every row is priced at −110 so the three compare evenly.</p>
+        <p class="note sp-bd-cov" data-bd="lines"></p>
+        <div class="empty sp-bd-empty" data-bd="lines" hidden>No graded bets with an opening and closing line in the range. These appear after the updated CFB export module has run.</div>
+        <div class="scroll"><table class="sp-bd-table" data-bd="lines"><thead><tr><th>Graded at</th><th>W-L-P</th><th class="num">Win %</th><th class="num">Risked</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+      </div>
+      <div class="card">
+        <h3>Model vs market when the line moved</h3>
+        <p class="note">Who was right when the market moved after the bet. Model right = the pick won at the line you bet.</p>
+        <div class="empty sp-bd-empty" data-bd="who" hidden>No graded bets with a closing line in the range.</div>
+        <div class="scroll"><table class="sp-bd-who"><thead><tr><th>Market moved…</th><th class="num">Bets</th><th class="num">Model right</th><th class="num">Market right</th><th class="num">Units +/-</th><th class="num">ROI</th></tr></thead><tbody></tbody></table></div>
+        <p class="note sp-bd-who-note" style="margin-top: var(--cds-gap-sm)"></p>
+      </div>
+    </div>
+    </div>
+
     <h2 class="picks-h2">Current card <small class="sp-label"></small></h2>
     <div class="mkt-seg" data-sect="card" role="group" aria-label="Filter by bet type" hidden><button data-m="all" aria-pressed="true">All picks</button><button data-m="ATS">ATS</button><button data-m="ML">ML</button><button data-m="TOT">Totals</button></div>
     <div class="card">
@@ -1139,6 +1202,7 @@ const rngLabel = () => { const [f, t] = rngBounds(); const fd = (v) => v ? new D
 // graded bets inside the range; pending bets always count toward the Pending tile
 const inRange = (r) => { if (r.result === 'Pending') return true; const [f, t] = rngBounds(); const d = String(r.date || ''); return (!f || d >= f) && (!t || d <= t); };
 const groupBy = (rows, keyOf, order) => { const keys = [...new Set(rows.map(keyOf))]; keys.sort(order || ((a, b) => (isNaN(a) || isNaN(b) ? String(a).localeCompare(String(b)) : Number(a) - Number(b)))); return keys.map((k) => [k, rows.filter((r) => keyOf(r) === k)]); };
+const pkNormL = (t) => window.bmF.pkNorm(t);
 const drawSport = (sport) => {
   const sec = document.getElementById(sport.toLowerCase());
   if (sec.hidden || !sec.dataset.built) return;
@@ -1240,6 +1304,46 @@ const drawSport = (sport) => {
   const noRisk = (cols) => cols.filter((c) => c.f !== 'risked');
   if (picks.status === 'ok') fillTable(q('.sp-stake-table'), localSt.filter((r) => r.graded > 0), noRisk(recCols({ f: 'units', fmt: (v) => d3.format('.1f')(v) + 'u' })), (r) => `${r.sport},${r.units}`);
   if (picks.status === 'ok') fillTable(q('.sp-tag-table'), localTg.filter((r) => r.graded > 0), noRisk(recCols({ f: 'tag' })), (r) => `${r.sport},${r.tag}`);
+  // CFB breakdown tables: bet size, model confidence, model-vs-market disagreement and line movement, for the range on view
+  const bdBox = q('.sp-bd'); bdBox.hidden = sport !== 'CFB';
+  if (sport === 'CFB' && picks.status === 'ok') {
+    const G = gradedRows.filter((r) => r.bet !== '');
+    const has = (v) => v !== null && v !== undefined && v !== '' && !isNaN(v);
+    const cushOf = (r) => { const t = String(r.limit_status || ''); if (/PAST LIMIT/i.test(t)) return -1; const m = /([\d.]+)\s*pt cushion/i.exec(t); return m ? +m[1] : null; };
+    const gapOf = (r) => (has(r.model_prob) && has(r.market_prob) ? Number(r.model_prob) - Number(r.market_prob) : null);
+    const grp = (defs) => defs.map(([label, f]) => ({ label, ...sumRows(G.filter(f)) })).filter((x) => x.graded > 0);
+    const sizes = [...new Set(G.map((r) => Number(r.units)))].sort((a, b) => a - b);
+    const T_ = {
+      size: [grp(sizes.map((u) => [d3.format('.1f')(u) + 'u', (r) => Number(r.units) === u])), G.length, 'units'],
+      conf: [grp([['Under 53%', (r) => has(r.model_prob) && r.model_prob < 0.53], ['53 – 55%', (r) => has(r.model_prob) && r.model_prob >= 0.53 && r.model_prob < 0.55], ['55 – 57%', (r) => has(r.model_prob) && r.model_prob >= 0.55 && r.model_prob < 0.57], ['57 – 60%', (r) => has(r.model_prob) && r.model_prob >= 0.57 && r.model_prob < 0.60], ['60% and up', (r) => has(r.model_prob) && r.model_prob >= 0.60]]), G.filter((r) => has(r.model_prob)).length, 'a model %'],
+      gap: [grp([['Model below market', (r) => gapOf(r) !== null && gapOf(r) < 0], ['0 – 2 pts higher', (r) => gapOf(r) !== null && gapOf(r) >= 0 && gapOf(r) < 0.02], ['2 – 4 pts higher', (r) => gapOf(r) !== null && gapOf(r) >= 0.02 && gapOf(r) < 0.04], ['4 – 6 pts higher', (r) => gapOf(r) !== null && gapOf(r) >= 0.04 && gapOf(r) < 0.06], ['6+ pts higher', (r) => gapOf(r) !== null && gapOf(r) >= 0.06]]), G.filter((r) => gapOf(r) !== null).length, 'both a model % and a market %'],
+      cush: [grp([['Past the limit', (r) => cushOf(r) === -1], ['Under 1 pt', (r) => cushOf(r) !== null && cushOf(r) >= 0 && cushOf(r) < 1], ['1 – 3 pts', (r) => cushOf(r) !== null && cushOf(r) >= 1 && cushOf(r) < 3], ['3 – 6 pts', (r) => cushOf(r) !== null && cushOf(r) >= 3 && cushOf(r) < 6], ['6 – 10 pts', (r) => cushOf(r) !== null && cushOf(r) >= 6 && cushOf(r) < 10], ['10+ pts', (r) => cushOf(r) !== null && cushOf(r) >= 10]]), G.filter((r) => cushOf(r) !== null).length, 'a cushion'],
+      move: [grp([['Toward the pick, 1+ pts', (r) => has(r.clv) && r.clv >= 1], ['Toward the pick, under 1 pt', (r) => has(r.clv) && r.clv > 0 && r.clv < 1], ['No movement', (r) => has(r.clv) && Number(r.clv) === 0], ['Against the pick, under 1 pt', (r) => has(r.clv) && r.clv < 0 && r.clv > -1], ['Against the pick, 1+ pts', (r) => has(r.clv) && r.clv <= -1]]), G.filter((r) => has(r.clv)).length, 'a closing line'],
+    };
+    T_.cover = [grp([['Under 48%', (r) => has(r.cover) && r.cover < 0.48], ['48 – 50%', (r) => has(r.cover) && r.cover >= 0.48 && r.cover < 0.50], ['50 – 52%', (r) => has(r.cover) && r.cover >= 0.50 && r.cover < 0.52], ['52 – 54%', (r) => has(r.cover) && r.cover >= 0.52 && r.cover < 0.54], ['54% and up', (r) => has(r.cover) && r.cover >= 0.54]]), G.filter((r) => has(r.cover)).length, 'a cover %'];
+    // the same picks graded at the opening line, the line bet and the closing line (home-side spread / total), flat -110
+    const sideOf = (r) => { if (r.market === 'Total') return /^over/i.test(r.selection) ? 1 : /^under/i.test(r.selection) ? -1 : 0; if (r.market !== 'Spread') return 0; const team = String(r.selection).replace(/\s+ATS.*$/, ''); const home = String(r.game).split(' @ ')[1]; return pkNormL(team) === pkNormL(home) ? 1 : -1; };
+    const scoreOf = (r) => { const m = /^(.*?)\s+(\d+)\s+-\s+(.*?)\s+(\d+)$/.exec(String(r.score || '')); return m ? { a: +m[2], h: +m[4] } : null; };
+    const gradeAt = (r, x) => { const sd = sideOf(r), sc = scoreOf(r); if (!sd || !sc || !has(x)) return null; const v = r.market === 'Total' ? sd * (sc.a + sc.h - Number(x)) : sd * (sc.h - sc.a + Number(x)); return v > 0 ? 'W' : v < 0 ? 'L' : 'P'; };
+    const L3 = G.filter((r) => has(r.open) && has(r.close) && has(has(r.line_rec) ? r.line_rec : r.line) && gradeAt(r, r.open));
+    const atLine = (label, pick) => ({ label, ...sumRows(L3.map((r) => { const res = gradeAt(r, pick(r)); const u = Number(r.units || 0); return { ...r, result: res, profit: res === 'W' ? u * 100 / 110 : res === 'L' ? -u : 0, clv: null }; })) });
+    T_.lines = [L3.length ? [atLine('Opening line', (r) => r.open), atLine('Line at the bet', (r) => (has(r.line_rec) ? r.line_rec : r.line)), atLine('Closing line', (r) => r.close)] : [], L3.length, 'an opening line, a closing line and a final score'];
+    q('.sp-bd-sub').textContent = `${fN(G.length)} graded ${tileMkt ? mktName[mktSel.tiles] + ' ' : ''}bets · ${rngLabel()}`;
+    for (const [k, [rowsK, n, what]] of Object.entries(T_)) {
+      const tb = q(`.sp-bd-table[data-bd="${k}"]`);
+      fillTable(tb, rowsK, recCols({ f: 'label' }), (r) => r.label);
+      tb.closest('.scroll').hidden = !rowsK.length; q(`.sp-bd-empty[data-bd="${k}"]`).hidden = rowsK.length > 0;
+      q(`.sp-bd-cov[data-bd="${k}"]`).textContent = n < G.length ? `${fN(n)} of ${fN(G.length)} graded bets in this range have ${what} recorded; the rest are left out.` : '';
+    }
+    // who was right when the line moved: the model (pick won) or the market's move
+    const who = [['Toward the pick (market agreed with the model)', (r) => has(r.clv) && r.clv > 0], ['Against the pick (market disagreed)', (r) => has(r.clv) && r.clv < 0], ['Did not move', (r) => has(r.clv) && Number(r.clv) === 0]].map(([label, f], i) => ({ label, i, ...sumRows(G.filter(f)) })).filter((x) => x.graded > 0);
+    const share = (a, b) => (a + b ? `${a} (${d3.format('.0%')(a / (a + b))})` : '—');
+    const wt = q('.sp-bd-who');
+    fillTable(wt, who, [{ f: 'label', cls: 'wrap' }, { f: 'graded', cls: 'num' }, { f: 'w', fmt: (v, r) => share(r.w, r.l), cls: 'num' }, { f: 'l', fmt: (v, r) => (r.i === 1 ? share(r.l, r.w) : r.i === 0 ? share(r.w, r.l) : '—'), cls: 'num' }, { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) }], (r) => r.label);
+    wt.closest('.scroll').hidden = !who.length; q('.sp-bd-empty[data-bd="who"]').hidden = who.length > 0;
+    const ag = who.find((x) => x.i === 1), fv = who.find((x) => x.i === 0);
+    q('.sp-bd-who-note').textContent = [fv ? `When the market moved toward the pick, model and market agreed, and the pick won ${fv.w} of ${fv.w + fv.l}.` : '', ag ? `When it moved against the pick they disagreed: the model was right ${ag.w} time${ag.w === 1 ? '' : 's'} and the market ${ag.l}.` : ''].filter(Boolean).join(' ');
+  }
   // picks tables: upcoming vs completed
   if (picks.status === 'ok') {
     const st2 = sortState[sport] || (sortState[sport] = { f: 'date', dir: -1 });
