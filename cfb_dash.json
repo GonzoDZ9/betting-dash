@@ -1,6 +1,6 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-12 08:42",
+"generated_at": "2026-11-13 08:32",
 "card_info": {"sport":"CFB","name":"College Football","label":"Week 11","title":"Week 11 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Thu Nov 12, 2026 8:40 AM ET","n_bets":35,"units":68.5,"n_top":25,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Thu 9:00 PM ET","game":"Louisiana @ UL Monroe","market":"Spread","pick":"Louisiana -10.5","line":"-10.5 (-105)","price":"","units":5,"model_prob":0.595,"market_prob":null,"edge":null,"limit":"Focus to -13.5  \u00B7 now -10.5 (-105) @ Thu 8:37 AM: unchanged","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 15-9","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Sat 12:00 PM ET","game":"Wisconsin @ Maryland","market":"Spread","pick":"Wisconsin -7.5","line":"-7.5 (-115)","price":"","units":5,"model_prob":0.611,"market_prob":null,"edge":null,"limit":"Focus to -11  \u00B7 now -8.5 (-110) @ Thu 8:37 AM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 15-9","top":"Y","soft":""},
