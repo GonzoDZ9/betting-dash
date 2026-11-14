@@ -1,7 +1,7 @@
 {
 "sport": "NHL",
-"generated_at": "2026-11-14 09:38",
-"card_info": {"sport":"NHL","name":"NHL","label":"Sat Nov 14","title":"NHL Bet Card \u2014 Saturday, November 14, 2026","generated":"Nov 14, 9:38 AM","n_bets":5,"units":6,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"generated_at": "2026-11-14 11:32",
+"card_info": {"sport":"NHL","name":"NHL","label":"Sat Nov 14","title":"NHL Bet Card \u2014 Saturday, November 14, 2026","generated":"Nov 14, 11:32 AM","n_bets":5,"units":6,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
 "cards": [{"sport":"NHL","n":1,"kickoff":"","game":"SEA @ CAR","market":"SOG","pick":"Sean Walker (CAR) Over 1.5 \u00B7 proj 2.1 (given 7:33 PM, no longer a bet)","line":"","price":"-115","units":0.5,"model_prob":0.5678,"market_prob":0.5,"edge":0.0678,"limit":"","tag":"LOCKED BET","top":"","soft":""},
 {"sport":"NHL","n":2,"kickoff":"","game":"PHI @ CBJ","market":"SOG","pick":"Travis Konecny (PHI) Over 1.5 \u00B7 proj 1.9 (given 7:33 PM, no longer a bet)","line":"","price":"-115","units":0.5,"model_prob":0.5569,"market_prob":0.5,"edge":0.0569,"limit":"","tag":"LOCKED BET","top":"","soft":"Y"},
 {"sport":"NHL","n":3,"kickoff":"","game":"PHI @ CBJ","market":"SOG","pick":"Kent Johnson (CBJ) Under 2.5 \u00B7 proj 2.0 (given 7:33 PM, no longer a bet)","line":"","price":"-140","units":1,"model_prob":0.6205,"market_prob":0.5446,"edge":0.0759,"limit":"","tag":"LOCKED BET","top":"","soft":""},
