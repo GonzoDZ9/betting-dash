@@ -1,7 +1,7 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-14 08:33",
-"card_info": {"sport":"CFB","name":"College Football","label":"Week 11","title":"Week 11 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Fri Nov 13, 2026 8:41 AM ET","n_bets":34,"units":63.5,"n_top":24,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
+"generated_at": "2026-11-14 09:16",
+"card_info": {"sport":"CFB","name":"College Football","label":"Week 11","title":"Week 11 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Sat Nov 14, 2026 9:14 AM ET","n_bets":34,"units":63.5,"n_top":24,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Sat 12:00 PM ET","game":"Wisconsin @ Maryland","market":"Spread","pick":"Wisconsin -7.5","line":"-7.5 (-115)","price":"","units":5,"model_prob":0.611,"market_prob":null,"edge":null,"limit":"Focus to -11  \u00B7 now -8.5 (-110) @ Fri 8:37 AM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 15-9","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Sat 7:30 PM ET","game":"UNLV @ New Mexico","market":"Spread","pick":"New Mexico -14.5","line":"-14.5 (-105)","price":"","units":5,"model_prob":0.618,"market_prob":null,"edge":null,"limit":"Focus to -19  \u00B7 now -15.5 (-105) @ Fri 8:37 AM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 15-9","top":"Y","soft":""},
 {"sport":"CFB","n":3,"kickoff":"Sat TBA","game":"Kansas State @ TCU","market":"Spread","pick":"TCU -10.5","line":"-10.5 (-110)","price":"","units":5,"model_prob":0.616,"market_prob":null,"edge":null,"limit":"Focus to -14.5  \u00B7 now -11.5 (-110) @ Fri 8:37 AM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 15-9","top":"Y","soft":""},
