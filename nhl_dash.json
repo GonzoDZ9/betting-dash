@@ -1,22 +1,9 @@
 {
 "sport": "NHL",
-"generated_at": "2026-11-14 11:32",
-"card_info": {"sport":"NHL","name":"NHL","label":"Sat Nov 14","title":"NHL Bet Card \u2014 Saturday, November 14, 2026","generated":"Nov 14, 11:32 AM","n_bets":5,"units":6,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
-"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"SEA @ CAR","market":"SOG","pick":"Sean Walker (CAR) Over 1.5 \u00B7 proj 2.1 (given 7:33 PM, no longer a bet)","line":"","price":"-115","units":0.5,"model_prob":0.5678,"market_prob":0.5,"edge":0.0678,"limit":"","tag":"LOCKED BET","top":"","soft":""},
-{"sport":"NHL","n":2,"kickoff":"","game":"PHI @ CBJ","market":"SOG","pick":"Travis Konecny (PHI) Over 1.5 \u00B7 proj 1.9 (given 7:33 PM, no longer a bet)","line":"","price":"-115","units":0.5,"model_prob":0.5569,"market_prob":0.5,"edge":0.0569,"limit":"","tag":"LOCKED BET","top":"","soft":"Y"},
-{"sport":"NHL","n":3,"kickoff":"","game":"PHI @ CBJ","market":"SOG","pick":"Kent Johnson (CBJ) Under 2.5 \u00B7 proj 2.0 (given 7:33 PM, no longer a bet)","line":"","price":"-140","units":1,"model_prob":0.6205,"market_prob":0.5446,"edge":0.0759,"limit":"","tag":"LOCKED BET","top":"","soft":""},
-{"sport":"NHL","n":4,"kickoff":"","game":"PHI @ CBJ","market":"SOG","pick":"Charlie Coyle (CBJ) Under 2.5 \u00B7 proj 1.8 (given 7:33 PM, no longer a bet)","line":"","price":"-180","units":2,"model_prob":0.6734,"market_prob":0.6017,"edge":0.0717,"limit":"","tag":"LOCKED BET","top":"","soft":""},
-{"sport":"NHL","n":5,"kickoff":"","game":"EDM @ TOR","market":"SOG","pick":"Ryan Nugent-Hopkins (EDM) Under 2.5 \u00B7 proj 1.8 (given 7:33 PM, no longer a bet)","line":"","price":"-185","units":2,"model_prob":0.6797,"market_prob":0.6091,"edge":0.0707,"limit":"","tag":"LOCKED BET","top":"","soft":""}],
-"parlays": [{"sport":"NHL","n":1,"market":"ML","leg":"SJS@UTA UTA moneyline","game":"","price":"-200","model_prob":0.7063,"hit_rate":"78% of 37"},
-{"sport":"NHL","n":2,"market":"ML","leg":"DET@TBL TBL moneyline","game":"","price":"-220","model_prob":0.6911,"hit_rate":"78% of 37"},
-{"sport":"NHL","n":3,"market":"PL","leg":"NYI@ANA NYI +1.5 puck line","game":"","price":"-250","model_prob":0.6905,"hit_rate":"78% of 80"},
-{"sport":"NHL","n":4,"market":"PL","leg":"COL@MTL COL +1.5 puck line","game":"","price":"-250","model_prob":0.6884,"hit_rate":"73% of 85"},
-{"sport":"NHL","n":5,"market":"PL","leg":"FLA@STL STL +1.5 puck line","game":"","price":"-300","model_prob":0.7066,"hit_rate":"69% of 54"},
-{"sport":"NHL","n":6,"market":"PL","leg":"MIN@BOS BOS +1.5 puck line","game":"","price":"-250","model_prob":0.6793,"hit_rate":"68% of 76"},
-{"sport":"NHL","n":7,"market":"PL","leg":"PHI@CBJ PHI +1.5 puck line","game":"","price":"-230","model_prob":0.6756,"hit_rate":"73% of 96"},
-{"sport":"NHL","n":8,"market":"PL","leg":"NJD@WSH WSH +1.5 puck line","game":"","price":"-250","model_prob":0.6885,"hit_rate":"67% of 70"},
-{"sport":"NHL","n":9,"market":"PL","leg":"BUF@DAL BUF +1.5 puck line","game":"","price":"-210","model_prob":0.6675,"hit_rate":"71% of 107"},
-{"sport":"NHL","n":10,"market":"ML","leg":"CGY@LAK LAK moneyline","game":"","price":"-170","model_prob":0.6304,"hit_rate":"71% of 77"}],
+"generated_at": "2026-11-15 09:13",
+"card_info": {"sport":"NHL","name":"NHL","label":"Sun Nov 15","title":"NHL Bet Card \u2014 Sunday, November 15, 2026","generated":"Nov 15, 9:13 AM","n_bets":0,"units":0,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"cards": [],
+"parlays": [],
 "picks": [
 {"id":"NHL-0001","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Kent Johnson (CBJ) Under 1.5 \u00B7 proj 1.2","line":1.5,"odds":146,"units":1,"model_prob":0.6704,"market_prob":0.3848,"result":"W","profit":1.46,"clv":0.0525,"top":"Y","soft":"","score":"1 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0002","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Conor Garland (CBJ) Under 1.5 \u00B7 proj 1.4","line":1.5,"odds":122,"units":1,"model_prob":0.6075,"market_prob":0.4267,"result":"W","profit":1.22,"clv":0.0902,"top":"Y","soft":"","score":"0 SOG","limit":"","limit_status":"","bet":"Y"},
