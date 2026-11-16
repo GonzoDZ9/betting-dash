@@ -1,7 +1,7 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-16 11:19",
-"card_info": {"sport":"CFB","name":"College Football","label":"Week 12","title":"Week 12 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Mon Nov 16, 2026 11:18 AM ET","n_bets":48,"units":46.5,"n_top":28,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
+"generated_at": "2026-11-16 12:05",
+"card_info": {"sport":"CFB","name":"College Football","label":"Week 12","title":"Week 12 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Mon Nov 16, 2026 12:04 PM ET","n_bets":48,"units":46.5,"n_top":28,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Tue 6:00 PM ET","game":"Eastern Michigan @ Western Michigan","market":"Spread","pick":"Eastern Michigan +13.5","line":"+13.5 (+100)","price":"","units":1,"model_prob":0.577,"market_prob":null,"edge":null,"limit":"Focus to +12  \u00B7 now +13.5 (+100) @ Mon 8:33 AM: unchanged","tag":"\u2605 TOP PICK  \u00B7  2-5: 52.3% / 32-36","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Tue 7:00 PM ET","game":"Miami (OH) @ Kent State","market":"Spread","pick":"Miami (OH) -9.5","line":"-9.5 (-115)","price":"","units":1,"model_prob":0.599,"market_prob":null,"edge":null,"limit":"Focus to -12.5  \u00B7 now -9.5 (-115) @ Mon 8:33 AM: unchanged","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 16-12","top":"Y","soft":""},
 {"sport":"CFB","n":3,"kickoff":"Wed 7:00 PM ET","game":"Akron @ Massachusetts","market":"Spread","pick":"Massachusetts -3.5","line":"-3.5 (-105)","price":"","units":1,"model_prob":0.574,"market_prob":null,"edge":null,"limit":"Focus to -4.5  \u00B7 now -3.5 (-105) @ Mon 8:33 AM: unchanged","tag":"\u2605 TOP PICK  \u00B7  2-5: 52.3% / 32-36","top":"Y","soft":""},
