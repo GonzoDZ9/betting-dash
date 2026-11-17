@@ -1,7 +1,7 @@
 {
 "sport": "NFL",
-"generated_at": "2026-11-17 08:51",
-"card_info": {"sport":"NFL","name":"NFL","label":"Week 11","title":"NFL WEEK 11 BET CARD  -  2026 SEASON","generated":"Tue Nov 17, 8:51 AM","n_bets":11,"units":5.5,"n_top":0,"empty":"","leans_record":"","source":"NFL workbook - Bet_Log (record) and Bet_Card (card)"},
+"generated_at": "2026-11-17 09:02",
+"card_info": {"sport":"NFL","name":"NFL","label":"Week 11","title":"NFL WEEK 11 BET CARD  -  2026 SEASON","generated":"Tue Nov 17, 9:02 AM","n_bets":11,"units":5.5,"n_top":0,"empty":"","leans_record":"","source":"NFL workbook - Bet_Log (record) and Bet_Card (card)"},
 "cards": [{"sport":"NFL","n":1,"kickoff":"Thu 8:15 PM ET","game":"IND @ HOU","market":"T3","pick":"RULE BET: Daniel Jones (IND) Under 7.5 Rush Yds","line":"7.5","price":"-115","units":0.5,"model_prob":0.62,"market_prob":null,"edge":0.1591,"limit":"","tag":"RULE BET  |  QB rush yds Under rule: proj 11.5 vs line 7.5  |  rule 62% vs books 50% | T1 by EV, capped T3: rule bet - max T3","top":"","soft":""},
 {"sport":"NFL","n":2,"kickoff":"Thu 8:15 PM ET","game":"IND @ HOU","market":"T3","pick":"RULE BET: C.J. Stroud (HOU) Under 11.5 Rush Yds","line":"11.5","price":"-120","units":0.5,"model_prob":0.62,"market_prob":null,"edge":0.1367,"limit":"","tag":"RULE BET  |  QB rush yds Under rule: proj 10.4 vs line 11.5  |  rule 62% vs books 51% | T1 by EV, capped T3: rule bet - max T3","top":"","soft":""},
 {"sport":"NFL","n":3,"kickoff":"Sun 1:00 PM ET","game":"MIA @ BUF","market":"T3","pick":"** TOP PICK **  RULE BET: Dalton Kincaid (BUF) Over 2.5 Receptions","line":"2.5","price":"135","units":0.5,"model_prob":0.61,"market_prob":null,"edge":0.4335,"limit":"","tag":"RULE BET  |  Receptions Over rule: proj 2.9 vs line 2.5 (+17%)  |  rule 61% vs books 39% | T1 by EV, capped T3: rule bet - max T3","top":"","soft":""},
