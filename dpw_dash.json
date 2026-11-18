@@ -764,5 +764,50 @@
   "plays": 11,
   "units": -11.0,
   "roi": -1.0
+ },
+ "history_mc1": {
+  "events": [
+   {
+    "event": "DP World Tour Championship",
+    "start_date": "2026-11-12",
+    "settled": true,
+    "plays": 0,
+    "cashed": 0,
+    "units": null
+   }
+  ],
+  "plays": 0,
+  "units": 0.0,
+  "roi": null
+ },
+ "history_fav": {
+  "events": [
+   {
+    "event": "DP World Tour Championship",
+    "start_date": "2026-11-12",
+    "settled": true,
+    "plays": 0,
+    "cashed": 0,
+    "units": null
+   }
+  ],
+  "plays": 0,
+  "units": 0.0,
+  "roi": null
+ },
+ "history_consensus": {
+  "events": [
+   {
+    "event": "DP World Tour Championship",
+    "start_date": "2026-11-12",
+    "settled": true,
+    "plays": 0,
+    "cashed": 0,
+    "units": null
+   }
+  ],
+  "plays": 0,
+  "units": 0.0,
+  "roi": null
  }
 }
