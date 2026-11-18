@@ -18,9 +18,9 @@
    {
     "event": "DP World Tour Championship",
     "start_date": "2026-11-12",
-    "settled": false,
-    "plays": 11,
-    "cashed": null,
+    "settled": true,
+    "plays": 0,
+    "cashed": 0,
     "units": null
    }
   ],
@@ -749,5 +749,20 @@
    "need_price": 4.1197
   }
  ],
- "blend_win": []
+ "blend_win": [],
+ "history_v1": {
+  "events": [
+   {
+    "event": "DP World Tour Championship",
+    "start_date": "2026-11-12",
+    "settled": true,
+    "plays": 11,
+    "cashed": 0,
+    "units": -11.0
+   }
+  ],
+  "plays": 11,
+  "units": -11.0,
+  "roi": -1.0
+ }
 }
