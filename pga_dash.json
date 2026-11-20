@@ -943,5 +943,385 @@
    "p_blend": 0.0184,
    "best_price": 39.0
   }
- ]
+ ],
+ "after_r1": {
+  "generated_at": "2026-11-20T05:37:37",
+  "event": "The RSM Classic",
+  "model_version": "A-4ad5549c",
+  "weather": {
+   "applied": false,
+   "reason": "multi-course event"
+  },
+  "history": {
+   "events": [
+    {
+     "event": "The RSM Classic",
+     "start_date": "2026-11-19",
+     "settled": false,
+     "plays": 2,
+     "cashed": null,
+     "units": null
+    },
+    {
+     "event": "World Wide Technology Championship",
+     "start_date": "2026-11-05",
+     "settled": true,
+     "plays": 7,
+     "cashed": 0,
+     "units": -7.0
+    }
+   ],
+   "plays": 7,
+   "units": -7.0,
+   "roi": -1.0
+  },
+  "leaderboard": [
+   {
+    "player_name": "Michael Thorbjornsen",
+    "r1_score": 64,
+    "p_win": 0.1477,
+    "p_top10": 0.5441,
+    "p_top20": 0.7249,
+    "p_make_cut": 0.9916
+   },
+   {
+    "player_name": "Jesper Svensson",
+    "r1_score": 64,
+    "p_win": 0.0414,
+    "p_top10": 0.311,
+    "p_top20": 0.4996,
+    "p_make_cut": 0.9773
+   },
+   {
+    "player_name": "Keith Mitchell",
+    "r1_score": 65,
+    "p_win": 0.106,
+    "p_top10": 0.5118,
+    "p_top20": 0.7108,
+    "p_make_cut": 0.9858
+   },
+   {
+    "player_name": "Max Greyserman",
+    "r1_score": 65,
+    "p_win": 0.04,
+    "p_top10": 0.3295,
+    "p_top20": 0.5236,
+    "p_make_cut": 0.967
+   },
+   {
+    "player_name": "Garrick Higgo",
+    "r1_score": 65,
+    "p_win": 0.0218,
+    "p_top10": 0.2224,
+    "p_top20": 0.3929,
+    "p_make_cut": 0.9514
+   },
+   {
+    "player_name": "Maverick McNealy",
+    "r1_score": 66,
+    "p_win": 0.0546,
+    "p_top10": 0.3869,
+    "p_top20": 0.5855,
+    "p_make_cut": 0.9584
+   },
+   {
+    "player_name": "Sami Valimaki",
+    "r1_score": 66,
+    "p_win": 0.0297,
+    "p_top10": 0.2639,
+    "p_top20": 0.4558,
+    "p_make_cut": 0.9396
+   },
+   {
+    "player_name": "Sepp Straka",
+    "r1_score": 66,
+    "p_win": 0.0285,
+    "p_top10": 0.2641,
+    "p_top20": 0.4393,
+    "p_make_cut": 0.9226
+   },
+   {
+    "player_name": "Rasmus Hojgaard",
+    "r1_score": 66,
+    "p_win": 0.0238,
+    "p_top10": 0.221,
+    "p_top20": 0.3924,
+    "p_make_cut": 0.9215
+   },
+   {
+    "player_name": "Emiliano Grillo",
+    "r1_score": 66,
+    "p_win": 0.0202,
+    "p_top10": 0.2389,
+    "p_top20": 0.4226,
+    "p_make_cut": 0.9419
+   },
+   {
+    "player_name": "Neal Shipley",
+    "r1_score": 66,
+    "p_win": 0.0202,
+    "p_top10": 0.2476,
+    "p_top20": 0.4303,
+    "p_make_cut": 0.9374
+   },
+   {
+    "player_name": "Haotong Li",
+    "r1_score": 66,
+    "p_win": 0.0186,
+    "p_top10": 0.2049,
+    "p_top20": 0.378,
+    "p_make_cut": 0.9264
+   },
+   {
+    "player_name": "Lee Hodges",
+    "r1_score": 66,
+    "p_win": 0.0131,
+    "p_top10": 0.211,
+    "p_top20": 0.3978,
+    "p_make_cut": 0.9376
+   },
+   {
+    "player_name": "Hank Lebioda",
+    "r1_score": 66,
+    "p_win": 0.0049,
+    "p_top10": 0.1015,
+    "p_top20": 0.2284,
+    "p_make_cut": 0.8917
+   },
+   {
+    "player_name": "Davis Riley",
+    "r1_score": 66,
+    "p_win": 0.0037,
+    "p_top10": 0.08,
+    "p_top20": 0.1772,
+    "p_make_cut": 0.8378
+   },
+   {
+    "player_name": "Patton Kizzire",
+    "r1_score": 66,
+    "p_win": 0.0036,
+    "p_top10": 0.0843,
+    "p_top20": 0.1905,
+    "p_make_cut": 0.8686
+   },
+   {
+    "player_name": "Harris English",
+    "r1_score": 67,
+    "p_win": 0.0236,
+    "p_top10": 0.2576,
+    "p_top20": 0.4582,
+    "p_make_cut": 0.9065
+   },
+   {
+    "player_name": "Austin Smotherman",
+    "r1_score": 67,
+    "p_win": 0.0211,
+    "p_top10": 0.2201,
+    "p_top20": 0.3848,
+    "p_make_cut": 0.8715
+   },
+   {
+    "player_name": "Brooks Koepka",
+    "r1_score": 67,
+    "p_win": 0.0208,
+    "p_top10": 0.2382,
+    "p_top20": 0.4267,
+    "p_make_cut": 0.8914
+   },
+   {
+    "player_name": "Ricky Castillo",
+    "r1_score": 67,
+    "p_win": 0.0177,
+    "p_top10": 0.2122,
+    "p_top20": 0.3773,
+    "p_make_cut": 0.8936
+   },
+   {
+    "player_name": "Harry Hall",
+    "r1_score": 67,
+    "p_win": 0.0173,
+    "p_top10": 0.2318,
+    "p_top20": 0.4117,
+    "p_make_cut": 0.8962
+   },
+   {
+    "player_name": "Chris Kirk",
+    "r1_score": 67,
+    "p_win": 0.0163,
+    "p_top10": 0.2151,
+    "p_top20": 0.3853,
+    "p_make_cut": 0.8839
+   },
+   {
+    "player_name": "Joel Dahmen",
+    "r1_score": 67,
+    "p_win": 0.0073,
+    "p_top10": 0.1375,
+    "p_top20": 0.2876,
+    "p_make_cut": 0.8686
+   },
+   {
+    "player_name": "Zecheng Dou",
+    "r1_score": 67,
+    "p_win": 0.0069,
+    "p_top10": 0.1321,
+    "p_top20": 0.2778,
+    "p_make_cut": 0.8583
+   },
+   {
+    "player_name": "Chandler Phillips",
+    "r1_score": 67,
+    "p_win": 0.0055,
+    "p_top10": 0.1174,
+    "p_top20": 0.2569,
+    "p_make_cut": 0.8469
+   },
+   {
+    "player_name": "John VanDerLaan",
+    "r1_score": 67,
+    "p_win": 0.0052,
+    "p_top10": 0.1097,
+    "p_top20": 0.2369,
+    "p_make_cut": 0.8275
+   },
+   {
+    "player_name": "S.Y. Noh",
+    "r1_score": 67,
+    "p_win": 0.0023,
+    "p_top10": 0.0686,
+    "p_top20": 0.165,
+    "p_make_cut": 0.7818
+   },
+   {
+    "player_name": "Matt Atkins",
+    "r1_score": 67,
+    "p_win": 0.0008,
+    "p_top10": 0.0371,
+    "p_top20": 0.1015,
+    "p_make_cut": 0.7461
+   },
+   {
+    "player_name": "Ben James",
+    "r1_score": 68,
+    "p_win": 0.0342,
+    "p_top10": 0.2883,
+    "p_top20": 0.4596,
+    "p_make_cut": 0.8418
+   },
+   {
+    "player_name": "Doug Ghim",
+    "r1_score": 68,
+    "p_win": 0.0185,
+    "p_top10": 0.2284,
+    "p_top20": 0.4097,
+    "p_make_cut": 0.8523
+   },
+   {
+    "player_name": "J.T. Poston",
+    "r1_score": 68,
+    "p_win": 0.0177,
+    "p_top10": 0.196,
+    "p_top20": 0.3541,
+    "p_make_cut": 0.8237
+   },
+   {
+    "player_name": "Matt Wallace",
+    "r1_score": 68,
+    "p_win": 0.0125,
+    "p_top10": 0.2066,
+    "p_top20": 0.3775,
+    "p_make_cut": 0.8467
+   },
+   {
+    "player_name": "Jackson Koivun",
+    "r1_score": 68,
+    "p_win": 0.0122,
+    "p_top10": 0.2012,
+    "p_top20": 0.3726,
+    "p_make_cut": 0.8333
+   },
+   {
+    "player_name": "Kristoffer Ventura",
+    "r1_score": 68,
+    "p_win": 0.0102,
+    "p_top10": 0.1544,
+    "p_top20": 0.301,
+    "p_make_cut": 0.8058
+   },
+   {
+    "player_name": "Marco Penge",
+    "r1_score": 68,
+    "p_win": 0.0092,
+    "p_top10": 0.1349,
+    "p_top20": 0.2636,
+    "p_make_cut": 0.7654
+   },
+   {
+    "player_name": "Eric Cole",
+    "r1_score": 68,
+    "p_win": 0.0089,
+    "p_top10": 0.1311,
+    "p_top20": 0.2513,
+    "p_make_cut": 0.7403
+   },
+   {
+    "player_name": "Rasmus Neergaard-Petersen",
+    "r1_score": 68,
+    "p_win": 0.0085,
+    "p_top10": 0.1511,
+    "p_top20": 0.2911,
+    "p_make_cut": 0.7848
+   },
+   {
+    "player_name": "Jackson Suber",
+    "r1_score": 68,
+    "p_win": 0.0078,
+    "p_top10": 0.1275,
+    "p_top20": 0.2611,
+    "p_make_cut": 0.7694
+   },
+   {
+    "player_name": "David Ford",
+    "r1_score": 68,
+    "p_win": 0.0072,
+    "p_top10": 0.1302,
+    "p_top20": 0.2648,
+    "p_make_cut": 0.7819
+   },
+   {
+    "player_name": "Karl Vilips",
+    "r1_score": 68,
+    "p_win": 0.0055,
+    "p_top10": 0.0854,
+    "p_top20": 0.186,
+    "p_make_cut": 0.7081
+   }
+  ],
+  "bet_at": "Hard Rock",
+  "price_label": "US median",
+  "plays": [],
+  "note": "Tracking only since 2026-11-16: after-round-1 disagreements are graded, not flagged as plays.",
+  "tracked": [
+   {
+    "player_name": "Jeremy Paul",
+    "market": "top_20",
+    "p_model": 0.0812,
+    "p_market_fair": 0.045,
+    "best_price": 14.0,
+    "best_book": "US median",
+    "ev": 0.1366,
+    "need_price": 13.5487
+   },
+   {
+    "player_name": "Bud Cauley",
+    "market": "top_10",
+    "p_model": 0.0638,
+    "p_market_fair": 0.0362,
+    "best_price": 17.5,
+    "best_book": "US median",
+    "ev": 0.1161,
+    "need_price": 17.2479
+   }
+  ]
+ }
 }
