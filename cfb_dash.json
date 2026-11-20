@@ -1,6 +1,6 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-19 08:42",
+"generated_at": "2026-11-20 08:32",
 "card_info": {"sport":"CFB","name":"College Football","label":"Week 12","title":"Week 12 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Thu Nov 19, 2026 8:40 AM ET","n_bets":18,"units":16.5,"n_top":12,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Fri 6:00 PM ET","game":"Iowa State @ UCF","market":"Spread","pick":"Iowa State +2.5","line":"+2.5 (-105)","price":"","units":1,"model_prob":0.539,"market_prob":null,"edge":null,"limit":"Focus to PK  \u00B7 now +1.5 (-105) @ Thu 8:37 AM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  2-5: 52.3% / 32-36","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Fri 7:30 PM ET","game":"Bowling Green @ Toledo","market":"Spread","pick":"Toledo -15.5","line":"-15.5 (-110)","price":"","units":1,"model_prob":0.515,"market_prob":null,"edge":null,"limit":"Focus to -16.5  \u00B7 now -16.5 (-110) @ Thu 8:37 AM: 1 pt worse - inside limit","tag":"\u2605 TOP PICK  \u00B7  2-5: 52.3% / 32-36","top":"Y","soft":""},
