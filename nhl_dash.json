@@ -1,9 +1,19 @@
 {
 "sport": "NHL",
-"generated_at": "2026-11-20 09:09",
-"card_info": {"sport":"NHL","name":"NHL","label":"Fri Nov 20","title":"NHL Bet Card \u2014 Friday, November 20, 2026","generated":"Nov 20, 9:09 AM","n_bets":0,"units":0,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
-"cards": [],
-"parlays": [],
+"generated_at": "2026-11-21 09:12",
+"card_info": {"sport":"NHL","name":"NHL","label":"Sat Nov 21","title":"NHL Bet Card \u2014 Saturday, November 21, 2026","generated":"Nov 21, 9:12 AM","n_bets":2,"units":2.5,"n_top":1,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"NYI @ DET","market":"SOG","pick":"Lucas Raymond (DET) Under 2.5 \u00B7 proj 2.4","line":"","price":"-110","units":0.5,"model_prob":0.5502,"market_prob":0.4899,"edge":0.0604,"limit":"","tag":"BET","top":"","soft":"Y"},
+{"sport":"NHL","n":2,"kickoff":"","game":"MIN @ VAN","market":"SOG","pick":"Filip Chytil (VAN) Over 1.5 \u00B7 proj 2.6","line":"","price":"-150","units":2,"model_prob":0.6513,"market_prob":0.5575,"edge":0.0938,"limit":"","tag":"\u2605 TOP PICK","top":"Y","soft":"Y"}],
+"parlays": [{"sport":"NHL","n":1,"market":"PTS","leg":"EDM@CAR Ryan Shea (EDM) Under 0.5 proj 0.3","game":"","price":"-325","model_prob":0.7261,"hit_rate":"75% of 527"},
+{"sport":"NHL","n":2,"market":"PTS","leg":"EDM@CAR Mattias Ekholm (EDM) Under 0.5 proj 0.3","game":"","price":"-350","model_prob":0.7106,"hit_rate":"73% of 748"},
+{"sport":"NHL","n":3,"market":"PL","leg":"SEA@SJS SEA +1.5 puck line","game":"","price":"-250","model_prob":0.7105,"hit_rate":"73% of 71"},
+{"sport":"NHL","n":4,"market":"PL","leg":"CBJ@TOR CBJ +1.5 puck line","game":"","price":"-250","model_prob":0.7024,"hit_rate":"74% of 81"},
+{"sport":"NHL","n":5,"market":"ML","leg":"EDM@CAR CAR moneyline","game":"","price":"-190","model_prob":0.699,"hit_rate":"74% of 31"},
+{"sport":"NHL","n":6,"market":"PTS","leg":"MIN@VAN Zeev Buium (VAN) Under 0.5 proj 0.3","game":"","price":"-275","model_prob":0.6987,"hit_rate":"72% of 934"},
+{"sport":"NHL","n":7,"market":"PL","leg":"WSH@BOS WSH +1.5 puck line","game":"","price":"-230","model_prob":0.6824,"hit_rate":"72% of 111"},
+{"sport":"NHL","n":8,"market":"PTS","leg":"ANA@UTA Logan Cooley (UTA) Over 0.5 proj 1.2","game":"","price":"-240","model_prob":0.6796,"hit_rate":"68% of 239"},
+{"sport":"NHL","n":9,"market":"PTS","leg":"VGK@WPG Mitch Marner (VGK) Under 1.5 proj 1.1","game":"","price":"-260","model_prob":0.6766,"hit_rate":"69% of 1357"},
+{"sport":"NHL","n":10,"market":"PL","leg":"PIT@NSH PIT +1.5 puck line","game":"","price":"-210","model_prob":0.6744,"hit_rate":"71% of 124"}],
 "picks": [
 {"id":"NHL-0001","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Kent Johnson (CBJ) Under 1.5 \u00B7 proj 1.2","line":1.5,"odds":146,"units":1,"model_prob":0.6704,"market_prob":0.3848,"result":"W","profit":1.46,"clv":0.0525,"top":"Y","soft":"","score":"1 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0002","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Conor Garland (CBJ) Under 1.5 \u00B7 proj 1.4","line":1.5,"odds":122,"units":1,"model_prob":0.6075,"market_prob":0.4267,"result":"W","profit":1.22,"clv":0.0902,"top":"Y","soft":"","score":"0 SOG","limit":"","limit_status":"","bet":"Y"},
@@ -761,6 +771,8 @@
 {"id":"NHL-0754","sport":"NHL","period":"2026-11-19","date":"2026-11-19","kickoff":"21:00","game":"ANA @ COL","market":"Prop \u00B7 shots","selection":"Artturi Lehkonen (COL) Under 2.5 \u00B7 proj 1.9 MODEL","line":2.5,"odds":-145,"units":1,"model_prob":0.6171,"market_prob":0.5541,"result":"W","profit":0.69,"clv":-0.0779,"top":"","soft":"","score":"2 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0755","sport":"NHL","period":"2026-11-19","date":"2026-11-19","kickoff":"22:00","game":"DAL @ VGK","market":"Prop \u00B7 shots","selection":"William Karlsson (VGK) Over 1.5 \u00B7 proj 2.1 MODEL","line":1.5,"odds":-115,"units":0.5,"model_prob":0.5537,"market_prob":0.5,"result":"W","profit":0.435,"clv":-0.0652,"top":"","soft":"","score":"2 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0756","sport":"NHL","period":"2026-11-19","date":"2026-11-19","kickoff":"21:00","game":"ANA @ COL","market":"Prop \u00B7 shots","selection":"Troy Terry (ANA) Over 1.5 \u00B7 proj 2.3 MODEL SOFT","line":1.5,"odds":-130,"units":1,"model_prob":0.6002,"market_prob":0.5306,"result":"W","profit":0.769,"clv":-0.0612,"top":"Y","soft":"Y","score":"2 SOG","limit":"","limit_status":"","bet":"Y"},
-{"id":"NHL-0757","sport":"NHL","period":"2026-11-19","date":"2026-11-19","kickoff":"19:30","game":"EDM @ TBL","market":"Prop \u00B7 points","selection":"Colton Dach (EDM) Under 0.5 \u00B7 proj 0.3 SOFT","line":0.5,"odds":-220,"units":0.5,"model_prob":0.7081,"market_prob":0.6456,"result":"L","profit":-0.5,"clv":-0.0586,"top":"Y","soft":"Y","score":"1 PTS","limit":"","limit_status":"","bet":"Y"}
+{"id":"NHL-0757","sport":"NHL","period":"2026-11-19","date":"2026-11-19","kickoff":"19:30","game":"EDM @ TBL","market":"Prop \u00B7 points","selection":"Colton Dach (EDM) Under 0.5 \u00B7 proj 0.3 SOFT","line":0.5,"odds":-220,"units":0.5,"model_prob":0.7081,"market_prob":0.6456,"result":"L","profit":-0.5,"clv":-0.0586,"top":"Y","soft":"Y","score":"1 PTS","limit":"","limit_status":"","bet":"Y"},
+{"id":"NHL-0758","sport":"NHL","period":"2026-11-21","date":"2026-11-21","kickoff":"22:00","game":"MIN @ VAN","market":"Prop \u00B7 shots","selection":"Filip Chytil (VAN) Over 1.5 \u00B7 proj 2.6 SOFT","line":1.5,"odds":-150,"units":2,"model_prob":0.6513,"market_prob":0.5575,"result":"Pending","profit":0,"clv":null,"top":"Y","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"},
+{"id":"NHL-0759","sport":"NHL","period":"2026-11-21","date":"2026-11-21","kickoff":"19:00","game":"NYI @ DET","market":"Prop \u00B7 shots","selection":"Lucas Raymond (DET) Under 2.5 \u00B7 proj 2.4 SOFT","line":2.5,"odds":-110,"units":0.5,"model_prob":0.5502,"market_prob":0.4899,"result":"Pending","profit":0,"clv":null,"top":"","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"}
 ]
 }
