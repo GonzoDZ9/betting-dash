@@ -173,6 +173,20 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .pga-event > .ev-body { padding: 0 var(--cds-pad-lg) var(--cds-pad-lg); }
 .bm .pga-event h3.ev-h { font-size: var(--cds-font-size-heading); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-lg) 0 var(--cds-gap-xs); }
 </style><style>
+.bm .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.bm .calc-row { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm) var(--cds-gap-md); align-items: center; margin: var(--cds-gap-sm) 0; }
+.bm .calc-row label { flex: 1 1 11rem; font-size: var(--cds-font-size-body); }
+.bm .calc-row label small { display: block; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bm .calc-row input { flex: 0 1 9rem; width: 9rem; font: inherit; font-size: 16px; font-variant-numeric: tabular-nums; text-align: right; background: var(--color-bg); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-sm); }
+.bm .calc-seg { display: inline-flex; border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); overflow: hidden; }
+.bm .calc-seg button { background: var(--color-panel); border: 0; border-left: 1px solid var(--color-border-line); padding: var(--cds-pad-sm) var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); cursor: pointer; }
+.bm .calc-seg button:first-child { border-left: 0; }
+.bm .calc-seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
+.bm .calc-out { margin-top: var(--cds-gap-md); }
+.bm .calc-big .v { color: var(--color-ok); }
+.bm .calc-warn { color: var(--color-warn); font-size: var(--cds-font-size-caption); margin: var(--cds-gap-sm) 0 0; }
+.bm .calc-warn[hidden] { display: none; }
+</style><style>
 #dash-root { --dash-gutter: var(--cds-pad-lg); }
 .bm { font-family: var(--font-anthropic-sans); font-size: var(--cds-font-size-body); color: var(--color-fg); max-width: 72rem; margin-inline: auto; }
 .bm * { box-sizing: border-box; }
@@ -278,6 +292,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <button role="tab" data-tab="nfl">NFL</button>
     <button role="tab" data-tab="nhl">NHL</button>
     <button role="tab" data-tab="pga">PGA</button>
+    <button role="tab" data-tab="calc">Bet Calculator</button>
     <span class="trk-view" role="group" aria-label="Which picks to show"><button data-view="all" aria-pressed="true">All picks</button><button data-view="mine" aria-pressed="false">My picks <span class="trk-n"></span></button></span>
   </div>
 
@@ -411,6 +426,33 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
   </details>
 </template>
+<section class="page" id="calc" hidden>
+    <h2>Bet Calculator <small>unit size, and how much to put on a parlay</small></h2>
+    <div class="calc-grid">
+      <div class="card">
+        <h3>1 · Your unit size</h3>
+        <p class="note">Your unit is set so that a normal week of bets keeps most of your bankroll out of play, and no single bet is big enough to hurt.</p>
+        <div class="calc-row"><label for="calc-bank">Bankroll<small>money set aside for betting</small></label><input id="calc-bank" type="number" inputmode="decimal" min="0" step="50" placeholder="1000"></div>
+        <div class="calc-row"><label for="calc-n">Bets per week<small>straight bets and parlays together</small></label><input id="calc-n" type="number" inputmode="numeric" min="1" step="1" placeholder="25"></div>
+        <div class="calc-row"><label>Risk level<small id="calc-risk-note"></small></label><span class="calc-seg" role="group" aria-label="Risk level" id="calc-risk"><button data-r="low">Careful</button><button data-r="mid">Standard</button><button data-r="high">Aggressive</button></span></div>
+        <div class="tiles calc-out" id="calc-unit-out"></div>
+        <p class="calc-warn" id="calc-unit-warn" hidden></p>
+      </div>
+      <div class="card">
+        <h3>2 · Parlay size</h3>
+        <p class="note">A parlay hits far less often than a straight bet, so it should carry a smaller stake. This sizes it so the parlay puts the same strain on your bankroll as a 1-unit straight bet.</p>
+        <div class="calc-row"><label for="calc-odds">Parlay odds<small>American odds for the whole parlay, e.g. +600</small></label><input id="calc-odds" type="text" inputmode="text" placeholder="+600" autocomplete="off"></div>
+        <div class="calc-row"><label for="calc-legs">Number of legs</label><input id="calc-legs" type="number" inputmode="numeric" min="2" max="15" step="1" placeholder="3"></div>
+        <div class="calc-row"><label for="calc-wr">Your win rate on straight bets<small>at about −110; break-even is 52.4%</small></label><input id="calc-wr" type="number" inputmode="decimal" min="50" max="70" step="0.5" placeholder="55"></div>
+        <div class="tiles calc-out" id="calc-par-out"></div>
+        <p class="calc-warn" id="calc-par-warn" hidden></p>
+      </div>
+    </div>
+    <div class="card" style="margin-top: var(--cds-gap-md)">
+      <h3>How these are worked out</h3>
+      <p class="note" id="calc-how"></p>
+    </div>
+</section>
 
   <template id="sport-tpl">
     <h2 class="rec-h2">Track record <small class="sp-tiles-sub">graded bets this season</small></h2>
@@ -869,7 +911,7 @@ window.bmPGA = (() => {
 })();
 
 // ---------- tabs ----------
-const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores', 'pga'];
+const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores', 'pga', 'calc'];
 const tpl = document.getElementById('sport-tpl');
 let current = 'overview';
 const showTab = (name) => {
@@ -877,7 +919,7 @@ const showTab = (name) => {
   current = name;
   for (const p of pages) {
     const sec = document.getElementById(p);
-    if (p !== 'overview' && p !== 'scores' && p !== 'pga' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
+    if (p !== 'overview' && p !== 'scores' && p !== 'pga' && p !== 'calc' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
     sec.hidden = p !== name;
   }
   document.querySelectorAll('.bm .tabs button[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
@@ -1423,7 +1465,7 @@ T.onChange(() => { syncTrackView(); window.bmDraw(); if (window.bmScoreboard) wi
 syncTrackView();
 dash.onData(window.bmDraw);
 const named = location.hash.slice(1);
-window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named : 'overview');
+window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'calc'].includes(named) ? named : 'overview');
 })();</script>
 <script>
 (() => {
@@ -1993,6 +2035,63 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga'].includes(named) ? named 
   };
   dash.onData(() => P.feeds().forEach(loadField));
   T.onChange(() => { if (!$('pga').hidden) render(); });
+})();
+</script>
+<script>
+// ---------- Bet Calculator: unit size from bankroll and weekly volume, and a parlay stake scaled to a 1u straight bet ----------
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const KEY = 'bm.calc.v1';
+  const RISK = { low: { week: 0.15, cap: 0.01, name: 'Careful' }, mid: { week: 0.25, cap: 0.02, name: 'Standard' }, high: { week: 0.40, cap: 0.03, name: 'Aggressive' } };
+  let s = { bank: '', n: '', risk: 'mid', odds: '', legs: '', wr: '55' };
+  try { s = { ...s, ...JSON.parse(localStorage.getItem(KEY) || '{}') }; } catch (e) { /* storage unavailable */ }
+  if (!RISK[s.risk]) s.risk = 'mid';
+  const save = () => { try { localStorage.setItem(KEY, JSON.stringify(s)); } catch (e) { /* storage unavailable */ } };
+  const money = (v) => '$' + (v >= 100 ? Math.round(v).toLocaleString('en-US') : v.toFixed(2));
+  const pct = (v, d = 1) => (100 * v).toFixed(d) + '%';
+  const tile = (k, v, sub, big) => `<div class="tile${big ? ' calc-big' : ''}"><div class="k">${k}</div><div class="v">${v}</div><div class="s">${sub || ''}</div></div>`;
+  // American odds -> decimal odds; accepts "+600", "600", "-120" (and decimal odds like "7.0")
+  const toDec = (t) => { const x = String(t || '').replace(/[\s,]/g, '').replace(/^−/, '-'); if (!/^[+-]?\d+(\.\d+)?$/.test(x)) return null; const n = parseFloat(x); if (/^[+-]/.test(x) || Math.abs(n) >= 100) { if (Math.abs(n) < 100) return null; return n > 0 ? 1 + n / 100 : 1 + 100 / -n; } return n > 1 ? n : null; };
+  const unitOf = () => { const B = parseFloat(s.bank), n = parseFloat(s.n), R = RISK[s.risk]; if (!(B > 0) || !(n > 0)) return null; const byWeek = B * R.week / n, byCap = B * R.cap; return { B, n, R, unit: Math.min(byWeek, byCap), capped: byCap < byWeek }; };
+
+  const draw = () => {
+    document.querySelectorAll('#calc-risk button').forEach((b) => b.setAttribute('aria-pressed', String(b.dataset.r === s.risk)));
+    const R = RISK[s.risk];
+    $('calc-risk-note').textContent = `up to ${pct(R.week, 0)} of bankroll in play per week, ${pct(R.cap, 0)} max per bet`;
+    const u = unitOf(); const uw = $('calc-unit-warn'); uw.hidden = true; uw.textContent = '';
+    if (!u) $('calc-unit-out').innerHTML = tile('1 unit', '—', 'enter your bankroll and bets per week');
+    else {
+      $('calc-unit-out').innerHTML = tile('1 unit', money(u.unit), pct(u.unit / u.B, 2) + ' of bankroll', true) + tile('In play per week', money(u.unit * u.n), `${pct(u.unit * u.n / u.B, 0)} of bankroll at 1u a bet`) + tile('Units in bankroll', Math.round(u.B / u.unit).toLocaleString('en-US'), 'how many 1u losses it can take');
+      if (u.capped) { uw.hidden = false; uw.textContent = `With only ${u.n} bet${u.n === 1 ? '' : 's'} a week the per-bet cap (${pct(u.R.cap, 0)} of bankroll) sets your unit, so less than ${pct(u.R.week, 0)} is in play each week.`; }
+      else if (u.unit / u.B < 0.0025) { uw.hidden = false; uw.textContent = 'That is a lot of bets for this bankroll: each unit is under a quarter of one percent of it. Fewer bets, or a bigger bankroll, would let each one matter more.'; }
+    }
+    // parlay
+    const D = toDec(s.odds), legs = parseInt(s.legs, 10), w = parseFloat(s.wr) / 100; const pw = $('calc-par-warn'); pw.hidden = true; pw.textContent = ''; const out = $('calc-par-out');
+    if (!D || !(legs >= 2) || !(w > 0)) { out.innerHTML = tile('Parlay stake', '—', 'enter the parlay odds and number of legs'); }
+    else {
+      const b1 = 100 / 110, be1 = 110 / 210;                       // a straight bet at -110: payout and break-even
+      const f1 = (w * (1 + b1) - 1) / b1;                         // share of bankroll a straight bet earns (Kelly), the 1u yardstick
+      const ratio = w / be1;                                      // how much better than the price each leg is assumed to be
+      const beP = 1 / D, P = Math.min(0.98, beP * Math.pow(ratio, legs));
+      const fP = (P * D - 1) / (D - 1);
+      let units = f1 > 0 && fP > 0 ? fP / f1 : 0; const raw = units; units = Math.min(1, units);
+      const shown = units >= 0.095 ? Math.round(units * 20) / 20 : Math.round(units * 100) / 100;
+      const stake = u ? shown * u.unit : null;
+      out.innerHTML = tile('Parlay stake', shown.toFixed(2) + 'u', stake != null ? money(stake) + ' at your unit' : 'enter a bankroll for dollars', true)
+        + tile('Dollar amount', stake != null ? money(stake) : '—', stake != null ? `to win ${money(stake * (D - 1))}` : 'needs your unit size')
+        + tile('Chance it hits', pct(P), `about 1 in ${Math.max(1, Math.round(1 / P))} · break-even ${pct(beP)}`)
+        + tile('Typical dry spell', (() => { const m = Math.max(0, Math.round(1 / P) - 1); return m + (m === 1 ? ' miss' : ' misses'); })(), 'between wins, on average');
+      if (w <= be1) { pw.hidden = false; pw.textContent = 'At that win rate straight bets do not beat −110, so there is no edge to size from and the calculator gives 0. A parlay does not add edge; it multiplies whatever the legs have.'; }
+      else if (raw > 1) { pw.hidden = false; pw.textContent = 'Short-priced parlay: the maths would allow more than 1u, but the stake is held at 1u so a parlay never outweighs a straight bet.'; }
+      else if (legs >= 5) { pw.hidden = false; pw.textContent = 'With this many legs the estimate leans heavily on every leg really having an edge. If even one is a coin flip at the price, the right stake is smaller than shown.'; }
+    }
+    const wS = isNaN(parseFloat(s.wr)) ? 55 : parseFloat(s.wr);
+    $('calc-how').textContent = `Unit size: the smaller of (bankroll × weekly share ÷ bets per week) and (bankroll × per-bet cap). ${R.name} uses ${pct(R.week, 0)} a week and ${pct(R.cap, 0)} a bet. Parlay size: a straight bet at −110 that wins ${wS}% of the time is the 1-unit yardstick. Each leg is assumed to beat its price by the same margin, which gives the parlay's chance of hitting; the stake is then scaled by how much of your bankroll that edge and those odds justify compared with the straight bet (the Kelly formula), and never above 1u. Longer odds and more legs both shrink the stake. Legs from the same game are not independent, so treat same-game parlays as an upper limit. This is a sizing guide, not a prediction.`;
+  };
+  const bind = (id, k) => { const el = $(id); el.value = s[k]; el.addEventListener('input', () => { s[k] = el.value; save(); draw(); }); };
+  bind('calc-bank', 'bank'); bind('calc-n', 'n'); bind('calc-odds', 'odds'); bind('calc-legs', 'legs'); bind('calc-wr', 'wr');
+  $('calc-risk').addEventListener('click', (e) => { const b = e.target.closest('button'); if (!b) return; s.risk = b.dataset.r; save(); draw(); });
+  draw();
 })();
 </script>
 <script>
