@@ -1,7 +1,7 @@
 {
 "sport": "CFB",
-"generated_at": "2026-11-23 07:22",
-"card_info": {"sport":"CFB","name":"College Football","label":"Week 13","title":"Week 13 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Mon Nov 23, 2026 7:20 AM ET","n_bets":28,"units":25.5,"n_top":18,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
+"generated_at": "2026-11-23 07:37",
+"card_info": {"sport":"CFB","name":"College Football","label":"Week 13","title":"Week 13 Betting Sheet \u2014 Grouped by Game, Chronological","generated":"Mon Nov 23, 2026 7:35 AM ET","n_bets":28,"units":25.5,"n_top":18,"empty":"","source":"CFB workbook - Weekly_Strategy (record) and Betting_Sheet (card)"},
 "cards": [{"sport":"CFB","n":1,"kickoff":"Tue 7:00 PM ET","game":"Miami (OH) @ Western Michigan","market":"Spread","pick":"Miami (OH) +7.5","line":"+7.5 (-110)","price":"","units":1,"model_prob":0.555,"market_prob":null,"edge":null,"limit":"Focus to +2.5  \u00B7 now +7.5 (-110) @ Sun 11:02 PM: unchanged","tag":"\u2605 TOP PICK  \u00B7  5-8: 52.6% / 18-13","top":"Y","soft":""},
 {"sport":"CFB","n":2,"kickoff":"Tue 7:00 PM ET","game":"Kent State @ Eastern Michigan","market":"Spread","pick":"Eastern Michigan -5.5","line":"-5.5 (-115)","price":"","units":1,"model_prob":0.532,"market_prob":null,"edge":null,"limit":"Focus to -7.5  \u00B7 now -5.5 (-115) @ Sun 11:02 PM: unchanged","tag":"\u2605 TOP PICK  \u00B7  2-5: 52.3% / 36-40","top":"Y","soft":""},
 {"sport":"CFB","n":3,"kickoff":"Fri 12:00 PM ET","game":"Nebraska @ Iowa","market":"Spread","pick":"Nebraska +6.5","line":"+6.5 (-110)","price":"","units":1,"model_prob":0.525,"market_prob":null,"edge":null,"limit":"Focus to +6  \u00B7 now +6.5 (-130) @ Sun 11:02 PM: unchanged","tag":"\u2605 TOP PICK  \u00B7  2-5: 52.3% / 36-40","top":"Y","soft":""},
