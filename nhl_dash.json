@@ -1,15 +1,14 @@
 {
 "sport": "NHL",
-"generated_at": "2026-11-24 09:14",
-"card_info": {"sport":"NHL","name":"NHL","label":"Tue Nov 24","title":"NHL Bet Card \u2014 Tuesday, November 24, 2026","generated":"Nov 24, 9:14 AM","n_bets":0,"units":0,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"generated_at": "2026-11-24 10:14",
+"card_info": {"sport":"NHL","name":"NHL","label":"Tue Nov 24","title":"NHL Bet Card \u2014 Tuesday, November 24, 2026","generated":"Nov 24, 10:14 AM","n_bets":0,"units":0,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
 "cards": [],
-"parlays": [{"sport":"NHL","n":1,"market":"PTS","leg":"VGK@EDM Mattias Ekholm (EDM) Under 0.5 proj 0.4","game":"","price":"-275","model_prob":0.6754,"hit_rate":"69% of 1424"},
-{"sport":"NHL","n":2,"market":"PL","leg":"VGK@EDM EDM +1.5 puck line","game":"","price":"-250","model_prob":0.6821,"hit_rate":"66% of 89"},
-{"sport":"NHL","n":3,"market":"PTS","leg":"VGK@EDM Jack Eichel (VGK) Over 0.5 proj 1.1","game":"","price":"-240","model_prob":0.6608,"hit_rate":"69% of 422"},
-{"sport":"NHL","n":4,"market":"PTS","leg":"VGK@EDM Evan Bouchard (EDM) Over 0.5 proj 1.1","game":"","price":"-250","model_prob":0.6562,"hit_rate":"68% of 470"},
-{"sport":"NHL","n":5,"market":"PTS","leg":"VGK@EDM Ivan Barbashev (VGK) Under 0.5 proj 0.4","game":"","price":"-225","model_prob":0.6373,"hit_rate":"63% of 2023"},
-{"sport":"NHL","n":6,"market":"PTS","leg":"VGK@EDM Mitch Marner (VGK) Over 0.5 proj 1.1","game":"","price":"-210","model_prob":0.6324,"hit_rate":"65% of 781"},
-{"sport":"NHL","n":7,"market":"PTS","leg":"VGK@EDM Shea Theodore (VGK) Under 0.5 proj 0.5","game":"","price":"-225","model_prob":0.6243,"hit_rate":"62% of 2140"}],
+"parlays": [{"sport":"NHL","n":1,"market":"PTS","leg":"VGK@EDM Mattias Ekholm (EDM) Under 0.5 proj 0.4","game":"","price":"-275","model_prob":0.6711,"hit_rate":"69% of 1475"},
+{"sport":"NHL","n":2,"market":"PTS","leg":"VGK@EDM Jack Eichel (VGK) Over 0.5 proj 1.1","game":"","price":"-240","model_prob":0.6673,"hit_rate":"69% of 359"},
+{"sport":"NHL","n":3,"market":"PTS","leg":"VGK@EDM Evan Bouchard (EDM) Over 0.5 proj 1.1","game":"","price":"-260","model_prob":0.6666,"hit_rate":"69% of 364"},
+{"sport":"NHL","n":4,"market":"PL","leg":"VGK@EDM EDM +1.5 puck line","game":"","price":"-250","model_prob":0.682,"hit_rate":"66% of 89"},
+{"sport":"NHL","n":5,"market":"PTS","leg":"VGK@EDM Ivan Barbashev (VGK) Under 0.5 proj 0.4","game":"","price":"-220","model_prob":0.6413,"hit_rate":"64% of 1942"},
+{"sport":"NHL","n":6,"market":"PTS","leg":"VGK@EDM Mitch Marner (VGK) Over 0.5 proj 1.1","game":"","price":"-210","model_prob":0.6358,"hit_rate":"65% of 737"}],
 "picks": [
 {"id":"NHL-0001","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Kent Johnson (CBJ) Under 1.5 \u00B7 proj 1.2","line":1.5,"odds":146,"units":1,"model_prob":0.6704,"market_prob":0.3848,"result":"W","profit":1.46,"clv":0.0525,"top":"Y","soft":"","score":"1 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0002","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Conor Garland (CBJ) Under 1.5 \u00B7 proj 1.4","line":1.5,"odds":122,"units":1,"model_prob":0.6075,"market_prob":0.4267,"result":"W","profit":1.22,"clv":0.0902,"top":"Y","soft":"","score":"0 SOG","limit":"","limit_status":"","bet":"Y"},
