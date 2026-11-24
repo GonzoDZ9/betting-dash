@@ -294,6 +294,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <button role="tab" data-tab="nfl">NFL</button>
     <button role="tab" data-tab="nhl">NHL</button>
     <button role="tab" data-tab="pga">PGA</button>
+    <button role="tab" data-tab="tt">Table Tennis</button>
     <button role="tab" data-tab="calc">Bet Calculator</button>
     <span class="trk-view" role="group" aria-label="Which picks to show"><button data-view="all" aria-pressed="true">All picks</button><button data-view="mine" aria-pressed="false">My picks <span class="trk-n"></span></button></span>
   </div>
@@ -386,6 +387,20 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
     <div id="pga-events"></div>
   </section>
+<section class="page" id="tt" hidden>
+  <h2>Table Tennis <small id="tt-sub">match totals vs 74.5</small></h2>
+  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">For each upcoming match: how often each player's last 5, 10, 15 and 20 matches finished over or under 74.5 total points, the average total with its gap to 74.5, and the same for the two players' head-to-head meetings. Updated once a day from tabletennistotals.com's public pages; no sportsbook lines are used, so check your book's number before betting. "Both lean" marks matches where both players went the same way in at least 60% of their last 10 and last 20. It is a filter for finding matches, not a tested pick.</p>
+  <div class="tt-controls">
+    <span class="sb-sports" role="group" aria-label="League" id="tt-leagues" style="margin-left: 0"></span>
+    <span class="sb-sports" role="group" aria-label="Show" id="tt-show" style="margin-left: 0"><button data-show="all" aria-pressed="true">All</button><button data-show="lean" aria-pressed="false">Both lean</button><button data-show="over" aria-pressed="false">Over</button><button data-show="under" aria-pressed="false">Under</button></span>
+    <select id="tt-sort" aria-label="Sort"><option value="time">Sort: start time</option><option value="strength">Sort: strongest lean</option><option value="gap">Sort: biggest average gap</option></select>
+    <input type="search" id="tt-q" placeholder="Player" aria-label="Find a player">
+  </div>
+  <div class="sb-status" id="tt-status">Loading…</div>
+  <div class="empty" id="tt-empty" hidden>No upcoming matches for this filter. The list refills after the next daily update.</div>
+  <div class="tt-grid" id="tt-grid"></div>
+  <button class="sb-refresh" id="tt-more" hidden>Show more</button>
+</section>
 <template id="pga-event-tpl">
   <details class="pga-event">
     <summary><span class="ev-tour"></span><span class="ev-name"></span><span class="ev-meta"></span></summary>
@@ -921,7 +936,7 @@ window.bmPGA = (() => {
 })();
 
 // ---------- tabs ----------
-const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores', 'pga', 'calc'];
+const pages = ['overview', 'cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'];
 const tpl = document.getElementById('sport-tpl');
 let current = 'overview';
 const showTab = (name) => {
@@ -929,7 +944,7 @@ const showTab = (name) => {
   current = name;
   for (const p of pages) {
     const sec = document.getElementById(p);
-    if (p !== 'overview' && p !== 'scores' && p !== 'pga' && p !== 'calc' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
+    if (p !== 'overview' && p !== 'scores' && p !== 'pga' && p !== 'tt' && p !== 'calc' && !sec.dataset.built) { sec.appendChild(tpl.content.cloneNode(true)); sec.dataset.built = '1'; }
     sec.hidden = p !== name;
   }
   document.querySelectorAll('.bm .tabs button[data-tab]').forEach((b) => b.setAttribute('aria-selected', String(b.dataset.tab === name)));
@@ -1475,7 +1490,7 @@ T.onChange(() => { syncTrackView(); window.bmDraw(); if (window.bmScoreboard) wi
 syncTrackView();
 dash.onData(window.bmDraw);
 const named = location.hash.slice(1);
-window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'calc'].includes(named) ? named : 'overview');
+window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(named) ? named : 'overview');
 })();</script>
 <script>
 (() => {
@@ -2200,6 +2215,122 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'calc'].includes(named) 
     const pgaTxt = (pf ? ' · PGA ' + String(pf.generated_at || '—').replace('T', ' ').slice(0, 16) : '') + (df ? ' · DP World ' + String(df.generated_at || '—').replace('T', ' ').slice(0, 16) : '');
     p.textContent = 'Feeds updated: ' + ci.data.map((r) => `${r.sport} ${r.feed_generated || '—'}`).join(' · ') + pgaTxt + (miss.length ? ' · missing: ' + miss.join(', ') : '');
   });
+})();
+</script>
+<style>
+.tt-controls { display: flex; flex-wrap: wrap; gap: var(--cds-gap-sm); align-items: center; margin: 0 0 var(--cds-gap-sm); }
+.tt-controls select, .tt-controls input { font: inherit; font-size: var(--cds-font-size-caption); background: var(--color-panel); color: var(--color-fg); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-xs) var(--cds-pad-sm); min-width: 0; }
+.tt-controls input { width: 9rem; }
+.tt-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(min(100%, 21rem), 1fr)); gap: var(--cds-gap-md); margin-bottom: var(--cds-gap-md); }
+.tt-card { background: var(--color-panel); border: 1px solid var(--color-border-line); border-radius: var(--cds-radius); padding: var(--cds-pad-md); min-width: 0; }
+.tt-card.lean-O { border-color: var(--color-ok); }
+.tt-card.lean-U { border-color: var(--color-warn); }
+.tt-top { display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs); align-items: center; color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.tt-top .when { color: var(--color-fg); font-variant-numeric: tabular-nums; margin-right: auto; }
+.tt-vs { font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-xs) 0 var(--cds-gap-sm); overflow-wrap: anywhere; }
+.tt-vs span { color: var(--color-fg-muted); font-weight: 400; }
+.tt-block { border-top: 1px solid var(--color-border-line); padding-top: var(--cds-pad-xs); margin-top: var(--cds-pad-xs); }
+.tt-name { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: flex; justify-content: space-between; gap: var(--cds-gap-sm); }
+.tt-name b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.tt-cells { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 2px; font-variant-numeric: tabular-nums; }
+.tt-cell { text-align: center; padding: 2px 0; }
+.tt-cell .w { color: var(--color-fg-muted); font-size: .68rem; }
+.tt-cell .p { font-size: var(--cds-font-size-body); line-height: 1.25; }
+.tt-cell .p.O { color: var(--color-ok); }
+.tt-cell .p.U { color: var(--color-warn); }
+.tt-cell .p.strong { font-weight: 700; }
+.tt-cell .a { color: var(--color-fg-muted); font-size: .68rem; line-height: 1.25; }
+.tt-foot { border-top: 1px solid var(--color-border-line); margin-top: var(--cds-pad-xs); padding-top: var(--cds-pad-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
+.tt-foot b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.chip.tt-O { color: var(--color-ok); border-color: currentColor; }
+.chip.tt-U { color: var(--color-warn); border-color: currentColor; }
+</style>
+<script>
+// ---------- Table Tennis tab: reads tt_dash.json (tt/tt_engine.py, once a day) ----------
+(() => {
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+  const WIN = ['5', '10', '15', '20'];
+  const PAGE = 60;
+  let feed = null, failed = false, league = 'ALL', show = 'all', shown = PAGE;
+  const sgn = (x) => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x).toFixed(1);
+  const when = (ts) => new Date(ts * 1000).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
+  const cell = (label, w) => {
+    if (!w) return `<div class="tt-cell"><div class="w">${label}</div><div class="p">–</div><div class="a">&nbsp;</div></div>`;
+    const side = w.op > 50 ? 'O' : w.op < 50 ? 'U' : '';
+    const pct = side === 'U' ? 100 - w.op : w.op;
+    const short = w.n < Number(label.replace('L', '')) && label !== 'All';
+    return `<div class="tt-cell" title="${w.o} over, ${w.u} under in ${w.n} matches"><div class="w">${label}${short ? ' (' + w.n + ')' : ''}</div>`
+      + `<div class="p ${side}${pct >= 60 ? ' strong' : ''}">${side ? side + ' ' + pct + '%' : '50/50'}</div>`
+      + `<div class="a">${w.avg.toFixed(1)} <span>${sgn(w.gap)}</span></div></div>`;
+  };
+  const block = (name, sub, s, withAll) => `<div class="tt-block"><div class="tt-name"><b>${esc(name)}</b><span>${sub}</span></div>`
+    + `<div class="tt-cells">${WIN.map((k) => cell('L' + k, s && s.w && s.w[k] && s.w[k].n > Number(k) - 5 ? s.w[k] : null)).join('')}${withAll ? cell('All', s && s.all) : '<div class="tt-cell"></div>'}</div></div>`;
+  const card = (m) => {
+    const L = m.lean || {};
+    const h = m.h2h || { n: 0 };
+    const chips = [`<span class="chip">${esc(m.lg || '')}</span>`];
+    if (L.side) chips.push(`<span class="chip tt-${L.side}">Both lean ${L.side === 'O' ? 'Over' : 'Under'}</span>`);
+    if (L.side && L.h2h) chips.push(`<span class="chip">H2H ${L.h2h}</span>`);
+    const foot = [];
+    if (m.avg20 != null) foot.push(`Players' L20 average <b>${m.avg20.toFixed(1)}</b> (${sgn(m.gap20)} vs 74.5)`);
+    if (m.avg10 != null) foot.push(`L10 <b>${m.avg10.toFixed(1)}</b> (${sgn(m.gap10)})`);
+    if (h.n && h.recent) foot.push('Last meetings: ' + h.recent.slice(0, 6).map((r) => `<b>${r.tot}</b>`).join(', '));
+    return `<article class="tt-card${L.side ? ' lean-' + L.side : ''}"><div class="tt-top"><span class="when">${when(m.ts)}</span>${chips.join('')}</div>`
+      + `<div class="tt-vs">${esc(m.a.name)} <span>vs</span> ${esc(m.b.name)}</div>`
+      + block(m.a.name, m.a.n ? '' : 'no history', m.a, false)
+      + block(m.b.name, m.b.n ? '' : 'no history', m.b, false)
+      + block('Head-to-head', h.n ? h.n + ' meeting' + (h.n === 1 ? '' : 's') : 'no meetings found', h.n ? h : null, true)
+      + (foot.length ? `<div class="tt-foot">${foot.join(' · ')}</div>` : '') + '</article>';
+  };
+  const rows = () => {
+    if (!feed) return [];
+    const now = Date.now() / 1000 - 300;
+    const q = $('tt-q').value.trim().toLowerCase();
+    let r = feed.matches.filter((m) => m.ts >= now && (league === 'ALL' || m.lg === league));
+    if (show === 'lean') r = r.filter((m) => m.lean && m.lean.side);
+    if (show === 'over') r = r.filter((m) => m.lean && m.lean.side === 'O');
+    if (show === 'under') r = r.filter((m) => m.lean && m.lean.side === 'U');
+    if (q) r = r.filter((m) => (m.a.name + ' ' + m.b.name).toLowerCase().includes(q));
+    const sort = $('tt-sort').value;
+    if (sort === 'strength') r.sort((x, y) => Math.abs((y.lean || {}).score || 0) - Math.abs((x.lean || {}).score || 0) || x.ts - y.ts);
+    else if (sort === 'gap') r.sort((x, y) => Math.abs(y.gap20 || 0) - Math.abs(x.gap20 || 0) || x.ts - y.ts);
+    else r.sort((x, y) => x.ts - y.ts);
+    return r;
+  };
+  const render = () => {
+    if ($('tt').hidden) return;
+    const st = $('tt-status');
+    if (failed) { st.textContent = 'The table tennis feed could not be loaded.'; return; }
+    if (!feed) { st.textContent = 'Loading…'; return; }
+    const lg = $('tt-leagues');
+    if (!lg.dataset.built) {
+      lg.innerHTML = ['ALL', ...(feed.leagues || [])].map((l) => `<button data-lg="${esc(l)}" aria-pressed="${l === league}">${l === 'ALL' ? 'All' : esc(l.replace(' Series', '').replace('Czech ', ''))}</button>`).join('');
+      lg.dataset.built = '1';
+    }
+    const r = rows();
+    const up = feed.matches.filter((m) => m.ts >= Date.now() / 1000 - 300);
+    const leans = up.filter((m) => m.lean && m.lean.side).length;
+    const gen = new Date(feed.generated_at);
+    const age = (Date.now() - gen.getTime()) / 36e5;
+    st.innerHTML = `Updated ${gen.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
+      + (age > 30 ? ' <span class="bad">(more than a day old)</span>' : '')
+      + ` · ${up.length} upcoming match${up.length === 1 ? '' : 'es'} · ${leans} where both players lean the same way · showing ${Math.min(shown, r.length)} of ${r.length}`;
+    $('tt-empty').hidden = r.length > 0;
+    $('tt-grid').innerHTML = r.slice(0, shown).map(card).join('');
+    $('tt-more').hidden = r.length <= shown;
+    $('tt-more').textContent = `Show ${Math.min(PAGE, r.length - shown)} more`;
+  };
+  const load = () => fetch('tt_dash.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => { feed = d; failed = false; render(); }).catch(() => { failed = !feed; render(); });
+  const reset = () => { shown = PAGE; render(); };
+  $('tt-leagues').addEventListener('click', (e) => { const b = e.target.closest('button[data-lg]'); if (!b) return; league = b.dataset.lg; $('tt-leagues').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); reset(); });
+  $('tt-show').addEventListener('click', (e) => { const b = e.target.closest('button[data-show]'); if (!b) return; show = b.dataset.show; $('tt-show').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); reset(); });
+  $('tt-sort').addEventListener('change', reset);
+  $('tt-q').addEventListener('input', reset);
+  $('tt-more').addEventListener('click', () => { shown += PAGE; render(); });
+  document.querySelector('.bm .tabs button[data-tab="tt"]').addEventListener('click', () => { render(); load(); });
+  load();
+  window.bmTT = { render, load };
 })();
 </script>
 </div>

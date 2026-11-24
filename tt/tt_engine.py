@@ -143,7 +143,7 @@ def player_stats(matches):
     """Over/under 74.5 record for the last 5/10/15/20 matches."""
     ms = sorted([m for m in matches if m.get("sets")], key=lambda m: -(m.get("timestamp") or 0))[:20]
     totals = [match_total(m) for m in ms]
-    out = {"n": len(totals), "t": totals, "last": ms[0].get("timestamp") if ms else None, "w": {}}
+    out = {"n": len(totals), "last": ms[0].get("timestamp") if ms else None, "w": {}}
     for w in WINDOWS:
         sub = totals[:w]
         if not sub:
@@ -151,7 +151,7 @@ def player_stats(matches):
         over = sum(1 for t in sub if t > LINE)
         avg = sum(sub) / len(sub)
         out["w"][str(w)] = {"n": len(sub), "o": over, "u": len(sub) - over,
-                            "op": round(100.0 * over / len(sub)), "avg": r1(avg), "gap": r1(avg - LINE)}
+                            "op": round(100.0 * over / len(sub)), "avg": r1(avg), "gap": r1(r1(avg) - LINE)}
     return out
 
 
@@ -164,15 +164,15 @@ def h2h_stats(d):
     over = sum(1 for t in totals if t > LINE)
     avg = sum(totals) / len(totals)
     out["all"] = {"n": len(totals), "o": over, "u": len(totals) - over, "op": round(100.0 * over / len(totals)),
-                  "avg": r1(avg), "gap": r1(avg - LINE)}
+                  "avg": r1(avg), "gap": r1(r1(avg) - LINE)}
     for w in WINDOWS:
         sub = totals[:w]
         o = sum(1 for t in sub if t > LINE)
         a = sum(sub) / len(sub)
         out["w"][str(w)] = {"n": len(sub), "o": o, "u": len(sub) - o, "op": round(100.0 * o / len(sub)),
-                            "avg": r1(a), "gap": r1(a - LINE)}
+                            "avg": r1(a), "gap": r1(r1(a) - LINE)}
     out["recent"] = [{"ts": h.get("timestamp"), "tot": h.get("totalPoints"),
-                      "sc": "%s-%s" % (h.get("homeSetScore"), h.get("awaySetScore"))} for h in hist[:10]]
+                      "sc": "%s-%s" % (h.get("homeSetScore"), h.get("awaySetScore"))} for h in hist[:6]]
     return out
 
 
@@ -278,7 +278,7 @@ def main():
         a_page, b_page = pages.get(a_slug), pages.get(b_slug) if b_slug else None
         a_id = players[a_slug]["id"]
         a = player_stats(a_page.get("recentMatches") or [])
-        b = player_stats(b_page.get("recentMatches") or []) if b_page else {"n": 0, "t": [], "w": {}, "last": None}
+        b = player_stats(b_page.get("recentMatches") or []) if b_page else {"n": 0, "w": {}, "last": None}
         a["name"], a["slug"] = players[a_slug]["name"], a_slug
         b["name"], b["slug"] = (players[b_slug]["name"] if b_slug else m["b_name"]), b_slug
 
@@ -297,11 +297,11 @@ def main():
         if a["w"].get("20") and b["w"].get("20"):
             ca = (a["w"]["20"]["avg"] + b["w"]["20"]["avg"]) / 2.0
             rec["avg20"] = r1(ca)
-            rec["gap20"] = r1(ca - LINE)
+            rec["gap20"] = r1(r1(ca) - LINE)
         if a["w"].get("10") and b["w"].get("10"):
             ca = (a["w"]["10"]["avg"] + b["w"]["10"]["avg"]) / 2.0
             rec["avg10"] = r1(ca)
-            rec["gap10"] = r1(ca - LINE)
+            rec["gap10"] = r1(r1(ca) - LINE)
         rec["lean"] = lean(a, b, h)
         matches.append(rec)
 

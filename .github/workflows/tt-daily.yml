@@ -3,10 +3,6 @@ on:
   schedule:
     - cron: '17 10 * * *'   # once a day, about 5:17 AM Eastern (6:17 during daylight time)
   workflow_dispatch:
-  push:
-    paths:
-      - 'tt/tt_engine.py'
-      - '.github/workflows/tt-daily.yml'
 permissions:
   contents: write
 concurrency:
