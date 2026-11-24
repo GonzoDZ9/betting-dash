@@ -1,5 +1,5 @@
 """One-off probe of the OddsPapi table tennis data. Writes tt/probe.json.
-Never prints or stores the API key."""
+Never prints or stores the API key. (run 2)"""
 import json, os, time, urllib.request, urllib.parse, urllib.error, datetime as dt
 
 KEY = os.environ.get("ODDSPAPI_API_KEY", "").strip()
