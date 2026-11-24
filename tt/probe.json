@@ -1,95 +1,36 @@
 {
- "ran_at": "2026-11-24T21:03:34.314413Z",
- "key_present": true,
+ "ran_at": "2026-11-24T21:04:34.652882Z",
+ "shape": {
+  "raw_len": 36,
+  "clean_len": 36,
+  "has_whitespace": false,
+  "has_quotes": false,
+  "looks_like_uuid": true,
+  "only_hex_and_dashes": true,
+  "only_alnum_dash_underscore": true,
+  "has_url_parts": false,
+  "has_at_sign": false
+ },
  "calls": [
   {
-   "path": "/account",
-   "params": {},
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
+   "label": "v4 account, cleaned key",
+   "status": 200,
+   "body": "[removed]"
   },
   {
-   "path": "/tournaments",
-   "params": {
-    "sportId": 25
-   },
+   "label": "v4 account, no key (baseline)",
    "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
+   "body": "[removed]"
   },
   {
-   "path": "/markets",
-   "params": {
-    "sportId": 25
-   },
+   "label": "v5 sports, header key",
    "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
+   "body": "[removed]"
   },
   {
-   "path": "/bookmakers",
-   "params": {},
+   "label": "v5 sports, no key (baseline)",
    "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
-  },
-  {
-   "path": "/fixtures",
-   "params": {
-    "tournamentId": 32129,
-    "from": "2026-11-23",
-    "to": "2026-11-26"
-   },
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
-  },
-  {
-   "path": "/fixtures",
-   "params": {
-    "tournamentId": 36349,
-    "from": "2026-11-23",
-    "to": "2026-11-26"
-   },
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
-  },
-  {
-   "path": "/fixtures",
-   "params": {
-    "tournamentId": 36377,
-    "from": "2026-11-23",
-    "to": "2026-11-26"
-   },
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
-  },
-  {
-   "path": "/odds-by-tournaments",
-   "params": {
-    "tournamentIds": "32129,36349,36377",
-    "bookmaker": "bet365"
-   },
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}",
-   "body": null
-  },
-  {
-   "path": "/odds-by-tournaments",
-   "params": {
-    "tournamentIds": "32129,36349,36377",
-    "bookmaker": "pinnacle"
-   },
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}",
-   "body": null
-  },
-  {
-   "path": "/account",
-   "params": {},
-   "status": 401,
-   "error_body": "{\"error\":{\"message\":\"Invalid API key\",\"code\":\"INVALID_API_KEY\",\"details\":\"The provided API key is invalid or does not exist.\"}}"
+   "body": "[removed]"
   }
- ],
- "picked": {
-  "finished": null,
-  "upcoming": null,
-  "participant": null
- }
+ ]
 }
