@@ -388,14 +388,17 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     <div id="pga-events"></div>
   </section>
 <section class="page" id="tt" hidden>
-  <h2>Table Tennis <small id="tt-sub">match totals vs 74.5</small></h2>
-  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">For each upcoming match: how often each player's last 5, 10, 15 and 20 matches finished over or under 74.5 total points, the average total with its gap to 74.5, and the same for the two players' head-to-head meetings. Updated once a day from tabletennistotals.com's public pages; no sportsbook lines are used, so check your book's number before betting. "Both lean" marks matches where both players went the same way in at least 60% of their last 10 and last 20. It is a filter for finding matches, not a tested pick.</p>
+  <h2>Table Tennis <small id="tt-sub">match totals</small></h2>
+  <p class="note" style="color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); margin-top: 0">Pick a bar. For each upcoming match you get how often each player's last 5, 10, 15 and 20 matches finished over or under it, the average total with its gap to the bar, and the same for the two players' head-to-head meetings. A match is <b>recommended</b> at a bar when both players finished on the same side of it in more than 75% of their last 20 matches (at least 15 matches each). Every recommendation is recorded when it is first listed and graded from the final score at the next daily update. Updated once a day from tabletennistotals.com's public pages; no sportsbook lines or odds are used, so the record is wins and losses at the bar, not units. Check your book's line before betting.</p>
   <div class="tt-controls">
+    <label class="tt-bar">Bar <select id="tt-bar" aria-label="Total points bar"></select></label>
     <span class="sb-sports" role="group" aria-label="League" id="tt-leagues" style="margin-left: 0"></span>
-    <span class="sb-sports" role="group" aria-label="Show" id="tt-show" style="margin-left: 0"><button data-show="all" aria-pressed="true">All</button><button data-show="lean" aria-pressed="false">Both lean</button><button data-show="over" aria-pressed="false">Over</button><button data-show="under" aria-pressed="false">Under</button></span>
-    <select id="tt-sort" aria-label="Sort"><option value="time">Sort: start time</option><option value="strength">Sort: strongest lean</option><option value="gap">Sort: biggest average gap</option></select>
+    <span class="sb-sports" role="group" aria-label="Show" id="tt-show" style="margin-left: 0"><button data-show="all" aria-pressed="true">All</button><button data-show="rec" aria-pressed="false">Recommended</button><button data-show="over" aria-pressed="false">Over</button><button data-show="under" aria-pressed="false">Under</button></span>
+    <select id="tt-sort" aria-label="Sort"><option value="time">Sort: start time</option><option value="strength">Sort: strongest rate</option><option value="gap">Sort: biggest average gap</option></select>
     <input type="search" id="tt-q" placeholder="Player" aria-label="Find a player">
   </div>
+  <div class="tiles" id="tt-tiles"></div>
+  <details class="tt-results" id="tt-results"><summary>Recent graded recommendations at this bar</summary><div class="scroll"><table><thead><tr><th>Match</th><th>Pick</th><th class="num">Total</th><th>Result</th></tr></thead><tbody id="tt-results-body"></tbody></table></div></details>
   <div class="sb-status" id="tt-status">Loading…</div>
   <div class="empty" id="tt-empty" hidden>No upcoming matches for this filter. The list refills after the next daily update.</div>
   <div class="tt-grid" id="tt-grid"></div>
@@ -2242,6 +2245,12 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(n
 .tt-cell .a { color: var(--color-fg-muted); font-size: .68rem; line-height: 1.25; }
 .tt-foot { border-top: 1px solid var(--color-border-line); margin-top: var(--cds-pad-xs); padding-top: var(--cds-pad-xs); font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); font-variant-numeric: tabular-nums; }
 .tt-foot b { color: var(--color-fg); font-weight: var(--cds-font-weight-medium); }
+.tt-bar { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); display: inline-flex; align-items: center; gap: var(--cds-gap-xs); }
+.tt-bar select { font-weight: var(--cds-font-weight-medium); }
+#tt-tiles { margin: 0 0 var(--cds-gap-sm); }
+.tt-results { margin: 0 0 var(--cds-gap-sm); font-size: var(--cds-font-size-caption); }
+.tt-results summary { cursor: pointer; color: var(--color-fg-muted); padding: var(--cds-pad-xs) 0; }
+.tt-results .scroll { max-height: 18rem; }
 .chip.tt-O { color: var(--color-ok); border-color: currentColor; }
 .chip.tt-U { color: var(--color-warn); border-color: currentColor; }
 </style>
@@ -2250,72 +2259,109 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(n
 (() => {
   const $ = (id) => document.getElementById(id);
   const esc = (s) => String(s == null ? '' : s).replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
-  const WIN = ['5', '10', '15', '20'];
+  const WIN = [5, 10, 15, 20];
   const PAGE = 60;
-  let feed = null, failed = false, league = 'ALL', show = 'all', shown = PAGE;
+  let feed = null, failed = false, league = 'ALL', show = 'all', shown = PAGE, bar = 74.5;
+  try { const b = Number(localStorage.getItem('tt-bar')); if (b >= 62.5 && b <= 80.5) bar = b; } catch (e) { /* no storage */ }
+  const barKey = () => bar.toFixed(1);
+  const sel = $('tt-bar');
+  for (let b = 62.5; b <= 80.5; b += 1) sel.add(new Option(b.toFixed(1), b.toFixed(1)));
+  sel.value = barKey();
   const sgn = (x) => (x > 0 ? '+' : x < 0 ? '−' : '±') + Math.abs(x).toFixed(1);
   const when = (ts) => new Date(ts * 1000).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
-  const cell = (label, w) => {
+  // over/under record of a list of totals at the current bar
+  const stat = (t) => {
+    if (!t || !t.length) return null;
+    const o = t.filter((x) => x > bar).length, avg = t.reduce((a, b) => a + b, 0) / t.length;
+    return { n: t.length, o, u: t.length - o, op: Math.round(100 * o / t.length), avg, gap: Math.round(avg * 10) / 10 - bar };
+  };
+  const win = (t, k) => (t && t.length > k - 5 ? stat(t.slice(0, k)) : null);
+  const cell = (label, w, k) => {
     if (!w) return `<div class="tt-cell"><div class="w">${label}</div><div class="p">–</div><div class="a">&nbsp;</div></div>`;
     const side = w.op > 50 ? 'O' : w.op < 50 ? 'U' : '';
     const pct = side === 'U' ? 100 - w.op : w.op;
-    const short = w.n < Number(label.replace('L', '')) && label !== 'All';
-    return `<div class="tt-cell" title="${w.o} over, ${w.u} under in ${w.n} matches"><div class="w">${label}${short ? ' (' + w.n + ')' : ''}</div>`
-      + `<div class="p ${side}${pct >= 60 ? ' strong' : ''}">${side ? side + ' ' + pct + '%' : '50/50'}</div>`
+    return `<div class="tt-cell" title="${w.o} over, ${w.u} under in ${w.n} matches"><div class="w">${label}${k && w.n < k ? ' (' + w.n + ')' : ''}</div>`
+      + `<div class="p ${side}${pct > 75 ? ' strong' : ''}">${side ? side + ' ' + pct + '%' : '50/50'}</div>`
       + `<div class="a">${w.avg.toFixed(1)} <span>${sgn(w.gap)}</span></div></div>`;
   };
-  const block = (name, sub, s, withAll) => `<div class="tt-block"><div class="tt-name"><b>${esc(name)}</b><span>${sub}</span></div>`
-    + `<div class="tt-cells">${WIN.map((k) => cell('L' + k, s && s.w && s.w[k] && s.w[k].n > Number(k) - 5 ? s.w[k] : null)).join('')}${withAll ? cell('All', s && s.all) : '<div class="tt-cell"></div>'}</div></div>`;
+  const block = (name, sub, t, withAll) => `<div class="tt-block"><div class="tt-name"><b>${esc(name)}</b><span>${sub}</span></div>`
+    + `<div class="tt-cells">${WIN.map((k) => cell('L' + k, win(t, k), k)).join('')}${withAll ? cell('All', stat(t)) : '<div class="tt-cell"></div>'}</div></div>`;
+  const recOf = (m) => (m.rec || {})[barKey()] || null;
   const card = (m) => {
-    const L = m.lean || {};
-    const h = m.h2h || { n: 0 };
+    const r = recOf(m), h = m.h || [];
     const chips = [`<span class="chip">${esc(m.lg || '')}</span>`];
-    if (L.side) chips.push(`<span class="chip tt-${L.side}">Both lean ${L.side === 'O' ? 'Over' : 'Under'}</span>`);
-    if (L.side && L.h2h) chips.push(`<span class="chip">H2H ${L.h2h}</span>`);
+    if (r) chips.push(`<span class="chip tt-${r}">Recommended: ${r === 'O' ? 'Over' : 'Under'} ${barKey()}</span>`);
     const foot = [];
-    if (m.avg20 != null) foot.push(`Players' L20 average <b>${m.avg20.toFixed(1)}</b> (${sgn(m.gap20)} vs 74.5)`);
-    if (m.avg10 != null) foot.push(`L10 <b>${m.avg10.toFixed(1)}</b> (${sgn(m.gap10)})`);
-    if (h.n && h.recent) foot.push('Last meetings: ' + h.recent.slice(0, 6).map((r) => `<b>${r.tot}</b>`).join(', '));
-    return `<article class="tt-card${L.side ? ' lean-' + L.side : ''}"><div class="tt-top"><span class="when">${when(m.ts)}</span>${chips.join('')}</div>`
+    const a20 = win(m.a.t, 20), b20 = win(m.b.t, 20), a10 = win(m.a.t, 10), b10 = win(m.b.t, 10);
+    if (a20 && b20) { const v = (a20.avg + b20.avg) / 2; foot.push(`Players' L20 average <b>${v.toFixed(1)}</b> (${sgn(Math.round(v * 10) / 10 - bar)} vs ${barKey()})`); }
+    if (a10 && b10) { const v = (a10.avg + b10.avg) / 2; foot.push(`L10 <b>${v.toFixed(1)}</b> (${sgn(Math.round(v * 10) / 10 - bar)})`); }
+    if (h.length) foot.push('Last meetings: ' + h.slice(0, 6).map((x) => `<b>${x}</b>`).join(', '));
+    return `<article class="tt-card${r ? ' lean-' + r : ''}"><div class="tt-top"><span class="when">${when(m.ts)}</span>${chips.join('')}</div>`
       + `<div class="tt-vs">${esc(m.a.name)} <span>vs</span> ${esc(m.b.name)}</div>`
-      + block(m.a.name, m.a.n ? '' : 'no history', m.a, false)
-      + block(m.b.name, m.b.n ? '' : 'no history', m.b, false)
-      + block('Head-to-head', h.n ? h.n + ' meeting' + (h.n === 1 ? '' : 's') : 'no meetings found', h.n ? h : null, true)
+      + block(m.a.name, m.a.t.length ? '' : 'no history', m.a.t, false)
+      + block(m.b.name, m.b.t.length ? '' : 'no history', m.b.t, false)
+      + block('Head-to-head', h.length ? h.length + ' meeting' + (h.length === 1 ? '' : 's') : 'no meetings found', h, true)
       + (foot.length ? `<div class="tt-foot">${foot.join(' · ')}</div>` : '') + '</article>';
   };
+  const strength = (m) => { const a = win(m.a.t, 20), b = win(m.b.t, 20); return a && b ? Math.abs((a.op + b.op) / 2 - 50) : -1; };
+  const gapOf = (m) => { const a = win(m.a.t, 20), b = win(m.b.t, 20); return a && b ? Math.abs((a.avg + b.avg) / 2 - bar) : -1; };
+  const upcoming = () => { const now = Date.now() / 1000 - 300; return feed.matches.filter((m) => m.ts >= now); };
   const rows = () => {
-    if (!feed) return [];
-    const now = Date.now() / 1000 - 300;
     const q = $('tt-q').value.trim().toLowerCase();
-    let r = feed.matches.filter((m) => m.ts >= now && (league === 'ALL' || m.lg === league));
-    if (show === 'lean') r = r.filter((m) => m.lean && m.lean.side);
-    if (show === 'over') r = r.filter((m) => m.lean && m.lean.side === 'O');
-    if (show === 'under') r = r.filter((m) => m.lean && m.lean.side === 'U');
+    let r = upcoming().filter((m) => league === 'ALL' || m.lg === league);
+    if (show === 'rec') r = r.filter((m) => recOf(m));
+    if (show === 'over') r = r.filter((m) => recOf(m) === 'O');
+    if (show === 'under') r = r.filter((m) => recOf(m) === 'U');
     if (q) r = r.filter((m) => (m.a.name + ' ' + m.b.name).toLowerCase().includes(q));
     const sort = $('tt-sort').value;
-    if (sort === 'strength') r.sort((x, y) => Math.abs((y.lean || {}).score || 0) - Math.abs((x.lean || {}).score || 0) || x.ts - y.ts);
-    else if (sort === 'gap') r.sort((x, y) => Math.abs(y.gap20 || 0) - Math.abs(x.gap20 || 0) || x.ts - y.ts);
+    if (sort === 'strength') r = r.map((m) => [strength(m), m]).sort((x, y) => y[0] - x[0] || x[1].ts - y[1].ts).map((x) => x[1]);
+    else if (sort === 'gap') r = r.map((m) => [gapOf(m), m]).sort((x, y) => y[0] - x[0] || x[1].ts - y[1].ts).map((x) => x[1]);
     else r.sort((x, y) => x.ts - y.ts);
     return r;
+  };
+  const wl = (w, l) => (w + l ? `${w}-${l}` : '0-0');
+  const pct = (w, l) => (w + l ? Math.round(100 * w / (w + l)) + '% hit' : 'no graded picks yet');
+  const record = () => {
+    const tr = feed.track || { days: {}, recent: [], open: [] };
+    const k = barKey();
+    const sum = (from) => Object.entries(tr.days || {}).reduce((acc, [d, v]) => { if (d >= from && v[k]) { acc[0] += v[k][0]; acc[1] += v[k][1]; } return acc; }, [0, 0]);
+    const day = (n) => new Date(Date.now() - n * 864e5).toISOString().slice(0, 10);
+    const all = sum(''), wk = sum(day(7)), mo = sum(day(30));
+    const now = Date.now() / 1000;
+    const pending = (tr.open || []).filter((p) => p.recs && p.recs[k]);
+    const live = pending.filter((p) => p.ts <= now).length;
+    const tile = (kk, v, s) => `<div class="tile"><div class="k">${kk}</div><div class="v">${v}</div><div class="s">${s}</div></div>`;
+    $('tt-tiles').innerHTML = tile(`Record at ${k}`, wl(all[0], all[1]), pct(all[0], all[1]) + (tr.since ? ' · since ' + tr.since.slice(5) : ''))
+      + tile('Last 7 days', wl(wk[0], wk[1]), pct(wk[0], wk[1]))
+      + tile('Last 30 days', wl(mo[0], mo[1]), pct(mo[0], mo[1]))
+      + tile('Open picks', String(pending.length), live ? live + ' started, awaiting result' : 'graded at the next update');
+    const rec = (tr.recent || []).filter((r) => r.recs && r.recs[k]);
+    $('tt-results').hidden = rec.length === 0;
+    $('tt-results-body').innerHTML = rec.slice(0, 200).map((r) => {
+      const side = r.recs[k], won = (r.tot > bar) === (side === 'O');
+      return `<tr><td class="wrap">${esc(r.a)} vs ${esc(r.b)}<br><span style="color: var(--color-fg-muted)">${when(r.ts)} · ${esc(r.lg || '')}</span></td><td>${side === 'O' ? 'Over' : 'Under'} ${k}</td><td class="num">${r.tot}</td><td><span class="chip ${won ? 'win' : 'loss'}">${won ? 'Won' : 'Lost'}</span></td></tr>`;
+    }).join('');
   };
   const render = () => {
     if ($('tt').hidden) return;
     const st = $('tt-status');
     if (failed) { st.textContent = 'The table tennis feed could not be loaded.'; return; }
     if (!feed) { st.textContent = 'Loading…'; return; }
+    if (feed.v !== 2) { st.textContent = 'The table tennis feed is being rebuilt. Check back in a few minutes.'; return; }
+    $('tt-sub').textContent = 'match totals vs ' + barKey();
     const lg = $('tt-leagues');
     if (!lg.dataset.built) {
       lg.innerHTML = ['ALL', ...(feed.leagues || [])].map((l) => `<button data-lg="${esc(l)}" aria-pressed="${l === league}">${l === 'ALL' ? 'All' : esc(l.replace(' Series', '').replace('Czech ', ''))}</button>`).join('');
       lg.dataset.built = '1';
     }
-    const r = rows();
-    const up = feed.matches.filter((m) => m.ts >= Date.now() / 1000 - 300);
-    const leans = up.filter((m) => m.lean && m.lean.side).length;
+    record();
+    const r = rows(), up = upcoming();
+    const recs = up.filter((m) => recOf(m)).length;
     const gen = new Date(feed.generated_at);
     const age = (Date.now() - gen.getTime()) / 36e5;
     st.innerHTML = `Updated ${gen.toLocaleString([], { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' })}`
       + (age > 30 ? ' <span class="bad">(more than a day old)</span>' : '')
-      + ` · ${up.length} upcoming match${up.length === 1 ? '' : 'es'} · ${leans} where both players lean the same way · showing ${Math.min(shown, r.length)} of ${r.length}`;
+      + ` · ${up.length} upcoming match${up.length === 1 ? '' : 'es'} · ${recs} recommended at ${barKey()} · showing ${Math.min(shown, r.length)} of ${r.length}`;
     $('tt-empty').hidden = r.length > 0;
     $('tt-grid').innerHTML = r.slice(0, shown).map(card).join('');
     $('tt-more').hidden = r.length <= shown;
@@ -2323,6 +2369,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(n
   };
   const load = () => fetch('tt_dash.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => { feed = d; failed = false; render(); }).catch(() => { failed = !feed; render(); });
   const reset = () => { shown = PAGE; render(); };
+  sel.addEventListener('change', () => { bar = Number(sel.value); try { localStorage.setItem('tt-bar', sel.value); } catch (e) { /* no storage */ } reset(); });
   $('tt-leagues').addEventListener('click', (e) => { const b = e.target.closest('button[data-lg]'); if (!b) return; league = b.dataset.lg; $('tt-leagues').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); reset(); });
   $('tt-show').addEventListener('click', (e) => { const b = e.target.closest('button[data-show]'); if (!b) return; show = b.dataset.show; $('tt-show').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); reset(); });
   $('tt-sort').addEventListener('change', reset);
