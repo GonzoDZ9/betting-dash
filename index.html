@@ -311,7 +311,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
       <div class="card" id="today-card" style="margin-top: var(--cds-gap-md)">
         <h3>Today's picks <small id="today-date"></small></h3>
-        <p class="note">Top picks and parlay pieces from every model whose game is played today.</p>
+        <p class="note">Top picks and parlay pieces from every model whose game is played today, plus table tennis recommendations at the bar selected on the Table Tennis tab.</p>
         <div class="empty" id="today-empty" hidden>No top picks or parlay pieces on today's slate.</div>
         <div class="scroll">
           <table data-source="today_picks" data-row-key="key" id="today-table">
@@ -336,7 +336,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 
     <div class="card" style="margin-top: var(--cds-gap-md)" id="ov-table-card">
       <h3 id="ov-table-title">Record by model</h3>
-      <p class="note">Win % = W ÷ (W + L). ROI = units won ÷ units risked on decided bets. CLV = average closing-line value where the model captured a close (CFB in points, NFL/NHL in probability). PGA counts flagged plays (1 unit each, a play wins if it cashed) by event start date and is kept out of the All models total.</p>
+      <p class="note">Win % = W ÷ (W + L). ROI = units won ÷ units risked on decided bets. CLV = average closing-line value where the model captured a close (CFB in points, NFL/NHL in probability). PGA counts flagged plays (1 unit each, a play wins if it cashed) by event start date and is kept out of the All models total. Table Tennis counts recommendations at the bar selected on its tab: wins and losses only (no odds, so no units), also kept out of the total.</p>
       <div class="scroll x-scroll">
       <table data-source="summary_by_sport" data-row-key="window,sport" id="ov-table">
         <thead><tr><th data-field="sport">Model</th><th data-field="record">W-L-P</th><th class="num" data-field="win_pct">Win %</th><th class="num" data-field="risked">Risked</th><th class="num" data-field="profit">Units +/-</th><th class="num" data-field="roi">ROI</th><th class="num" data-field="avg_clv">Avg CLV</th><th class="num" data-field="pending">Pending</th></tr></thead>
@@ -1137,6 +1137,17 @@ const pgaTile = (win) => {
   t.title = 'PGA flagged plays, 1 unit each at the card price. Kept separate: not in the All models total.';
   return [t];
 };
+// ---- Table Tennis on the overview: record and picks at the bar chosen on the Table Tennis tab. Wins-losses only (no odds), kept out of the All models total. ----
+const ttApi = () => (window.bmTT && window.bmTT.ready && window.bmTT.ready() ? window.bmTT : null);
+const ttTile = (win) => {
+  const A = ttApi(); if (!A) return [];
+  const r = A.record(winKeep(win)); const n = r.w + r.l;
+  const t = n ? tile('Table Tennis', `${r.w}-${r.l}`, `${Math.round(100 * r.w / n)}% hit at bar ${A.bar()} · ${r.open} open`) : tile('Table Tennis', '—', r.open ? `${r.open} open pick${r.open === 1 ? '' : 's'} at bar ${A.bar()}` : `No picks at bar ${A.bar()} yet`);
+  t.title = 'Table tennis recommendations at the bar selected on the Table Tennis tab. Wins and losses only, no units. Kept separate: not in the All models total.';
+  return [t];
+};
+const ttRec = (win) => { const A = ttApi(); if (!A) return []; const r = A.record(winKeep(win)); const n = r.w + r.l; return [{ window: win, sport: 'TT', record: `${r.w}-${r.l}-0`, win_pct: n ? r.w / n : null, risked: null, profit: null, roi: null, avg_clv: null, pending: r.open, pending_units: 0 }]; };
+const ttWhen = (ts) => new Date(ts * 1000).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 const pgaPlayRows = (f) => window.bmPGA.picks(f).map((p, i) => ({ key: window.bmPGA.key(f, p), sport: 'PGA', n: i + 1, type: p.flagged ? 'Flagged play' : 'Your pick', game_time: f.event, game: f.event, date: f.start_date, pick: window.bmPGA.label(p), bet_type: window.bmPGA.MKT[p.market] || p.market, line: p.best_price ? window.bmPGA.us(p.best_price) + (p.best_book ? ' ' + p.best_book : '') : 'model fair ' + window.bmPGA.fair(p.p_model), units: p.flagged ? 1 : null, model_prob: p.p_model, market_prob: p.p_market_fair, note: !p.flagged ? 'Your pick' : p.ev == null ? '' : 'EV +' + Math.round(100 * p.ev) + '%', market: p.market }));
 const drawOverview = () => {
   const win = window.bmWin;
@@ -1155,12 +1166,12 @@ const drawOverview = () => {
       const t = tile(r.sport === 'ALL' ? 'All models' : r.sport, fU(r.profit), `${r.record} · ROI ${fPs(r.roi)}`, signCls(r.profit));
       t.setAttribute('data-source', 'summary_by_sport'); t.setAttribute('data-field', 'profit'); t.setAttribute('data-where', 'window=' + win + '&sport=' + r.sport);
       return t;
-    }), ...pgaTile(win), myPicksTile(win));
+    }), ...pgaTile(win), ...ttTile(win), myPicksTile(win));
     const pgaRec = window.bmPGA.feed() ? [window.bmPGA.record(window.bmPGA.feed(), winKeep(win))] : [];
-    fillTable(document.getElementById('ov-table'), [...rows, ...pgaRec, myPicksRecord(win)], [
-      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v === 'MINE' ? 'My picks' : v === 'PGA' ? 'PGA (golf)' : v }, { f: 'record' }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v) => fN(v) + 'u', cls: 'num' },
+    fillTable(document.getElementById('ov-table'), [...rows, ...pgaRec, ...ttRec(win), myPicksRecord(win)], [
+      { f: 'sport', fmt: (v) => v === 'ALL' ? 'All models' : v === 'MINE' ? 'My picks' : v === 'PGA' ? 'PGA (golf)' : v === 'TT' ? 'Table Tennis (bar ' + (ttApi() ? ttApi().bar() : '') + ')' : v }, { f: 'record', fmt: (v, r) => r.sport === 'TT' ? String(v).replace(/-0$/, '') : esc(v) }, { f: 'win_pct', fmt: fP, cls: 'num' }, { f: 'risked', fmt: (v, r) => r.sport === 'TT' ? '—' : fN(v) + 'u', cls: 'num' },
       { f: 'profit', fmt: fU, cls: (r) => 'num ' + signCls(r.profit) }, { f: 'roi', fmt: fPs, cls: (r) => 'num ' + signCls(r.roi) },
-      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' || r.sport === 'MINE' || r.sport === 'PGA' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => `${v} (${r.pending_units}u)`, cls: 'num' },
+      { f: 'avg_clv', fmt: (v, r) => r.sport === 'ALL' || r.sport === 'MINE' || r.sport === 'PGA' || r.sport === 'TT' ? '—' : r.sport === 'CFB' ? (v === null ? '—' : fU2(v) + ' pts') : fPs(v), cls: 'num' }, { f: 'pending', fmt: (v, r) => r.sport === 'TT' ? String(v) : `${v} (${r.pending_units}u)`, cls: 'num' },
     ], (r) => `${r.window},${r.sport}`);
     markMineRow(document.getElementById('ov-table'));
   } else { lede.querySelectorAll('span').forEach((e) => { e.textContent = '—'; }); tiles.replaceChildren(); }
@@ -1175,7 +1186,8 @@ const drawOverview = () => {
   } else { box.querySelectorAll('svg').forEach((s) => s.remove()); }
   skel(box, cum.status === 'loading');
   if (info.status === 'ok') { const pf = window.bmPGA.feed(); const pgaNow = pf ? [{ sport: 'PGA', label: pf.event + (pf.odds_live ? ' · in play' : ''), n_bets: window.bmPGA.plays(pf).length, units: window.bmPGA.plays(pf).length, n_top: 0, generated: (() => { const d = new Date(String(pf.generated_at).replace(' ', 'T')); return isNaN(d) ? pf.generated_at : d.toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }); })() }] : [];
-    fillTable(document.getElementById('today-cards-table'), [...info.data, ...pgaNow, myPicksOnCards()], [{ f: 'sport' }, { f: 'label', cls: 'wrap' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v) => fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated', fmt: (v) => v || '—' }], (r) => r.sport); markMineRow(document.getElementById('today-cards-table')); }
+    const ttA = ttApi(); const ttNow = ttA ? [{ sport: 'Table Tennis', label: `Recommended at bar ${ttA.bar()} · matches in the next 30 hours`, n_bets: ttA.picks().length, units: null, n_top: 0, generated: new Date(ttA.updated()).toLocaleString('en-US', { weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) }] : [];
+    fillTable(document.getElementById('today-cards-table'), [...info.data, ...pgaNow, ...ttNow, myPicksOnCards()], [{ f: 'sport' }, { f: 'label', cls: 'wrap' }, { f: 'n_bets', cls: 'num' }, { f: 'units', fmt: (v, r) => r.sport === 'Table Tennis' ? '—' : fN(v) + 'u', cls: 'num' }, { f: 'n_top', cls: 'num' }, { f: 'generated', fmt: (v) => v || '—' }], (r) => r.sport); markMineRow(document.getElementById('today-cards-table')); }
 
   // ---- active top picks + parlay pieces per model, and today's picks ----
   if (cards.status !== 'ok' || parl.status !== 'ok' || picks.status !== 'ok') return;
@@ -1239,15 +1251,38 @@ const drawOverview = () => {
     }
     host.appendChild(card);
   }
+  const ttP = ttApi() && window.bmTrack.view() !== 'mine' ? ttApi().picks() : [];
+  if (ttApi() && window.bmTrack.view() !== 'mine') {
+    const A = ttApi(); const card = document.createElement('div'); card.className = 'card';
+    const h3 = document.createElement('h3'); h3.textContent = 'Table Tennis'; card.appendChild(h3);
+    const note = document.createElement('p'); note.className = 'note'; note.textContent = `Bar ${A.bar()} (change it on the Table Tennis tab) · both players on the same side in more than 75% of their last 20 · updated ${new Date(A.updated()).toLocaleString('en-US', { weekday: 'short', hour: 'numeric', minute: '2-digit' })}`; card.appendChild(note);
+    const h4 = document.createElement('h4'); h4.replaceChildren('Recommended', Object.assign(document.createElement('small'), { textContent: `${ttP.length}` })); card.appendChild(h4);
+    if (!ttP.length) { const e = document.createElement('div'); e.className = 'empty'; e.textContent = `No upcoming matches clear the rule at bar ${A.bar()}.`; card.appendChild(e); }
+    else {
+      const wrap = document.createElement('div'); wrap.className = 'scroll';
+      const t = document.createElement('table'); t.innerHTML = '<thead><tr><th>Start</th><th>Match</th><th>Pick</th><th class="num">L20 rates</th><th class="num">Head-to-head</th><th>League</th></tr></thead><tbody></tbody>';
+      fillTable(t, ttP.slice(0, 25), [{ f: 'ts', fmt: ttWhen }, { f: 'game', cls: 'wrap' }, { f: 'pick' }, { f: 'rates', cls: 'num' }, { f: 'h2h', cls: 'num' }, { f: 'lg' }], (r) => r.key);
+      wrap.appendChild(t); card.appendChild(wrap);
+      if (ttP.length > 25) { const m = document.createElement('p'); m.className = 'note'; m.textContent = `+ ${ttP.length - 25} more on the Table Tennis tab.`; card.appendChild(m); }
+    }
+    host.appendChild(card);
+  }
+  const ttDay = (ts) => { const x = new Date(ts * 1000); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
   const todayKey = (r) => r.sport === 'PGA' ? r.key : window.bmTrack.keyOf(r.sport, r.date, r.game, r.pick, r.market);
   const todayIsoL = (() => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; })();
   const pgaToday = pf && window.bmPGA.days(pf).includes(todayIsoL) && !window.bmPGA.settledThisWeek(pf) ? pgaPlayRows(pf).map((r) => ({ ...r, game_time: 'All day' })) : [];
   const todayRows = window.bmTrack.filter([...(todayCalc.status === 'ok' ? todayCalc.data : []), ...pgaToday], todayKey);
   const tt = document.getElementById('today-table');
-  document.getElementById('today-empty').hidden = todayRows.length > 0; tt.closest('.scroll').hidden = todayRows.length === 0;
+  const ttToday = ttP.filter((r) => ttDay(r.ts) === todayIsoL);
+  document.getElementById('today-empty').hidden = todayRows.length + ttToday.length > 0; tt.closest('.scroll').hidden = todayRows.length + ttToday.length === 0;
   document.getElementById('today-empty').textContent = window.bmTrack.view() === 'mine' ? 'None of today\'s top picks or parlay pieces are tracked. Switch to All picks and tap + on the ones you agree with.' : 'No top picks or parlay pieces on today\'s slate.';
   fillTable(tt, todayRows, [{ f: 'sport' }, { f: 'type', cls: 'type-tag' }, { f: 'game_time' }, { f: 'game' }, { f: 'pick', html: pickCell, cls: 'wrap' }, { f: 'bet_type' }, { f: 'line' }, { f: 'units', fmt: (v) => v === null || v === undefined || v === '' ? '—' : d3.format('.1f')(v) + 'u', cls: 'num' }, { f: 'model_prob', fmt: fP, cls: 'num' }, { f: 'market_prob', fmt: fP, cls: 'num' }, { f: 'note', cls: 'wrap' }], (r) => r.key);
   window.bmTrackCol(tt, todayRows, todayKey);
+  // table tennis recommendations for today (not trackable with +; their record is kept by the daily feed)
+  const ttBody = tt.querySelector('tbody');
+  const ttRow = (cells) => { const tr = document.createElement('tr'); const c0 = document.createElement('td'); c0.className = 'trk-c'; tr.appendChild(c0); cells.forEach((c, i) => { const td = document.createElement('td'); td.textContent = c; if (i === 1) td.className = 'type-tag'; if (i === 4 || i === 10) td.classList.add('wrap'); if (i >= 7 && i <= 9) td.className = 'num'; tr.appendChild(td); }); return tr; };
+  ttToday.slice(0, 25).forEach((r) => ttBody.appendChild(ttRow(['TT', 'Recommended', ttWhen(r.ts).replace(/^\w+ /, ''), r.game, r.pick, 'Total points', r.bar, '—', '—', '—', `L20 ${r.rates} · H2H ${r.h2h}`])));
+  if (ttToday.length > 25) ttBody.appendChild(ttRow(['TT', '', '', `+ ${ttToday.length - 25} more on the Table Tennis tab`, '', '', '', '', '', '', '']));
 };
 document.querySelectorAll('.bm .seg button').forEach((b) => b.addEventListener('click', () => { window.bmWin = b.dataset.win; drawOverview(); }));
 
@@ -2367,7 +2402,7 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(n
     $('tt-more').hidden = r.length <= shown;
     $('tt-more').textContent = `Show ${Math.min(PAGE, r.length - shown)} more`;
   };
-  const load = () => fetch('tt_dash.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => { feed = d; failed = false; render(); }).catch(() => { failed = !feed; render(); });
+  const load = () => fetch('tt_dash.json?t=' + Date.now(), { cache: 'no-store' }).then((r) => (r.ok ? r.json() : Promise.reject())).then((d) => { feed = d; failed = false; render(); if (window.bmDraw && window.bmCurrent && window.bmCurrent() === 'overview') window.bmDraw(); }).catch(() => { failed = !feed; render(); });
   const reset = () => { shown = PAGE; render(); };
   sel.addEventListener('change', () => { bar = Number(sel.value); try { localStorage.setItem('tt-bar', sel.value); } catch (e) { /* no storage */ } reset(); });
   $('tt-leagues').addEventListener('click', (e) => { const b = e.target.closest('button[data-lg]'); if (!b) return; league = b.dataset.lg; $('tt-leagues').querySelectorAll('button').forEach((x) => x.setAttribute('aria-pressed', String(x === b))); reset(); });
@@ -2377,7 +2412,21 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(n
   $('tt-more').addEventListener('click', () => { shown += PAGE; render(); });
   document.querySelector('.bm .tabs button[data-tab="tt"]').addEventListener('click', () => { render(); load(); });
   load();
-  window.bmTT = { render, load };
+  const ovPicks = () => {
+    if (!feed || feed.v !== 2) return [];
+    return upcoming().filter((m) => recOf(m)).sort((x, y) => x.ts - y.ts).map((m) => {
+      const side = recOf(m), a = stat(m.a.t), b = stat(m.b.t), h = stat(m.h);
+      const p = (w) => (side === 'O' ? w.op : 100 - w.op) + '%';
+      return { key: 'TT|' + m.id, ts: m.ts, lg: m.lg, game: m.a.name + ' vs ' + m.b.name, pick: (side === 'O' ? 'Over ' : 'Under ') + barKey(), bar: barKey(),
+        rates: a && b ? p(a) + ' / ' + p(b) : '—', h2h: h ? p(h) + ' of ' + h.n : 'none' };
+    });
+  };
+  const ovRecord = (keep) => {
+    const tr = (feed && feed.track) || {}; const k = barKey(); let w = 0, l = 0;
+    for (const [d, v] of Object.entries(tr.days || {})) if (v[k] && keep(d)) { w += v[k][0]; l += v[k][1]; }
+    return { w, l, open: (tr.open || []).filter((p) => p.recs && p.recs[k]).length };
+  };
+  window.bmTT = { render, load, ready: () => !!feed && feed.v === 2, bar: barKey, picks: ovPicks, record: ovRecord, updated: () => feed.generated_at };
 })();
 </script>
 </div>
