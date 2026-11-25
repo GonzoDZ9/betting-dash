@@ -1,14 +1,18 @@
 {
 "sport": "NHL",
-"generated_at": "2026-11-24 10:14",
-"card_info": {"sport":"NHL","name":"NHL","label":"Tue Nov 24","title":"NHL Bet Card \u2014 Tuesday, November 24, 2026","generated":"Nov 24, 10:14 AM","n_bets":0,"units":0,"n_top":0,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
-"cards": [],
-"parlays": [{"sport":"NHL","n":1,"market":"PTS","leg":"VGK@EDM Mattias Ekholm (EDM) Under 0.5 proj 0.4","game":"","price":"-275","model_prob":0.6711,"hit_rate":"69% of 1475"},
-{"sport":"NHL","n":2,"market":"PTS","leg":"VGK@EDM Jack Eichel (VGK) Over 0.5 proj 1.1","game":"","price":"-240","model_prob":0.6673,"hit_rate":"69% of 359"},
-{"sport":"NHL","n":3,"market":"PTS","leg":"VGK@EDM Evan Bouchard (EDM) Over 0.5 proj 1.1","game":"","price":"-260","model_prob":0.6666,"hit_rate":"69% of 364"},
-{"sport":"NHL","n":4,"market":"PL","leg":"VGK@EDM EDM +1.5 puck line","game":"","price":"-250","model_prob":0.682,"hit_rate":"66% of 89"},
-{"sport":"NHL","n":5,"market":"PTS","leg":"VGK@EDM Ivan Barbashev (VGK) Under 0.5 proj 0.4","game":"","price":"-220","model_prob":0.6413,"hit_rate":"64% of 1942"},
-{"sport":"NHL","n":6,"market":"PTS","leg":"VGK@EDM Mitch Marner (VGK) Over 0.5 proj 1.1","game":"","price":"-210","model_prob":0.6358,"hit_rate":"65% of 737"}],
+"generated_at": "2026-11-25 09:12",
+"card_info": {"sport":"NHL","name":"NHL","label":"Wed Nov 25","title":"NHL Bet Card \u2014 Wednesday, November 25, 2026","generated":"Nov 25, 9:12 AM","n_bets":1,"units":0.5,"n_top":1,"empty":"","source":"NHL workbook - Bets_Ledger (Mode = BET) and Bet_Card"},
+"cards": [{"sport":"NHL","n":1,"kickoff":"","game":"VAN @ DET","market":"SOG","pick":"Lucas Raymond (DET) Under 2.5 \u00B7 proj 2.3","line":"","price":"-115","units":0.5,"model_prob":0.5534,"market_prob":0.5,"edge":0.0534,"limit":"","tag":"\u2605 TOP PICK","top":"Y","soft":"Y"}],
+"parlays": [{"sport":"NHL","n":1,"market":"PL","leg":"NYR@BUF NYR +1.5 puck line","game":"","price":"-230","model_prob":0.7027,"hit_rate":"75% of 88"},
+{"sport":"NHL","n":2,"market":"PL","leg":"STL@NYI STL +1.5 puck line","game":"","price":"-250","model_prob":0.6977,"hit_rate":"77% of 95"},
+{"sport":"NHL","n":3,"market":"PL","leg":"MTL@COL MTL +1.5 puck line","game":"","price":"-250","model_prob":0.6874,"hit_rate":"74% of 115"},
+{"sport":"NHL","n":4,"market":"PL","leg":"UTA@MIN UTA +1.5 puck line","game":"","price":"-210","model_prob":0.6783,"hit_rate":"73% of 127"},
+{"sport":"NHL","n":5,"market":"PTS","leg":"VAN@DET Alex DeBrincat (DET) Under 1.5 proj 1.0","game":"","price":"-260","model_prob":0.6779,"hit_rate":"69% of 1389"},
+{"sport":"NHL","n":6,"market":"PTS","leg":"CAR@TBL Charle-Edouard D'Astous (TBL) Under 0.5 proj 0.4","game":"","price":"-275","model_prob":0.6725,"hit_rate":"69% of 1464"},
+{"sport":"NHL","n":7,"market":"PTS","leg":"NSH@DAL Shane Wright (NSH) Under 0.5 proj 0.4","game":"","price":"-220","model_prob":0.6644,"hit_rate":"68% of 1600"},
+{"sport":"NHL","n":8,"market":"PTS","leg":"NSH@DAL Nils Hoglander (NSH) Under 0.5 proj 0.3","game":"","price":"-210","model_prob":0.6588,"hit_rate":"67% of 1671"},
+{"sport":"NHL","n":9,"market":"PTS","leg":"VAN@DET Zeev Buium (VAN) Under 0.5 proj 0.4","game":"","price":"-220","model_prob":0.6576,"hit_rate":"67% of 1696"},
+{"sport":"NHL","n":10,"market":"PL","leg":"CHI@SEA CHI +1.5 puck line","game":"","price":"-185","model_prob":0.6571,"hit_rate":"70% of 148"}],
 "picks": [
 {"id":"NHL-0001","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Kent Johnson (CBJ) Under 1.5 \u00B7 proj 1.2","line":1.5,"odds":146,"units":1,"model_prob":0.6704,"market_prob":0.3848,"result":"W","profit":1.46,"clv":0.0525,"top":"Y","soft":"","score":"1 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0002","sport":"NHL","period":"2026-10-01","date":"2026-10-01","kickoff":"19:00","game":"BUF @ CBJ","market":"Prop \u00B7 shots","selection":"Conor Garland (CBJ) Under 1.5 \u00B7 proj 1.4","line":1.5,"odds":122,"units":1,"model_prob":0.6075,"market_prob":0.4267,"result":"W","profit":1.22,"clv":0.0902,"top":"Y","soft":"","score":"0 SOG","limit":"","limit_status":"","bet":"Y"},
@@ -778,6 +782,7 @@
 {"id":"NHL-0766","sport":"NHL","period":"2026-11-23","date":"2026-11-23","kickoff":"22:00","game":"MIN @ SJS","market":"Prop \u00B7 shots","selection":"Mason Marchment (SJS) Over 1.5 \u00B7 proj 2.1 MODEL SOFT","line":1.5,"odds":-115,"units":0.5,"model_prob":0.5608,"market_prob":0.5,"result":"W","profit":0.435,"clv":null,"top":"","soft":"Y","score":"3 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0767","sport":"NHL","period":"2026-11-23","date":"2026-11-23","kickoff":"21:40","game":"ANA @ SEA","market":"Prop \u00B7 shots","selection":"Bobby McMann (SEA) Under 2.5 \u00B7 proj 2.4 MODEL SOFT","line":2.5,"odds":-110,"units":0.5,"model_prob":0.5479,"market_prob":0.4899,"result":"W","profit":0.455,"clv":null,"top":"","soft":"Y","score":"1 SOG","limit":"","limit_status":"","bet":"Y"},
 {"id":"NHL-0768","sport":"NHL","period":"2026-11-23","date":"2026-11-23","kickoff":"22:00","game":"MIN @ SJS","market":"Prop \u00B7 shots","selection":"Brock Faber (MIN) Under 2.5 \u00B7 proj 1.8 MODEL","line":2.5,"odds":-155,"units":2,"model_prob":0.6437,"market_prob":0.5665,"result":"W","profit":1.29,"clv":null,"top":"","soft":"","score":"2 SOG","limit":"","limit_status":"","bet":"Y"},
-{"id":"NHL-0769","sport":"NHL","period":"2026-11-23","date":"2026-11-23","kickoff":"19:30","game":"UTA @ WPG","market":"Prop \u00B7 shots","selection":"Vincent Trocheck (UTA) Under 2.5 \u00B7 proj 1.9 MODEL","line":2.5,"odds":-155,"units":2,"model_prob":0.6343,"market_prob":0.5721,"result":"L","profit":-2,"clv":null,"top":"","soft":"","score":"3 SOG","limit":"","limit_status":"","bet":"Y"}
+{"id":"NHL-0769","sport":"NHL","period":"2026-11-23","date":"2026-11-23","kickoff":"19:30","game":"UTA @ WPG","market":"Prop \u00B7 shots","selection":"Vincent Trocheck (UTA) Under 2.5 \u00B7 proj 1.9 MODEL","line":2.5,"odds":-155,"units":2,"model_prob":0.6343,"market_prob":0.5721,"result":"L","profit":-2,"clv":null,"top":"","soft":"","score":"3 SOG","limit":"","limit_status":"","bet":"Y"},
+{"id":"NHL-0770","sport":"NHL","period":"2026-11-25","date":"2026-11-25","kickoff":"19:30","game":"VAN @ DET","market":"Prop \u00B7 shots","selection":"Lucas Raymond (DET) Under 2.5 \u00B7 proj 2.3 MODEL SOFT","line":2.5,"odds":-115,"units":0.5,"model_prob":0.5534,"market_prob":0.5,"result":"Pending","profit":0,"clv":null,"top":"Y","soft":"Y","score":"","limit":"","limit_status":"","bet":"Y"}
 ]
 }

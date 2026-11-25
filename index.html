@@ -252,7 +252,14 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
 .bm .seg button { background: var(--color-panel); border: 0; border-left: 1px solid var(--color-border-line); padding: var(--cds-pad-xs) var(--cds-pad-md); font: inherit; font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); cursor: pointer; }
 .bm .seg button:first-child { border-left: 0; }
 .bm .seg button[aria-pressed="true"] { background: var(--color-fg); color: var(--color-bg); }
-.bm .model-cards { display: grid; grid-template-columns: repeat(auto-fit, minmax(min(100%, 24rem), 1fr)); gap: var(--cds-gap-md); }
+.bm .model-cards { display: grid; grid-template-columns: minmax(0, 1fr); gap: var(--cds-gap-sm); }
+.bm details.ov-fold > summary { cursor: pointer; list-style: none; display: flex; flex-wrap: wrap; gap: var(--cds-gap-xs) var(--cds-gap-md); align-items: baseline; }
+.bm details.ov-fold > summary::-webkit-details-marker { display: none; }
+.bm details.ov-fold > summary::before { content: '▸'; color: var(--color-fg-muted); width: 1em; }
+.bm details.ov-fold[open] > summary::before { content: '▾'; }
+.bm details.ov-fold > summary h3 { margin: 0; }
+.bm details.ov-fold > summary .fold-meta { color: var(--color-fg-muted); font-size: var(--cds-font-size-caption); }
+.bm details.ov-fold[open] > summary { margin-bottom: var(--cds-gap-sm); }
 .bm .model-cards h4 { font-size: var(--cds-font-size-body); font-weight: var(--cds-font-weight-medium); margin: var(--cds-gap-sm) 0 var(--cds-gap-xs); }
 .bm .model-cards h4 small { font-weight: 400; color: var(--color-fg-muted); margin-left: var(--cds-gap-sm); }
 .bm .type-tag { font-size: var(--cds-font-size-caption); color: var(--color-fg-muted); }
@@ -309,6 +316,15 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
     </div>
     <div class="tiles" id="ov-tiles"></div>
 
+    <div class="grid" style="margin-top: var(--cds-gap-md)">
+      <div class="card" id="cum-card">
+        <h3 id="cum-title">Cumulative units</h3>
+        <p class="note" id="cum-note">Running profit in units by game date, each model and all three together.</p>
+        <div class="legend" id="cum-legend"></div>
+        <div class="chart" id="cum-chart" data-source="cum_by_date"><div class="tip"></div></div>
+      </div>
+    </div>
+
       <div class="card" id="today-card" style="margin-top: var(--cds-gap-md)">
         <h3>Today's picks <small id="today-date"></small></h3>
         <p class="note">Top picks and parlay pieces from every model whose game is played today, plus table tennis recommendations at the bar selected on the Table Tennis tab.</p>
@@ -322,16 +338,7 @@ html, body { margin: 0; background: var(--color-bg); color: var(--color-fg); }
       </div>
 
 
-    <div class="grid" style="margin-top: var(--cds-gap-md)">
-      <div class="card" id="cum-card">
-        <h3 id="cum-title">Cumulative units</h3>
-        <p class="note" id="cum-note">Running profit in units by game date, each model and all three together.</p>
-        <div class="legend" id="cum-legend"></div>
-        <div class="chart" id="cum-chart" data-source="cum_by_date"><div class="tip"></div></div>
-      </div>
-    </div>
-
-    <h2>Active picks by model <small>what each card is backing right now</small></h2>
+    <h2>Active picks by model <small>tap a model to open or close its picks</small></h2>
     <div class="model-cards" id="model-cards"></div>
 
     <div class="card" style="margin-top: var(--cds-gap-md)" id="ov-table-card">
@@ -1040,7 +1047,7 @@ const drawCum = (box, rows, series, colors) => {
     rule.style('display', null).attr('x1', x(d.date)).attr('x2', x(d.date));
     dots.style('display', null).selectAll('circle').data(series).attr('cx', x(d.date)).attr('cy', (s) => y(Number(d[s])));
     const sc = W / box.clientWidth;
-    tipShow(box, x(d.date) / sc, my / sc, [tipHead(d3.utcFormat('%a %b %-d')(d.date)), ...series.map((s, j) => tipLine(true, s === 'ALL' ? 'All models' : s, fU(d[s]), colors[j]))]);
+    tipShow(box, x(d.date) / sc, my / sc, [tipHead(d3.utcFormat('%a %b %-d')(d.date)), ...series.map((s, j) => tipLine(true, s === 'ALL' ? 'All models' : s === 'TT' ? 'Table Tennis' : s, fU(d[s]), colors[j]))]);
   }).on('mouseleave', () => { rule.style('display', 'none'); dots.style('display', 'none'); tipHide(box); });
 };
 
@@ -1149,6 +1156,22 @@ const ttTile = (win) => {
 const ttRec = (win) => { const A = ttApi(); if (!A) return []; const r = A.record(winKeep(win)); const n = r.w + r.l; return [{ window: win, sport: 'TT', record: `${r.w}-${r.l}-0`, win_pct: n ? r.w / n : null, risked: null, profit: null, roi: null, avg_clv: null, pending: r.open, pending_units: 0 }]; };
 const ttWhen = (ts) => new Date(ts * 1000).toLocaleString([], { weekday: 'short', hour: 'numeric', minute: '2-digit' });
 const pgaPlayRows = (f) => window.bmPGA.picks(f).map((p, i) => ({ key: window.bmPGA.key(f, p), sport: 'PGA', n: i + 1, type: p.flagged ? 'Flagged play' : 'Your pick', game_time: f.event, game: f.event, date: f.start_date, pick: window.bmPGA.label(p), bet_type: window.bmPGA.MKT[p.market] || p.market, line: p.best_price ? window.bmPGA.us(p.best_price) + (p.best_book ? ' ' + p.best_book : '') : 'model fair ' + window.bmPGA.fair(p.p_model), units: p.flagged ? 1 : null, model_prob: p.p_model, market_prob: p.p_market_fair, note: !p.flagged ? 'Your pick' : p.ev == null ? '' : 'EV +' + Math.round(100 * p.ev) + '%', market: p.market }));
+// Active picks by model: each model's card becomes a full-width drop-down. Which ones are open is remembered on this device.
+const FOLD_KEY = 'bm.ovOpen.v1'; let foldOpen = new Set();
+try { foldOpen = new Set(JSON.parse(localStorage.getItem(FOLD_KEY) || '[]')); } catch (e) { /* storage unavailable */ }
+const foldModelCards = (host) => {
+  for (const card of [...host.children]) {
+    if (card.tagName === 'DETAILS') continue;
+    const h3 = card.querySelector(':scope > h3'); if (!h3) continue;
+    const name = h3.textContent.trim();
+    const det = document.createElement('details'); det.className = 'card ov-fold'; det.open = foldOpen.has(name);
+    const sum = document.createElement('summary'); const meta = document.createElement('span'); meta.className = 'fold-meta';
+    meta.textContent = [...card.querySelectorAll(':scope > h4')].map((h) => { const sm = h.querySelector('small'); const n = sm ? sm.textContent.trim() : ''; const label = (h.firstChild && h.firstChild.textContent || '').trim(); return /^\d+$/.test(n) ? `${n} ${label.toLowerCase()}` : ''; }).filter(Boolean).join(' · ');
+    sum.append(h3, meta); det.appendChild(sum); while (card.firstChild) det.appendChild(card.firstChild);
+    det.addEventListener('toggle', () => { if (det.open) foldOpen.add(name); else foldOpen.delete(name); try { localStorage.setItem(FOLD_KEY, JSON.stringify([...foldOpen])); } catch (e) { /* storage unavailable */ } });
+    card.replaceWith(det);
+  }
+};
 const drawOverview = () => {
   const win = window.bmWin;
   const sum = dash.data('summary_by_sport'), cum = dash.data('cum_by_date'), info = dash.data('card_info'), cards = dash.data('cards'), parl = dash.data('parlays'), picks = dash.data('picks');
@@ -1178,10 +1201,26 @@ const drawOverview = () => {
   skel(lede, sum.status === 'loading');
   const box = document.getElementById('cum-chart');
   if (cum.status === 'ok' && !document.getElementById('overview').hidden) {
-    const series = ['CFB', 'NFL', 'NHL', 'ALL']; const colors = [dash.colors[0], dash.colors[1], dash.colors[2], 'var(--color-fg-muted)'];
-    document.getElementById('cum-legend').replaceChildren(...series.map((s, i) => { const d = document.createElement('span'); const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = colors[i]; d.append(sw, s === 'ALL' ? 'All models' : s); return d; }));
-    const rows = cum.data.filter((r) => r.window === win);
-    document.getElementById('cum-note').textContent = rows.length ? 'Running profit in units by game date, each model and all three together' + (win === 'season' ? '.' : ', starting from zero at the beginning of the window.') : 'No graded bets in this window yet.';
+    // PGA and Table Tennis ride along on the same chart. PGA: units per settled event, on its start date. Table Tennis has no odds,
+    // so each recommendation at the chosen bar counts as 1 unit at -110 (win +0.91u, loss -1u). Neither is part of the All models line.
+    const keepD = winKeep(win); const extra = {};
+    const pf = window.bmPGA && window.bmPGA.feed();
+    if (pf) { const ev = ((pf.history || {}).events || []).filter((e) => e.settled && e.start_date && keepD(e.start_date)); if (ev.length) extra.PGA = ev.map((e) => [e.start_date, Number(e.units || 0)]); }
+    const tA = ttApi();
+    if (tA && tA.days) { const dd = tA.days(keepD); if (dd.length) extra.TT = dd.map(([d, w, l]) => [d, w * 100 / 110 - l]); }
+    const xs = Object.keys(extra);
+    const series = ['CFB', 'NFL', 'NHL', ...xs, 'ALL']; const colors = [dash.colors[0], dash.colors[1], dash.colors[2], ...xs.map((k) => (k === 'PGA' ? dash.colors[3] : dash.colors[4])), 'var(--color-fg-muted)'];
+    document.getElementById('cum-legend').replaceChildren(...series.map((s, i) => { const d = document.createElement('span'); const sw = document.createElement('span'); sw.className = 'sw'; sw.style.background = colors[i]; d.append(sw, s === 'ALL' ? 'All models' : s === 'TT' ? 'Table Tennis' : s); return d; }));
+    let rows = cum.data.filter((r) => r.window === win);
+    if (xs.length) {
+      // one row per date across every series; each line carries its last value forward
+      const by = {}; for (const r of rows) by[String(r.date).slice(0, 10)] = { ...r, date: String(r.date).slice(0, 10) };
+      for (const k of xs) for (const [d] of extra[k]) if (!by[d]) by[d] = { window: win, date: d };
+      const run = { CFB: 0, NFL: 0, NHL: 0, ALL: 0 }; for (const k of xs) run[k] = 0;
+      rows = Object.keys(by).sort().map((d) => { const r = by[d]; for (const k of ['CFB', 'NFL', 'NHL', 'ALL']) { if (r[k] === undefined) r[k] = run[k]; else run[k] = r[k]; } for (const k of xs) { for (const [dd, u] of extra[k]) if (dd === d) run[k] += u; r[k] = Math.round(run[k] * 100) / 100; } return r; });
+    }
+    const xNote = [xs.includes('PGA') ? 'PGA is added on each event\'s start date' : '', xs.includes('TT') ? `Table Tennis counts each recommendation at bar ${tA.bar()} as 1 unit at −110, since it has no odds` : ''].filter(Boolean).join('; ');
+    document.getElementById('cum-note').textContent = rows.length ? 'Running profit in units by game date, each model and the three Excel models together' + (win === 'season' ? '.' : ', starting from zero at the beginning of the window.') + (xNote ? ' ' + xNote + '. ' + (xs.length > 1 ? 'Neither is' : 'It is not') + ' in the All models line.' : '') : 'No graded bets in this window yet.';
     window.bmC.drawCum(box, rows, series, colors);
   } else { box.querySelectorAll('svg').forEach((s) => s.remove()); }
   skel(box, cum.status === 'loading');
@@ -1268,6 +1307,7 @@ const drawOverview = () => {
     host.appendChild(card);
   }
   const ttDay = (ts) => { const x = new Date(ts * 1000); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; };
+  foldModelCards(host);
   const todayKey = (r) => r.sport === 'PGA' ? r.key : window.bmTrack.keyOf(r.sport, r.date, r.game, r.pick, r.market);
   const todayIsoL = (() => { const x = new Date(); return `${x.getFullYear()}-${String(x.getMonth() + 1).padStart(2, '0')}-${String(x.getDate()).padStart(2, '0')}`; })();
   const pgaToday = pf && window.bmPGA.days(pf).includes(todayIsoL) && !window.bmPGA.settledThisWeek(pf) ? pgaPlayRows(pf).map((r) => ({ ...r, game_time: 'All day' })) : [];
@@ -2426,7 +2466,9 @@ window.bmShowTab(['cfb', 'nfl', 'nhl', 'scores', 'pga', 'tt', 'calc'].includes(n
     for (const [d, v] of Object.entries(tr.days || {})) if (v[k] && keep(d)) { w += v[k][0]; l += v[k][1]; }
     return { w, l, open: (tr.open || []).filter((p) => p.recs && p.recs[k]).length };
   };
-  window.bmTT = { render, load, ready: () => !!feed && feed.v === 2, bar: barKey, picks: ovPicks, record: ovRecord, updated: () => feed.generated_at };
+  // wins and losses per day at the current bar, oldest first: [[date, w, l], ...]
+  const ovDays = (keep) => { const tr = (feed && feed.track) || {}; const k = barKey(); return Object.entries(tr.days || {}).filter(([d, v]) => v[k] && keep(d)).map(([d, v]) => [d, v[k][0], v[k][1]]).sort((a, b) => (a[0] < b[0] ? -1 : 1)); };
+  window.bmTT = { render, load, ready: () => !!feed && feed.v === 2, bar: barKey, picks: ovPicks, record: ovRecord, days: ovDays, updated: () => feed.generated_at };
 })();
 </script>
 </div>
