@@ -2,6 +2,8 @@ name: Table tennis daily feed
 on:
   schedule:
     - cron: '17 10 * * *'   # once a day, about 5:17 AM Eastern (6:17 during daylight time)
+    - cron: '47 11 * * *'   # backups: GitHub sometimes drops a scheduled run;
+    - cron: '17 13 * * *'   # these do nothing if today's feed is already built
   workflow_dispatch:
 permissions:
   contents: write
@@ -17,9 +19,29 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+      - name: Skip if the feed is already fresh (scheduled runs only)
+        id: fresh
+        run: |
+          python - <<'PY' >> "$GITHUB_OUTPUT"
+          import json, datetime as dt, os
+          skip = "false"
+          if os.environ.get("EVENT") == "schedule":
+              try:
+                  g = json.load(open("tt_dash.json"))["generated_at"]
+                  age = dt.datetime.utcnow() - dt.datetime.strptime(g, "%Y-%m-%dT%H:%M:%SZ")
+                  if age < dt.timedelta(hours=8):
+                      skip = "true"
+              except Exception:
+                  pass
+          print("skip=" + skip)
+          PY
+        env:
+          EVENT: ${{ github.event_name }}
       - name: Build tt_dash.json
+        if: steps.fresh.outputs.skip != 'true'
         run: python tt/tt_engine.py
       - name: Publish
+        if: steps.fresh.outputs.skip != 'true'
         run: |
           git config user.name "tt-engine"
           git config user.email "actions@users.noreply.github.com"

@@ -4,9 +4,9 @@ Once a day this reads the free public player and matchup pages on
 tabletennistotals.com and writes tt_dash.json at the repo root:
 for every upcoming match, the total points of each player's last 20 matches
 and of every head-to-head meeting, so the page can work out over/under rates
-at any bar from 62.5 to 80.5. It also recommends matches (both players on the
-same side of a bar in more than 75% of their last 20) and tracks how those
-recommendations finish (tt/track.json).
+at any bar from 62.5 to 80.5. It also recommends matches (at least one player on one side of a bar in more
+than 75% of their last 20, unless the other player is above 75% the opposite
+way) and tracks how those recommendations finish (tt/track.json).
 
 Standard library only. No API key needed.
 """
@@ -22,7 +22,7 @@ import zlib
 
 SITE = "https://tabletennistotals.com"
 BARS = [62.5 + i for i in range(19)]      # 62.5 ... 80.5
-REC_PCT = 0.75                            # recommend when both players are above this, same side
+REC_PCT = 0.75                            # a player is "consistent" above this share, either side
 REC_MIN_MATCHES = 15                      # each player needs at least this many recent matches
 SKIP_LEAGUES = ("Setka Cup Women",)
 HERE = os.path.dirname(os.path.abspath(__file__))
@@ -157,17 +157,20 @@ def h2h_totals(d):
 
 
 def recommend(ta, tb):
-    """{bar: 'O'|'U'} for every bar where BOTH players finished on the same side
-    in more than 75% of their last 20 matches."""
+    """{bar: 'O'|'U'} for every bar where at least one player finished on one side
+    in more than 75% of their last 20 matches. The pick follows that player.
+    No pick when the two players are both above 75% on opposite sides."""
     out = {}
     if len(ta) < REC_MIN_MATCHES or len(tb) < REC_MIN_MATCHES:
         return out
     for bar in BARS:
         pa = sum(1 for t in ta if t > bar) / float(len(ta))
         pb = sum(1 for t in tb if t > bar) / float(len(tb))
-        if pa > REC_PCT and pb > REC_PCT:
+        over = pa > REC_PCT or pb > REC_PCT
+        under = (1 - pa) > REC_PCT or (1 - pb) > REC_PCT
+        if over and not under:
             out["%.1f" % bar] = "O"
-        elif (1 - pa) > REC_PCT and (1 - pb) > REC_PCT:
+        elif under and not over:
             out["%.1f" % bar] = "U"
     return out
 
@@ -331,10 +334,15 @@ def main():
             if d:
                 ht = h2h_totals(d)
 
+        recs = recommend(ta, tb)
         if key in open_by_key:
-            recs = open_by_key[key]["recs"]      # keep what was recommended when first listed
+            # still to be played: keep the record in step with the latest numbers
+            if recs:
+                open_by_key[key]["recs"] = recs
+            else:
+                track["open"] = [p for p in track["open"] if p["key"] != key]
+                del open_by_key[key]
         else:
-            recs = recommend(ta, tb)
             if recs and m["ts"] > now:
                 p = {"key": key, "ts": m["ts"], "lg": m["lg"], "a": a_name, "b": b_name,
                      "a_slug": a_slug, "b_slug": b_slug, "a_id": a_id, "b_id": m["b_id"], "recs": recs}
