@@ -2,9 +2,11 @@
 
 Once a day this reads the free public player and matchup pages on
 tabletennistotals.com and writes tt_dash.json at the repo root:
-for every upcoming match, how often each player's last 5 / 10 / 15 / 20
-matches went over the 74.5 total, the average total and its gap to the line,
-and the same for the two players' head-to-head history.
+for every upcoming match, the total points of each player's last 20 matches
+and of every head-to-head meeting, so the page can work out over/under rates
+at any bar from 62.5 to 80.5. It also recommends matches (both players on the
+same side of a bar in more than 75% of their last 20) and tracks how those
+recommendations finish (tt/track.json).
 
 Standard library only. No API key needed.
 """
@@ -19,13 +21,15 @@ import urllib.request
 import zlib
 
 SITE = "https://tabletennistotals.com"
-LINE = 74.5
-WINDOWS = (5, 10, 15, 20)
-LEAGUES = ("TT Cup", "Setka Cup", "Czech Liga Pro", "TT Elite Series")
+BARS = [62.5 + i for i in range(19)]      # 62.5 ... 80.5
+REC_PCT = 0.75                            # recommend when both players are above this, same side
+REC_MIN_MATCHES = 15                      # each player needs at least this many recent matches
+SKIP_LEAGUES = ("Setka Cup Women",)
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
 CACHE = os.path.join(HERE, "players.json")
 OUTFILE = os.path.join(ROOT, "tt_dash.json")
+TRACK = os.path.join(HERE, "track.json")
 UA = "betting-dash-tt/1.0 (+https://github.com/GonzoDZ9/betting-dash; once-daily personal stats page)"
 PAUSE = 0.3            # seconds between requests
 ACTIVE_DAYS = 10       # players who played this recently are re-read every day
@@ -135,68 +139,86 @@ def match_total(m):
     return sum((s.get("player") or 0) + (s.get("opponent") or 0) for s in (m.get("sets") or []))
 
 
-def r1(x):
-    return round(x + 0.0, 1)
+def completed(m):
+    """A finished best-of-five: someone won three sets."""
+    sets = m.get("sets") or []
+    w = sum(1 for s in sets if (s.get("player") or 0) > (s.get("opponent") or 0))
+    return max(w, len(sets) - w) == 3
 
 
-def player_stats(matches):
-    """Over/under 74.5 record for the last 5/10/15/20 matches."""
+def recent_totals(matches):
     ms = sorted([m for m in matches if m.get("sets")], key=lambda m: -(m.get("timestamp") or 0))[:20]
-    totals = [match_total(m) for m in ms]
-    out = {"n": len(totals), "last": ms[0].get("timestamp") if ms else None, "w": {}}
-    for w in WINDOWS:
-        sub = totals[:w]
-        if not sub:
-            continue
-        over = sum(1 for t in sub if t > LINE)
-        avg = sum(sub) / len(sub)
-        out["w"][str(w)] = {"n": len(sub), "o": over, "u": len(sub) - over,
-                            "op": round(100.0 * over / len(sub)), "avg": r1(avg), "gap": r1(r1(avg) - LINE)}
-    return out
+    return [match_total(m) for m in ms]
 
 
-def h2h_stats(d):
+def h2h_totals(d):
     hist = sorted((d.get("h2hStats") or {}).get("detailedHistory") or [], key=lambda x: -(x.get("timestamp") or 0))
-    totals = [h.get("totalPoints") for h in hist if isinstance(h.get("totalPoints"), (int, float))]
-    if not totals:
-        return {"n": 0}
-    out = {"n": len(totals), "w": {}}
-    over = sum(1 for t in totals if t > LINE)
-    avg = sum(totals) / len(totals)
-    out["all"] = {"n": len(totals), "o": over, "u": len(totals) - over, "op": round(100.0 * over / len(totals)),
-                  "avg": r1(avg), "gap": r1(r1(avg) - LINE)}
-    for w in WINDOWS:
-        sub = totals[:w]
-        o = sum(1 for t in sub if t > LINE)
-        a = sum(sub) / len(sub)
-        out["w"][str(w)] = {"n": len(sub), "o": o, "u": len(sub) - o, "op": round(100.0 * o / len(sub)),
-                            "avg": r1(a), "gap": r1(r1(a) - LINE)}
-    out["recent"] = [{"ts": h.get("timestamp"), "tot": h.get("totalPoints"),
-                      "sc": "%s-%s" % (h.get("homeSetScore"), h.get("awaySetScore"))} for h in hist[:6]]
+    return [int(h["totalPoints"]) for h in hist if isinstance(h.get("totalPoints"), (int, float))]
+
+
+def recommend(ta, tb):
+    """{bar: 'O'|'U'} for every bar where BOTH players finished on the same side
+    in more than 75% of their last 20 matches."""
+    out = {}
+    if len(ta) < REC_MIN_MATCHES or len(tb) < REC_MIN_MATCHES:
+        return out
+    for bar in BARS:
+        pa = sum(1 for t in ta if t > bar) / float(len(ta))
+        pb = sum(1 for t in tb if t > bar) / float(len(tb))
+        if pa > REC_PCT and pb > REC_PCT:
+            out["%.1f" % bar] = "O"
+        elif (1 - pa) > REC_PCT and (1 - pb) > REC_PCT:
+            out["%.1f" % bar] = "U"
     return out
 
 
-def lean(a, b, h):
-    """A plain agreement check, not a tested betting rule:
-    both players went the same way in at least 60% of their last 10 and last 20."""
-    def side(s):
-        w10, w20 = s["w"].get("10"), s["w"].get("20")
-        if not w10 or not w20 or w20["n"] < 10:
-            return None
-        if w10["op"] >= 60 and w20["op"] >= 60:
-            return "O"
-        if w10["op"] <= 40 and w20["op"] <= 40:
-            return "U"
+def pick_key(id_a, id_b, ts):
+    lo, hi = sorted([str(id_a), str(id_b)])
+    return "%s-%s-%s" % (lo, hi, ts)
+
+
+def find_result(page, opp_id, ts):
+    """Total points of the finished match vs opp_id that started near ts, or None."""
+    best = None
+    for m in (page or {}).get("recentMatches") or []:
+        if str(m.get("opponentId")) != str(opp_id):
+            continue
+        gap = abs((m.get("timestamp") or 0) - ts)
+        if gap <= 3 * 3600 and (best is None or gap < best[0]):
+            best = (gap, m)
+    if not best:
         return None
-    sa, sb = side(a), side(b)
-    vals = [s["w"][k]["op"] for s in (a, b) for k in ("10", "20") if s["w"].get(k)]
-    score = r1(sum(vals) / len(vals) - 50) if vals else 0.0
-    out = {"score": score, "side": sa if (sa and sa == sb) else None}
-    if out["side"] and h.get("n", 0) >= 5:
-        hp = h["all"]["op"]
-        out["h2h"] = "agrees" if (hp >= 55 and out["side"] == "O") or (hp <= 45 and out["side"] == "U") else (
-            "against" if (hp <= 45 and out["side"] == "O") or (hp >= 55 and out["side"] == "U") else "split")
-    return out
+    m = best[1]
+    return match_total(m) if completed(m) else "void"
+
+
+def grade(track, pages, read, now):
+    """Settle open recommendations whose match has finished."""
+    still = []
+    for p in track["open"]:
+        if p["ts"] > now - 3600:
+            still.append(p)
+            continue
+        page = pages.get(p["a_slug"]) or read(p["a_slug"])
+        res = find_result(page, p["b_id"], p["ts"])
+        if res is None and p.get("b_slug"):
+            page_b = pages.get(p["b_slug"]) or read(p["b_slug"])
+            res = find_result(page_b, p["a_id"], p["ts"])
+        if res is None:
+            if now - p["ts"] < 3 * 86400:
+                still.append(p)          # result not posted yet
+            continue                     # never posted: drop without grading
+        if res == "void":
+            continue
+        day = dt.datetime.utcfromtimestamp(p["ts"]).strftime("%Y-%m-%d")
+        d = track["days"].setdefault(day, {})
+        for bar, side in p["recs"].items():
+            won = (res > float(bar)) == (side == "O")
+            wl = d.setdefault(bar, [0, 0])
+            wl[0 if won else 1] += 1
+        track["recent"].append({"ts": p["ts"], "lg": p["lg"], "a": p["a"], "b": p["b"], "tot": res, "recs": p["recs"]})
+    track["open"] = still
+    track["recent"] = sorted([r for r in track["recent"] if r["ts"] > now - 4 * 86400], key=lambda r: -r["ts"])
 
 
 def main():
@@ -206,6 +228,14 @@ def main():
     except Exception:
         cache = {}
     players = cache.get("players", {})          # slug -> {id, name, lg, last}
+    try:
+        track = json.load(open(TRACK))
+    except Exception:
+        track = {}
+    track.setdefault("since", dt.datetime.utcfromtimestamp(now).strftime("%Y-%m-%d"))
+    track.setdefault("open", [])
+    track.setdefault("days", {})
+    track.setdefault("recent", [])
 
     sm = fetch("/sitemap.xml") or ""
     slugs = re.findall(r"<loc>%s/player/([^<]+)</loc>" % re.escape(SITE), sm)
@@ -220,17 +250,21 @@ def main():
         p = players.get(s)
         if p is None or first_run:
             todo.append(s)                      # new player (or first full read)
+        elif p.get("lg") in SKIP_LEAGUES:
+            if zlib.crc32(s.encode()) % 7 == weekday:
+                todo.append(s)
         elif p.get("last") and now - p["last"] <= ACTIVE_DAYS * 86400:
             todo.append(s)                      # active: read every day
         elif zlib.crc32(s.encode()) % 7 == weekday:
             todo.append(s)                      # inactive: re-check once a week
-    # active players first so the slate is complete even if time runs out
     todo.sort(key=lambda s: -((players.get(s) or {}).get("last") or 0))
 
-    pages = {}                                  # slug -> page data read this run
+    pages = {}
     truncated = False
 
     def read(slug):
+        if not slug or slug in pages:
+            return pages.get(slug)
         d = get_player(slug)
         if not d:
             if slug in players:
@@ -245,13 +279,17 @@ def main():
         pages[slug] = d
         return d
 
-    for i, s in enumerate(todo):
+    for s in todo:
         if time.time() - T0 > MAX_RUN_SEC:
             truncated = True
             break
         read(s)
 
     by_id = {p["id"]: s for s, p in players.items() if p.get("id")}
+
+    # ----- settle yesterday's recommendations -----
+    grade(track, pages, read, now)
+    open_by_key = {p["key"]: p for p in track["open"]}
 
     # ----- slate: every upcoming match listed on a player page -----
     horizon = now + SLATE_HOURS * 3600
@@ -260,14 +298,14 @@ def main():
         me = players[slug]
         for u in d.get("upcomingMatches") or []:
             ts = u.get("timestamp") or 0
-            if ts < now - 600 or ts > horizon:
+            lg = u.get("league") or me.get("lg")
+            if ts < now - 600 or ts > horizon or lg in SKIP_LEAGUES:
                 continue
             oid = str(u.get("opponentId"))
-            key = str(u.get("id") or "") or "%s-%s-%s" % (min(me["id"], oid), max(me["id"], oid), ts)
+            key = pick_key(me["id"], oid, ts)
             if key in slate:
                 continue
-            slate[key] = {"id": key, "ts": ts, "lg": u.get("league") or me.get("lg"),
-                          "a": slug, "b_id": oid, "b_name": u.get("opponentName")}
+            slate[key] = {"ts": ts, "lg": lg, "a": slug, "b_id": oid, "b_name": u.get("opponentName")}
 
     matches = []
     for key, m in sorted(slate.items(), key=lambda kv: kv[1]["ts"]):
@@ -277,12 +315,12 @@ def main():
             read(b_slug)
         a_page, b_page = pages.get(a_slug), pages.get(b_slug) if b_slug else None
         a_id = players[a_slug]["id"]
-        a = player_stats(a_page.get("recentMatches") or [])
-        b = player_stats(b_page.get("recentMatches") or []) if b_page else {"n": 0, "w": {}, "last": None}
-        a["name"], a["slug"] = players[a_slug]["name"], a_slug
-        b["name"], b["slug"] = (players[b_slug]["name"] if b_slug else m["b_name"]), b_slug
+        ta = recent_totals(a_page.get("recentMatches") or [])
+        tb = recent_totals(b_page.get("recentMatches") or []) if b_page else []
+        a_name = players[a_slug]["name"]
+        b_name = players[b_slug]["name"] if b_slug and b_slug in players else m["b_name"]
 
-        h = {"n": 0}
+        ht = []
         if b_slug and time.time() - T0 < MAX_RUN_SEC + 600:
             try:
                 first = int(a_id) < int(m["b_id"])
@@ -291,37 +329,48 @@ def main():
             lo, hi = (a_slug, b_slug) if first else (b_slug, a_slug)
             d = get_matchup("%s-%s" % (lo, hi)) or get_matchup("%s-%s" % (hi, lo))
             if d:
-                h = h2h_stats(d)
-                h["slug"] = (d.get("matchup") or {}).get("slug")
-        rec = {"id": key, "ts": m["ts"], "lg": m["lg"], "a": a, "b": b, "h2h": h}
-        if a["w"].get("20") and b["w"].get("20"):
-            ca = (a["w"]["20"]["avg"] + b["w"]["20"]["avg"]) / 2.0
-            rec["avg20"] = r1(ca)
-            rec["gap20"] = r1(r1(ca) - LINE)
-        if a["w"].get("10") and b["w"].get("10"):
-            ca = (a["w"]["10"]["avg"] + b["w"]["10"]["avg"]) / 2.0
-            rec["avg10"] = r1(ca)
-            rec["gap10"] = r1(r1(ca) - LINE)
-        rec["lean"] = lean(a, b, h)
-        matches.append(rec)
+                ht = h2h_totals(d)
+
+        if key in open_by_key:
+            recs = open_by_key[key]["recs"]      # keep what was recommended when first listed
+        else:
+            recs = recommend(ta, tb)
+            if recs and m["ts"] > now:
+                p = {"key": key, "ts": m["ts"], "lg": m["lg"], "a": a_name, "b": b_name,
+                     "a_slug": a_slug, "b_slug": b_slug, "a_id": a_id, "b_id": m["b_id"], "recs": recs}
+                track["open"].append(p)
+                open_by_key[key] = p
+        matches.append({"id": key, "ts": m["ts"], "lg": m["lg"],
+                        "a": {"name": a_name, "t": ta}, "b": {"name": b_name, "t": tb},
+                        "h": ht, "rec": recs})
+
+    # keep 120 days of daily records
+    cutoff = dt.datetime.utcfromtimestamp(now - 120 * 86400).strftime("%Y-%m-%d")
+    track["days"] = {d: v for d, v in track["days"].items() if d >= cutoff}
 
     out = {
         "generated_at": dt.datetime.utcfromtimestamp(now).strftime("%Y-%m-%dT%H:%M:%SZ"),
-        "line": LINE,
+        "v": 2,
+        "bars": BARS,
+        "rule": {"pct": REC_PCT, "min_matches": REC_MIN_MATCHES},
         "source": "tabletennistotals.com public player and matchup pages",
         "leagues": sorted({m["lg"] for m in matches if m.get("lg")}),
         "counts": {"matches": len(matches), "players_read": len(pages), "players_known": len(players),
                    "requests": STATS["requests"], "errors": STATS["errors"], "truncated": truncated},
+        "track": {"since": track["since"], "days": track["days"], "recent": track["recent"],
+                  "open": [{"ts": p["ts"], "recs": p["recs"]} for p in track["open"]]},
         "matches": matches,
     }
     with open(OUTFILE, "w") as f:
         json.dump(out, f, separators=(",", ":"))
-    # drop players the site no longer lists
+    with open(TRACK, "w") as f:
+        json.dump(track, f, separators=(",", ":"), sort_keys=True)
     players = {s: p for s, p in players.items() if s in slugset}
     with open(CACHE, "w") as f:
         json.dump({"updated": out["generated_at"], "players": players}, f, separators=(",", ":"), sort_keys=True)
-    print("matches=%d players_read=%d requests=%d errors=%d truncated=%s secs=%d" % (
-        len(matches), len(pages), STATS["requests"], STATS["errors"], truncated, time.time() - T0))
+    print("matches=%d recs=%d open=%d players_read=%d requests=%d errors=%d truncated=%s secs=%d" % (
+        len(matches), sum(1 for m in matches if m["rec"]), len(track["open"]), len(pages),
+        STATS["requests"], STATS["errors"], truncated, time.time() - T0))
 
 
 if __name__ == "__main__":
