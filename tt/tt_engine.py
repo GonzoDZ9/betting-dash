@@ -1,6 +1,12 @@
 """Table tennis totals feed for the Betting Models site.
 
-Once a day this reads the free public player and matchup pages on
+Two modes:
+  python tt/tt_engine.py           full pull, once a day (about 2,000 page reads)
+  python tt/tt_engine.py --grade   results only, every 15 minutes: reads just the
+                                   pages of recommended matches that should have
+                                   finished, and settles them (a handful of reads)
+
+Once a day the full pull reads the free public player and matchup pages on
 tabletennistotals.com and writes tt_dash.json at the repo root:
 for every upcoming match, the total points of each player's last 20 matches
 and of every head-to-head meeting, so the page can work out over/under rates
@@ -30,7 +36,7 @@ ROOT = os.path.dirname(HERE)
 CACHE = os.path.join(HERE, "players.json")
 OUTFILE = os.path.join(ROOT, "tt_dash.json")
 TRACK = os.path.join(HERE, "track.json")
-UA = "betting-dash-tt/1.0 (+https://github.com/GonzoDZ9/betting-dash; once-daily personal stats page)"
+UA = "betting-dash-tt/1.0 (+https://github.com/GonzoDZ9/betting-dash; personal stats page: one daily pull plus light result checks)"
 PAUSE = 0.3            # seconds between requests
 ACTIVE_DAYS = 10       # players who played this recently are re-read every day
 SLATE_HOURS = 40       # how far ahead to list matches
@@ -195,13 +201,28 @@ def find_result(page, opp_id, ts):
     return match_total(m) if completed(m) else "void"
 
 
-def grade(track, pages, read, now):
-    """Settle open recommendations whose match has finished."""
+GRADE_AFTER = 25 * 60      # light mode: first look for a result this long after the start
+GRADE_MAX_READS = 150      # light mode: page reads allowed per run
+
+
+def grade(track, pages, read, now, light=False):
+    """Settle open recommendations whose match has finished. Returns how many were settled.
+
+    light=True is the every-15-minutes pass: it looks sooner after the start, and a match
+    whose result is still missing after two hours is only re-read about once an hour
+    (once every six hours after six hours), so a missing result is not re-read every run."""
     still = []
+    settled = 0
     for p in track["open"]:
-        if p["ts"] > now - 3600:
+        if p["ts"] > now - (GRADE_AFTER if light else 3600):
             still.append(p)
             continue
+        if light:
+            age, t = now - p["ts"], time.gmtime(now)
+            wait = (age > 2 * 3600 and t.tm_min >= 15) or (age > 6 * 3600 and t.tm_hour % 6 != 0)
+            if wait or STATS["requests"] >= GRADE_MAX_READS:
+                still.append(p)
+                continue
         page = pages.get(p["a_slug"]) or read(p["a_slug"])
         res = find_result(page, p["b_id"], p["ts"])
         if res is None and p.get("b_slug"):
@@ -211,6 +232,7 @@ def grade(track, pages, read, now):
             if now - p["ts"] < 3 * 86400:
                 still.append(p)          # result not posted yet
             continue                     # never posted: drop without grading
+        settled += 1
         if res == "void":
             continue
         day = dt.datetime.utcfromtimestamp(p["ts"]).strftime("%Y-%m-%d")
@@ -222,6 +244,42 @@ def grade(track, pages, read, now):
         track["recent"].append({"ts": p["ts"], "lg": p["lg"], "a": p["a"], "b": p["b"], "tot": res, "recs": p["recs"]})
     track["open"] = still
     track["recent"] = sorted([r for r in track["recent"] if r["ts"] > now - 4 * 86400], key=lambda r: -r["ts"])
+    return settled
+
+
+def grade_only():
+    """Every-15-minutes pass: settle finished recommendations and refresh the record in
+    tt_dash.json. The match list and its numbers are left exactly as the daily pull built them."""
+    now = int(time.time())
+    try:
+        track = json.load(open(TRACK))
+        out = json.load(open(OUTFILE))
+    except Exception:
+        print("grade: no feed yet, nothing to do")
+        return
+    track.setdefault("open", [])
+    track.setdefault("days", {})
+    track.setdefault("recent", [])
+    pages = {}
+
+    def read(slug):
+        if not slug:
+            return None
+        if slug not in pages:
+            pages[slug] = get_player(slug)
+        return pages[slug]
+
+    settled = grade(track, pages, read, now, light=True)
+    if settled:
+        with open(TRACK, "w") as f:
+            json.dump(track, f, separators=(",", ":"), sort_keys=True)
+        out["graded_at"] = dt.datetime.utcfromtimestamp(now).strftime("%Y-%m-%dT%H:%M:%SZ")
+        out["track"] = {"since": track.get("since"), "days": track["days"], "recent": track["recent"],
+                        "open": [{"ts": p["ts"], "recs": p["recs"]} for p in track["open"]]}
+        with open(OUTFILE, "w") as f:
+            json.dump(out, f, separators=(",", ":"))
+    print("grade: settled=%d open=%d requests=%d errors=%d secs=%d" % (
+        settled, len(track["open"]), STATS["requests"], STATS["errors"], time.time() - T0))
 
 
 def main():
@@ -383,7 +441,10 @@ def main():
 
 if __name__ == "__main__":
     try:
-        main()
+        if "--grade" in sys.argv[1:]:
+            grade_only()
+        else:
+            main()
     except Blocked as e:
         # Leave yesterday's feed in place and fail loudly rather than publish an empty page.
         print("STOPPED: %s" % e)
