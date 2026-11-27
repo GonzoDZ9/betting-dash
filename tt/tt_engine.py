@@ -10,9 +10,10 @@ Once a day the full pull reads the free public player and matchup pages on
 tabletennistotals.com and writes tt_dash.json at the repo root:
 for every upcoming match, the total points of each player's last 20 matches
 and of every head-to-head meeting, so the page can work out over/under rates
-at any bar from 62.5 to 80.5. It also recommends matches (at least one player on one side of a bar in more
-than 75% of their last 20, unless the other player is above 75% the opposite
-way) and tracks how those recommendations finish (tt/track.json).
+at any bar from 62.5 to 80.5. It also recommends matches (the two players combined
+on one side of a bar in more than 70% of their last 20 matches each, or at least
+70% of 10 or more head-to-head meetings on one side) and tracks how those
+recommendations finish (tt/track.json).
 
 Standard library only. No API key needed.
 """
@@ -28,8 +29,10 @@ import zlib
 
 SITE = "https://tabletennistotals.com"
 BARS = [62.5 + i for i in range(19)]      # 62.5 ... 80.5
-REC_PCT = 0.75                            # a player is "consistent" above this share, either side
-REC_MIN_MATCHES = 15                      # each player needs at least this many recent matches
+REC_PCT = 0.70                            # the two players combined must be above this share on one side
+REC_MIN_MATCHES = 15                      # each player needs at least this many recent matches for that test
+H2H_PCT = 0.70                            # or: their head-to-head meetings at or above this share on one side
+H2H_MIN_MATCHES = 10                      # ... with at least this many meetings
 SKIP_LEAGUES = ("Setka Cup Women",)
 HERE = os.path.dirname(os.path.abspath(__file__))
 ROOT = os.path.dirname(HERE)
@@ -162,22 +165,31 @@ def h2h_totals(d):
     return [int(h["totalPoints"]) for h in hist if isinstance(h.get("totalPoints"), (int, float))]
 
 
-def recommend(ta, tb):
-    """{bar: 'O'|'U'} for every bar where at least one player finished on one side
-    in more than 75% of their last 20 matches. The pick follows that player.
-    No pick when the two players are both above 75% on opposite sides."""
+def recommend(ta, tb, h=()):
+    """{bar: 'O'|'U'} for every bar where either test passes:
+      1. the two players combined (their last 20 matches each, pooled) finished on one
+         side of the bar in more than 70% of those matches, or
+      2. they have met at least 10 times and at least 70% of those meetings finished
+         on one side of the bar.
+    No pick when the two tests point in opposite directions."""
     out = {}
-    if len(ta) < REC_MIN_MATCHES or len(tb) < REC_MIN_MATCHES:
+    form_ok = len(ta) >= REC_MIN_MATCHES and len(tb) >= REC_MIN_MATCHES
+    h2h_ok = len(h) >= H2H_MIN_MATCHES
+    if not form_ok and not h2h_ok:
         return out
     for bar in BARS:
-        pa = sum(1 for t in ta if t > bar) / float(len(ta))
-        pb = sum(1 for t in tb if t > bar) / float(len(tb))
-        over = pa > REC_PCT or pb > REC_PCT
-        under = (1 - pa) > REC_PCT or (1 - pb) > REC_PCT
-        if over and not under:
-            out["%.1f" % bar] = "O"
-        elif under and not over:
-            out["%.1f" % bar] = "U"
+        form = meet = None
+        if form_ok:
+            over = (sum(1 for t in ta if t > bar) + sum(1 for t in tb if t > bar)) / float(len(ta) + len(tb))
+            form = "O" if over > REC_PCT else "U" if (1 - over) > REC_PCT else None
+        if h2h_ok:
+            over = sum(1 for t in h if t > bar) / float(len(h))
+            meet = "O" if over >= H2H_PCT else "U" if (1 - over) >= H2H_PCT else None
+        if form and meet and form != meet:
+            continue
+        side = form or meet
+        if side:
+            out["%.1f" % bar] = side
     return out
 
 
@@ -392,7 +404,7 @@ def main():
             if d:
                 ht = h2h_totals(d)
 
-        recs = recommend(ta, tb)
+        recs = recommend(ta, tb, ht)
         if key in open_by_key:
             # still to be played: keep the record in step with the latest numbers
             if recs:
@@ -418,7 +430,7 @@ def main():
         "generated_at": dt.datetime.utcfromtimestamp(now).strftime("%Y-%m-%dT%H:%M:%SZ"),
         "v": 2,
         "bars": BARS,
-        "rule": {"pct": REC_PCT, "min_matches": REC_MIN_MATCHES},
+        "rule": {"pct": REC_PCT, "min_matches": REC_MIN_MATCHES, "h2h_pct": H2H_PCT, "h2h_min": H2H_MIN_MATCHES, "mode": "combined_or_h2h"},
         "source": "tabletennistotals.com public player and matchup pages",
         "leagues": sorted({m["lg"] for m in matches if m.get("lg")}),
         "counts": {"matches": len(matches), "players_read": len(pages), "players_known": len(players),
